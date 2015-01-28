@@ -13,6 +13,6 @@ Demonstrates a number of advanced Javascript techniques:
   Sun/Moon calculations.  Master updater using timer.
 
 NEXT PLANNED ENHANCEMENTS:
-  Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
-  Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce  network activity.
+1. Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
+2. Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce  network activity.
   
