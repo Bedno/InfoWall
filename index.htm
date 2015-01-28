@@ -1,0 +1,959 @@
+
+
+// Configure WeatherUnderground URLs below.  See http://www.wunderground.com/weather/api/
+var InfoZip = '60657';  // Zipcode of this installation.
+var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // Example: http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
+var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // Example: http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999';  // Detailed local forecast.  Substitute 
+
+var WinWid, WinHgt;
+var WinMin, WinMax;
+
+var MasterDur = 500;
+var MasterTimer = null;
+
+var SunRise = '';
+var SunSet = '';
+var StartDay = 7;
+var StartNight = 19;
+var ClockDay = '#40FFFF';
+var ClockNight = '#FFFFFF';
+var ClockColor = ClockDay;  var ClockColorPrev = ClockColor;
+var ClockCursor = '';  var ClockBlink = 0;
+var ClockDur = MasterDur;  var ClockTimer = 0;
+var ClockCanvas, ClockContext;
+
+var RadarWid, RadarHgt;
+var RadarIdx = -1;
+var RadarTimer = -1;
+
+var ForecastRows = 14;
+var ForecastRowsHgt = 0.82;
+var ForecastColor = '#FFE3E3';
+var WeatherHgtMult = 0.13;
+var WeatherCurrent = '';
+var WeatherCurrentIcon = '';
+var WeatherForecast = '';
+var WeatherForecastSpoken = '';
+var WeatherForecastDur = 42*60*1000;  // Update forecast every 42 minutes to minimize API calls.
+var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
+var WeatherForecastTimer = 0;
+var WeatherCurrentTimer = 0;
+
+var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
+var MoonDiam = 80;
+var HourPrev = -1;  var HourCurr = -1;
+
+var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
+
+// BGshow = [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
+var BGdata = [
+  { BGname:"WebCams", BGcode:"cam", BGshow:"CDFMW", BGslides: [
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg#{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg#{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://www.oakstbeach.com/", BGsrc:"http://205.178.49.123:8080/snapshot.cgi?user=guest&amp;pwd=password&amp;t=1421826844#{unq}", BGdesc:"Oak Street Beach", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://www.luc.edu/webcams/", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg#{unq}", BGdesc:"Loyola, Water Tower", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg#{unq}", BGdesc:"Daley Plaza", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/columbiacam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg#{unq}", BGdesc:"Grant Park", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg#{unq}", BGdesc:"Belmont Harbor", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:2000, BGzoom:1 } ] },
+  { BGname:"Wrigley", BGcode:"wrig", BGshow:"CDFMRW", BGslides: [
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 } ] },
+  { BGname:"Art", BGcode:"art", BGshow:"ADMSW", BGslides: [
+    { BGlink:"http://en.wikipedia.org/wiki/Mona_Lisa", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg/402px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg", BGdesc:"Mona Lisa, Leonardo da Vinci, 1506", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Nighthawks", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nighthawks_by_Edward_Hopper_1942.jpg/800px-Nighthawks_by_Edward_Hopper_1942.jpg", BGdesc:"Nighthawks, Edward Hopper, 1942", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/American_Gothic", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg/497px-Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg", BGdesc:"American Gothic, Grant Wood, 1930", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Paris_Street;_Rainy_Day", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg/792px-Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg", BGdesc:"Paris Street; Rainy Day, Gustave Caillebotte, 1877", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Paul_C%C3%A9zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/C%C3%A9zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-C%C3%A9zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/6/67/A_Sunday_on_La_Grande_Jatte,_Georges_Seurat,_1884.png", BGdesc:"Sunday Afternoon on La Grande Jatte, Georges Seurat, 1884", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/The_Grand_Canal_in_Venice_from_Palazzo_Flangini_to_Campo_San_Marcuola", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg/800px-Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg", BGdesc:"The Grand Canal, Canaletto, 1738", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Vanitas", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/7/77/Adriaen_van_Utrecht-_Vanitas_-_Still_Life_with_Bouquet_and_Skull.JPG", BGdesc:"Vanitas, Adriaen van Utrecht, 1642", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Haystacks_(Monet)", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/b/b8/Wheatstacks_(End_of_Summer),_1890-91_(190_Kb);_Oil_on_canvas,_60_x_100_cm_(23_5-8_x_39_3-8_in),_The_Art_Institute_of_Chicago.jpg", BGdesc:"Wheatstacks, Claude Monet, 1891", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/James_Tissot", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/James_Tissot_-_Young_Lady_in_a_Boat.jpg/800px-James_Tissot_-_Young_Lady_in_a_Boat.jpg", BGdesc:"Young Lady in a Boat, James Tissot, 1870", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/The_Persistence_of_Memory", BGsrc:"http://upload.wikimedia.org/wikipedia/en/d/dd/The_Persistence_of_Memory.jpg", BGdesc:"The Persistence of Memory, Salvador Dal&iacute;, 1931", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Les_Demoiselles_d'Avignon", BGsrc:"http://upload.wikimedia.org/wikipedia/en/thumb/4/4c/Les_Demoiselles_d'Avignon.jpg/579px-Les_Demoiselles_d'Avignon.jpg", BGdesc:"Les Demoiselles d&#8217Avignon, Pablo Picasso, 1907", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Henri_Matisse", BGsrc:"http://upload.wikimedia.org/wikipedia/en/a/a7/Matissedance.jpg", BGdesc:"La danse, Henri Matisse, 1910", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=120079", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=120079", BGdesc:"The Japanese Footbridge, Claude Monet, 1899", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=121693", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=121693", BGdesc:"Sainte-Adresse, Claude Monet, 1867", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=57125", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=57125", BGdesc:"Ginevra de Benci, Leonardo da Vinci, 1452", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=135937", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=135937", BGdesc:"Green Wheat Fields, Vincent van Gogh, 1853", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=21816", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=21816", BGdesc:"Woman Holding a Balance, Johannes Vermeer, 1664", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=45785", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=45785", BGdesc:"Self-Portrait, Paul Gauguin, 1848", BGdur:15000, BGzoom:1 } ] },
+  { BGname:"Zoom", BGcode:"zoom", BGshow:"CD", BGslides: [
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:2000, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1000, BGzoom:3 },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1 },
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:6 },
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:3 } ] },
+  { BGname:"Radar", BGcode:"radar", BGshow:"CDFMW", BGslides: [
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:3000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer9.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer8.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer7.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer2.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer1.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+  { BGname:"Cats", BGcode:"cats", BGshow:"CDFMSW", BGslides: [
+    { BGsrc:"http://i.pbase.com/o4/89/178289/1/62514812.SZWbPwC1.PICT0024vivitarportrait.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u18/minoltaman/upload/36084631.718stockcatscalico.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u32/minoltaman/upload/22307525.leothelion08.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u34/minoltaman/upload/31353567.2346leoizbister.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u35/minoltaman/upload/23132843.catsn98.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u38/minoltaman/upload/31919098.4814backlitblackstuff.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u48/minoltaman/upload/30517830.8346calicodelight.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
+    { BGsrc:"http://i.pbase.com/u48/minoltaman/upload/30640384.9341wastedoncatnip.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 } ] }
+  ];
+
+function haslocalstorage() { try { return 'localStorage' in window && window['localStorage'] !== null; } catch(e){ return false; } }
+// Recall current BG from local storage.
+if (haslocalstorage()) {
+  try {
+    if ( (localStorage.getItem('BGcurr')!='') && (localStorage.getItem('BGcurr')!='null') ) {
+      var BGcurrTmp = parseInt(localStorage.getItem('BGcurr'));
+      if ( (BGcurrTmp >= 0) && (BGcurrTmp < BGdata.length) ) { BGcurr = BGcurrTmp; }
+    }
+  } catch (err) {
+  }
+}
+// Optionally set BG from URL.
+for (var ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
+  if (location.href.indexOf(BGdata[ArgLp].BGcode)>=0) { BGcurr = ArgLp; };
+}
+
+if (haslocalstorage()) {
+  try { localStorage.setItem('BGcurr', BGcurr.toString()); }
+  catch (err) {
+  }
+}
+
+function UnqArg () {
+  var UAdt=new Date();
+  return(''+UAdt.getYear()+''+(UAdt.getMonth()+1)+''+UAdt.getDate()+''+UAdt.getHours()+''+UAdt.getMinutes()+''+UAdt.getSeconds()+'');
+}
+
+function SetupBG() {
+  if (BGdata[BGcurr].BGshow.indexOf('C')<0) {
+    document.getElementById('SpanTime').style.visibility='hidden';
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('D')<0) {
+    document.getElementById('DivDate').style.visibility = 'hidden';
+    document.getElementById('SpanDate').style.visibility = 'hidden';
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('F')<0) {
+    if (BGdata[BGcurr].BGshow.indexOf('W')<0) {
+      document.getElementById('DivWeatherForecast').style.visibility='hidden';
+    }
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('M')<0) {
+    document.getElementById('DivMoonImg').style.visibility='hidden';
+    document.getElementById('DivMoonStat').style.visibility='hidden';
+    document.getElementById('DivSunTimes').style.visibility='hidden';
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('R')<0) {
+    document.getElementById('RadarImg').style.visibility='hidden';
+    RadarIdx=-1;
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('W')<0) {
+    document.getElementById('DivWeatherCurrent').style.visibility='hidden';
+  }
+  RadarTimer = -1;  BGtimer = -1;
+}
+
+function UpdBG() {
+  var ImgSrc = '';
+  if (BGtimer < MasterDur) {
+    if (BGdata[BGcurr].BGshow.indexOf('S')>=0) {
+      var BGframePrev = BGframe;
+      do { BGframe = Math.floor(Math.random()*BGdata[BGcurr].BGslides.length); }
+      while (BGframe==BGframePrev);
+    }
+    ImgSrc = BGdata[BGcurr].BGslides[BGframe].BGsrc;
+    ImgSrc = ImgSrc.replace(/{unq}/,UnqArg());
+    if (ImgSrc.indexOf('#') >= 0) { ImgSrc += UnqArg(); }
+    document.getElementById('DivBGdesc').innerHTML = '';
+    document.getElementById('ImgBG').src = ImgSrc;
+    document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+    document.getElementById('ImgBG').width = Math.floor(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+    document.getElementById('DivBG').style.top = Math.floor(0.5*(WinHgt-(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom)));
+    document.getElementById('DivBG').style.left = Math.floor(0.5*(WinWid-(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom)));
+    document.getElementById('DivBG').style.visibility='visible';
+    document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGdata[BGcurr].BGslides[BGframe].BGlink+'" target=_blank style="font-family:Arial; color:#000000; text-decoration:none; font-size:12pt; text-shadow:1px 1px 0px #EEEEEE;">'+BGdata[BGcurr].BGslides[BGframe].BGdesc+'</a>';
+    BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur;
+    BGframe = (BGframe+1) % BGdata[BGcurr].BGslides.length;
+  } else {
+    BGtimer -= MasterDur;
+  }
+}
+
+function ShowMoon() {
+  SetupSun();
+  var MoonTimes = SunCalc.getMoonIllumination(new Date());
+  var MoonPhase = Math.floor(MoonTimes.phase*10);
+  var MoonDaysToFull = 0;
+  if (MoonTimes.phase<0.5) {
+    MoonDaysToFull = ''+(Math.floor((29.53/2) - (29.53*MoonTimes.phase)));
+  } else {
+    MoonDaysToFull = (Math.floor(29.53*(0.5-MoonTimes.phase)));
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('M')>=0) {
+    document.getElementById('DivMoonStat').style.top = ((MoonDiam/2)-28)+'px';
+    document.getElementById('DivMoonStat').style.left = (WinWid-(MoonDiam/2)-24)+'px';
+    document.getElementById('DivMoonStat').innerHTML = '<span style="font-family:Arial; color:#FF40FF; font-size:32pt; text-shadow:0px 0px 16px #80FFFF;">'+MoonDaysToFull+'</span>';
+    document.getElementById('DivMoonImg').style.left = (WinWid-MoonDiam)+'px';
+    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/iwall/moon/moon'+(MoonPhase)+'.gif" height='+MoonDiam+' width='+MoonDiam+' border=0><br>'+WeatherCurrentIcon;
+    document.getElementById('DivSunTimes').style.left = (WinWid-MoonDiam-80)+'px';
+    document.getElementById('DivSunTimes').innerHTML = '<span style="font-family:Arial; color:#FFFF00; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunRise+'</span><font size=0><br></font><span style="font-family:Arial; color:#FF8000; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunSet+'</span>';
+  }
+}
+function SetupSun() {
+  var SSdt=new Date();
+  SSh=SSdt.getHours();
+  var SunTimes = SunCalc.getTimes(new Date(), 41.94637, -87.64519);
+  if (SunTimes.sunrise.getHours()<1) { SunRise = '12'; }
+  if (SunTimes.sunrise.getHours()>12) { SunRise = ''+(SunTimes.sunrise.getHours()-12); } else { SunRise = ''+SunTimes.sunrise.getHours(); }
+  if (SunTimes.sunrise.getMinutes()<10) { SunRise += ':0'+SunTimes.sunrise.getMinutes(); } else { SunRise += ':'+SunTimes.sunrise.getMinutes(); }
+  if (SunTimes.sunrise.getHours()>11) { SunRise += 'P'; } else { SunRise += 'A'; }
+  SunUp = Math.floor(SunTimes.sunrise.getHours());
+  if (SunTimes.sunset.getHours()<1) { SunSet = '12'; }
+  if (SunTimes.sunset.getHours()>12) { SunSet = ''+(SunTimes.sunset.getHours()-12); } else { SunSet = ''+SunTimes.sunset.getHours(); }
+  if (SunTimes.sunset.getMinutes()<10) { SunSet += ':0'+SunTimes.sunset.getMinutes(); } else { SunSet += ':'+SunTimes.sunset.getMinutes(); }
+  if (SunTimes.sunset.getHours()>11) { SunSet += 'P'; } else { SunRise += 'A'; }
+  SunDown = Math.floor(SunTimes.sunset.getHours());
+  if ( (SSh >= SunUp) && (SSh < SunDown) ) { ClockColor = ClockDay; } else { ClockColor = ClockNight; }
+}
+
+function NextRadar() {
+  if (BGdata[BGcurr].BGshow.indexOf('R')>=0) {
+    if (RadarIdx>=0) {
+      document.getElementById('RadarImg').style.visibility='visible';
+      document.getElementById('RadarImg').src = "http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer"+(9-RadarIdx)+'.jpeg#'+UnqArg();
+      RadarTimer = 1500;
+    } else {
+      document.getElementById('RadarImg').style.visibility='hidden';
+      RadarTimer = 4000;
+    }
+    RadarIdx = (RadarIdx+1) % 10;
+  }
+}
+function SetupRadar() {
+  document.getElementById('DivRadar').style.top = (-2)+'px';
+  document.getElementById('DivRadar').style.left = (WinWid-RadarWid+2)+'px';
+  document.getElementById('DivRadar').innerHTML = '<a href="http://www.myfoxchicago.com/weather" target="weather"><img src="" id="RadarImg" width='+RadarWid+' height='+RadarHgt+' onMouseover="this.width='+(RadarWid*2)+';this.height='+(RadarHgt*2)+';" onMouseout="this.width='+RadarWid+';this.height='+RadarHgt+';" style="border-radius:25px;" border=0></a>';
+  RadarTimer = 4000;
+  if (BGdata[BGcurr].BGshow.indexOf('R')<1) {
+    document.getElementById('RadarImg').style.visibility='hidden';
+  }
+}
+
+function SpeakForecast() {
+  if ('speechSynthesis' in window) {
+    var SFmsg = new SpeechSynthesisUtterance();
+    // var SFvoices = window.speechSynthesis.getVoices();
+    // SFmsg.voice = SFvoices[10];
+    // SFmsg.voiceURI = 'native';
+    SFmsg.volume = 1; // 0 to 1
+    SFmsg.rate = .23; // 0.1 to 10
+    SFmsg.pitch = 1; //0 to 2
+    SFmsg.lang = 'en-US';
+    SFmsg.text = WeatherForecastSpoken;
+    window.speechSynthesis.speak(SFmsg);
+  }
+}
+
+var WeatherForecastHandle = false;
+function WeatherForecastReceive() {
+  WeatherForecast = '';
+  if ( (WeatherForecastHandle.readyState==4) && (WeatherForecastHandle.status==200) ) {
+    var FWFread = WeatherForecastHandle.responseText;
+    try {
+      var FWFrec = JSON.parse(FWFread);
+      for (var FWFlp=0; FWFlp<2; FWFlp++) {
+        WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor((WinHgt/ForecastRows)*0.8))+'" border=0>';
+        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+" ";
+        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit']+"-";
+        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']+"\n";
+        WeatherForecast += FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext']+"\n";
+      }
+      WeatherForecastSpoken = FWFrec['forecast']['simpleforecast']['forecastday'][0]['date']['weekday']+" ";
+      WeatherForecastSpoken += FWFrec['forecast']['simpleforecast']['forecastday'][0]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit']+". ";
+      WeatherForecastSpoken += FWFrec['forecast']['txt_forecast']['forecastday'][0]['fcttext'];
+      WeatherForecastSpoken = WeatherForecastSpoken.toUpperCase();
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([0-9])s([^A-Z0-9])/gi,"$1$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([0-9])F/gi,"$1");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])E([^A-Z0-9])/gi,"$1EAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])W([^A-Z0-9])/gi,"$1WEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])N([^A-Z0-9])/gi,"$1NORTH$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])S([^A-Z0-9])/gi,"$1SOUTH$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+      WeatherForecastSpoken = WeatherForecastSpoken.replace(/MPH/gi,"");
+    } catch (err) {
+      WeatherForecast = '<font size=2>Weather forecast is not available on this browser.</font>';
+    }
+    if (BGdata[BGcurr].BGshow.indexOf('F')>=0) {
+      if ('speechSynthesis' in window) {
+        document.getElementById('DivWeatherForecast').innerHTML = '<a href="JavaScript:SpeakForecast();" title="Speak the forecast." target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
+      } else {
+        document.getElementById('DivWeatherForecast').innerHTML = '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
+      }
+    }
+  }
+}
+function WeatherForecastRequest() {
+  try {
+    WeatherForecastHandle = new XMLHttpRequest();
+  } catch (trymicrosoft) {
+    try {
+      WeatherForecastHandle = new ActiveXObject('Msxml2.XMLHTTP');
+    } catch (othermicrosoft) {
+      try {
+        WeatherForecastHandle = new ActiveXObject('Microsoft.XMLHTTP');
+      } catch (failed) {
+        WeatherForecastHandle = false;
+      }
+    }
+  }
+  if (WeatherForecastHandle) {
+    try {
+      if (WeatherForecastURL.length>1) {
+        WeatherForecastHandle.open('GET', WeatherForecastURL, true);
+        WeatherForecastHandle.timeout = 20000;
+        WeatherForecastHandle.onreadystatechange = WeatherForecastReceive;
+        WeatherForecastHandle.send(null);
+      }
+    } catch (err) {
+      WeatherForecast = '<font size=2>Weather forecast is not available on this browser.</font>';
+      document.getElementById('DivWeatherForecast').innerHTML = '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
+    }
+  }
+  WeatherForecastTimer = WeatherForecastDur;
+}
+
+var WeatherCurrentHandle = false;
+function WeatherCurrentReceive() {
+  if ( (WeatherCurrentHandle.readyState==4) && (WeatherCurrentHandle.status==200) ) {
+    var FWCread = WeatherCurrentHandle.responseText;
+    try {
+      var FWCrec = JSON.parse(FWCread);
+      WeatherCurrent = '';
+      WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 width=56 height=56>';
+      WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*1.1)+'pt;">'+FWCrec['current_observation']['temp_f']+'</span><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;">F</span></nobr> ';
+      var WindText = '';
+      var WindDir = FWCrec['current_observation']['wind_dir'];
+      if (WindDir.length < 1) { WindDir = 'V'; }
+      if (FWCrec['current_observation']['wind_mph']>2) {
+        WindText += '<span style="font-size:'+(Math.floor(RadarWid*WeatherHgtMult*0.8))+'pt; font-stretch:condensed;">'+WindDir+'</span>';
+        WindText += FWCrec['current_observation']['wind_mph'];
+      }
+      if (FWCrec['current_observation']['wind_gust_mph']>2) {
+        if (Math.abs(FWCrec['current_observation']['wind_mph']-FWCrec['current_observation']['wind_gust_mph'])>3) {
+          if (FWCrec['current_observation']['wind_mph']>2) {
+            WindText += '<span style="font-size:'+(Math.floor(RadarWid*WeatherHgtMult*0.9))+'pt;"><i><span style="font-size:'+(Math.floor(RadarWid*WeatherHgtMult*0.4))+'pt;  vertical-align:20%; margin-right:-4px">&#45;</span>'+FWCrec['current_observation']['wind_gust_mph']+'</i></span>';
+          } else {
+            WindText += '<span style="font-size:'+(Math.floor(RadarWid*WeatherHgtMult*0.8))+'pt; font-stretch:condensed;">'+WindDir+'</span>'+FWCrec['current_observation']['wind_gust_mph'];
+          }
+        }
+      }
+      if (WindText.length>1) {
+        WeatherCurrent += '<nobr>'+WindText+'</nobr> ';
+      }
+      var FWhum = FWCrec['current_observation']['relative_humidity'].replace('%','');
+      if ( (FWhum>1) && (FWhum<120) ) {
+        WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;">'+FWhum+'<span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.7)+'pt; font-stretch:condensed;">H</span></span></nobr> ';
+      }
+      if ( (FWCrec['current_observation']['windchill_f']!="") && (FWCrec['current_observation']['windchill_f']!="NA") && (FWCrec['current_observation']['windchill_f']!="N/A") && (FWCrec['current_observation']['windchill_f']!="null") && (FWCrec['current_observation']['windchill_f']!="undefined") &&
+           (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['windchill_f'])>4) ) {
+        WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;"><i><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.7)+'pt;">i</span>'+FWCrec['current_observation']['windchill_f']+"</i></span></nobr> ";
+      } else {
+        if ( (FWCrec['current_observation']['heat_index_f']!="") && (FWCrec['current_observation']['heat_index_f']!="NA") && (FWCrec['current_observation']['heat_index_f']!="N/A") && (FWCrec['current_observation']['heat_index_f']!="null") && (FWCrec['current_observation']['heat_index_f']!="undefined") &&
+             (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['heat_index_f'])>4) ) {
+          WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;"><i><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.7)+'pt;">i</span>'+FWCrec['current_observation']['heat_index_f']+"</i></span></nobr> ";
+        }
+      }
+      WeatherCurrent += ' '+FWCrec['current_observation']['weather']+"\n";
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])East([^A-Z0-9])/gi,"$1E$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])West([^A-Z0-9])/gi,"$1W$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])North([^A-Z0-9])/gi,"$1N$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])South([^A-Z0-9])/gi,"$1S$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NE$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NE$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SE$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SE$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SW$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SW$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NW$2");
+      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NW$2");
+      WeatherCurrent = WeatherCurrent.replace(/\.0/g,'');
+    } catch (err) {
+      WeatherCurrent = '';
+    }
+    if (BGdata[BGcurr].BGshow.indexOf('W')>=0) {
+      var WeatherURLeff = WeatherURL;
+      if ('speechSynthesis' in window) { WeatherURLeff = 'JavaScript:SpeakForecast();' }
+      var FWCout = '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
+      if (BGdata[BGcurr].BGshow.indexOf('F')<0) {
+        document.getElementById('DivWeatherForecast').innerHTML = FWCout;
+      } else {
+        document.getElementById('DivWeatherCurrent').innerHTML = FWCout;
+      }
+    }
+    ShowMoon();
+  }
+}
+function WeatherCurrentRequest() {
+  try {
+    WeatherCurrentHandle = new XMLHttpRequest();
+  } catch (trymicrosoft) {
+    try {
+      WeatherCurrentHandle = new ActiveXObject('Msxml2.XMLHTTP');
+    } catch (othermicrosoft) {
+      try {
+        WeatherCurrentHandle = new ActiveXObject('Microsoft.XMLHTTP');
+      } catch (failed) {
+        WeatherCurrentHandle = false;
+      }
+    }
+  }
+  if (WeatherCurrentHandle) {
+    try {
+      if (WeatherCurrentURL.length>1) {
+        WeatherCurrentHandle.open('GET', WeatherCurrentURL, true);
+        WeatherCurrentHandle.timeout = 20000;
+        WeatherCurrentHandle.onreadystatechange = WeatherCurrentReceive;
+        WeatherCurrentHandle.send(null);
+      }
+    } catch (err) {
+    }
+  }
+  WeatherCurrentTimer = WeatherCurrentDur;
+}
+
+function SetupWeather() {
+  if ( (BGdata[BGcurr].BGshow.indexOf('F')<0) && (BGdata[BGcurr].BGshow.indexOf('W')>=0) ) {
+    document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*3)))+'px';
+    document.getElementById('DivWeatherForecast').style.left = '30px';
+  } else {
+    document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*4.8)))+'px';
+  }
+  document.getElementById('DivWeatherCurrent').style.left = (WinWid-Math.floor(RadarWid*0.85))+'px';
+  document.getElementById('DivWeatherCurrent').style.width = (Math.floor(RadarWid*0.8))+'px';
+  document.getElementById('DivWeatherCurrent').style.top = (Math.floor(RadarHgt*0.65))+'px';
+  document.getElementById('DivWeatherCurrent').style.height = (Math.floor(RadarHgt*0.6))+'px';
+  WeatherForecastTimer = 0;
+  WeatherCurrentTimer = 0;
+}
+
+function ShowDate() {
+  var SDdt = new Date();
+  var SDday = SDdt.getDate();
+  var SDdow = SDdt.getDay();
+  var SDmonth = SDdt.getMonth();
+  if (BGdata[BGcurr].BGshow.indexOf('D')>=0) {
+    if (BGdata[BGcurr].BGshow.indexOf('A')>=0) {
+      document.getElementById('DivDate').style.top = (WinHgt*0.65)+'px';
+      document.getElementById('SpanDate').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.10)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + " " + AbrvMon[SDmonth] + " " + SDday + '</span>';
+    } else {
+      document.getElementById('DivDate').style.top = (WinHgt*0.45)+'px';
+      document.getElementById('SpanDate').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.16)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + " " + AbrvMon[SDmonth] + " " + SDday + '</span>';
+    }
+  }
+}
+
+function AnalogSetup() {
+  document.getElementById('DivAnalog').innerHTML = '<canvas id="AnalogClock" width="'+WinWid+'" height="'+WinHgt+'" onClick="location.reload();"> </canvas>';
+  ClockCanvas = document.getElementById("AnalogClock");
+  ClockContext = ClockCanvas.getContext("2d");
+  if (! ClockContext) {
+    if (BGdata[BGcurr].BGshow.indexOf('A')>=0) { BGdata[BGcurr].BGshow = BGdata[BGcurr].BGshow.replace(/A/gi,'')+'C'; }
+  }
+}
+
+function ShowTime() {
+  var STdt=new Date();
+  STap="A";
+  STh=STdt.getHours();
+  HourCurr = STh;
+  STm=STdt.getMinutes();
+  STs=STdt.getSeconds();
+  if (STh>11) { STap = "P"; }
+  if (STh>12) { STh = STh-12; }
+  if (STh==0) { STh = 12; }
+  if (STm<10) { STm = "0" + STm; }
+  var TimeSizeMult = 0.40;
+  if (BGdata[BGcurr].BGshow.indexOf('C')>=0) {
+    document.getElementById('SpanTime').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*TimeSizeMult)+'px;" onClick="location.reload();">' + STh + '</span>' + ClockCursor + '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*TimeSizeMult)+'px;" onClick="location.reload();">' + STm + '</span><span style="font-size:'+Math.floor(WinMin*0.07)+'pt; color:'+ClockColor+'; margin-left:-4px; vertical-align:80%;">'+STap+'</span>';
+  }
+  if (BGdata[BGcurr].BGshow.indexOf('A')>=0) {
+    Math.TAU = 2 * Math.PI;
+    function ACdraw(ACtype, ACprogress, ACwidth, AClength) {
+      var ACrads = (Math.TAU * ACprogress) - (Math.TAU/4);
+      var ACtgtX = Math.floor((WinWid / 2) + Math.cos(ACrads) * (AClength * (WinMin/2)));
+      var ACtgtY = Math.floor((WinHgt / 2) + Math.sin(ACrads) * (AClength * (WinMin/2)));
+      var ACcolor = '#FF0000';
+      if (ACtype=='H') { ACcolor = '#88047A'; } // Hour  (was #40FFFF)
+      if (ACtype=='M') { ACcolor = '#88047A'; } // Minute  (was #FF00DE)
+      ClockContext.lineWidth = ACwidth;
+      ClockContext.beginPath();
+      ClockContext.moveTo((WinWid / 2), (WinHgt / 2));
+      ClockContext.lineTo(ACtgtX, ACtgtY);
+      ClockContext.strokeStyle = ACcolor;
+      ClockContext.stroke();
+      // Inner color.
+      if (ACtype!='S') {
+        ClockContext.lineWidth = ACwidth*0.6;
+        ClockContext.beginPath();
+        ClockContext.moveTo((WinWid / 2), (WinHgt / 2));
+        ClockContext.lineTo(ACtgtX, ACtgtY);
+        ClockContext.strokeStyle = ClockColor;
+        ClockContext.stroke();
+      }     
+    }     
+    ClockContext.clearRect(0, 0, ClockCanvas.width, ClockCanvas.height);
+    var ACtickLp, ACtickI, ACtickO, ACtickR, ACtickX1, ACtickX2, ACtickY1, ACtickY2;
+    for (ACtickLp=0; ACtickLp< 12; ACtickLp++) {
+      ACtickI = (ACtickLp % 3) ? 0.75 : 0.7;
+      ACtickO = (ACtickLp % 3) ? 0.95 : 1.0;
+      ACtickR = (Math.TAU * (ACtickLp/12)) - (Math.TAU/4);
+      ACtickX1 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickI * (WinMin/2));
+      ACtickY1 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickI * (WinMin/2));
+      ACtickX2 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickO * (WinMin/2));
+      ACtickY2 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickO * (WinMin/2));
+      ClockContext.lineWidth = (ACtickLp % 3) ? 4 : 10;
+      ClockContext.beginPath();
+      ClockContext.moveTo(ACtickX1, ACtickY1); // Start at the center
+      ClockContext.lineTo(ACtickX2, ACtickY2); // Draw a line outwards
+      ClockContext.strokeStyle = '#999999';
+      ClockContext.lineCap = 'round';
+      ClockContext.stroke();
+    }
+    ACdraw('H', (STh+(STm/60)) / 12, 36, 0.40); // Hour
+    ACdraw('M', STm / 60, 20, 0.75); // Minute
+    ACdraw('S', STs / 60, 4, 0.90); // Second
+    document.getElementById('DivAnalog').style.visibility='visible';
+  }
+}
+
+function DoUpd() {
+  ClockTimer -= MasterDur;
+  if (ClockTimer<1) {
+    ClockCursor = '<font style="visibility:';
+    if (ClockBlink>0) { ClockBlink = 0; ClockCursor += 'hidden'; } else { ClockBlink = 1; ClockCursor += 'visible'; }
+    ClockCursor += '; vertical-align:20%; margin-left:-5px; font-size:'+Math.floor(WinMin*0.19)+'pt; color:'+ClockColor+';" onClick="location.reload();">:</font>';
+    ShowTime();
+    ClockTimer = ClockDur;
+  }
+  if (HourCurr != HourPrev) {
+    HourPrev = HourCurr;
+    ShowMoon();
+    ShowDate();
+  }
+  if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
+    ShowMoon();
+    ShowDate();
+    ClockColorPrev = ClockColor;
+  }
+  RadarTimer -= MasterDur;
+  if (RadarTimer<1) {
+    NextRadar();
+  }
+  UpdBG();
+  WeatherForecastTimer -= MasterDur;
+  if (WeatherForecastTimer<1) {
+    WeatherForecastRequest();
+  }
+  WeatherCurrentTimer -= MasterDur;
+  if (WeatherCurrentTimer<1) {
+    WeatherCurrentRequest();
+  }
+  if (MasterTimer!=null) {
+    clearTimeout(MasterTimer);
+    MasterTimer = null;
+  }
+  MasterTimer = setTimeout('DoUpd()',MasterDur);
+}
+
+function DoSetup() {
+  WinWid = window.innerWidth && document.documentElement.clientWidth ? Math.min(window.innerWidth, document.documentElement.clientWidth) : window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth;
+  WinHgt = window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
+  WinMin = Math.min(WinWid,WinHgt);
+  WinMax = Math.max(WinWid,WinHgt);
+  RadarWid = Math.floor(WinWid/3);
+  RadarHgt = Math.floor(WinWid/3);
+  SetupSun();
+  if (BGdata[BGcurr].BGshow.indexOf('A')>=0) { AnalogSetup(); }
+  SetupRadar();
+  SetupBG();
+  DoUpd();
+  SetupWeather();
+  document.getElementById('DivAbout').style.top = (Math.round(WinHgt*.9))+'px';
+  document.getElementById('DivAbout').style.left = (Math.round(WinWid*.96))+'px';
+  document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
+  window.onresize = function(event) { HourPrev = -1; DoSetup(); }
+}
+
+function NextBG() {
+  BGcurr = (BGcurr+1) % BGdata.length;
+  if (haslocalstorage()) {
+    try { localStorage.setItem('BGcurr', BGcurr.toString()); }
+    catch (err) { }
+  }
+  location.reload();
+}
+
+function CheckKeypress(e) {
+  if (e.keyCode == 32) {
+    NextBG();
+  } else {
+    location.reload();
+  }
+}
+
+</script>
+</head>
+
+<body onLoad="DoSetup();" style="margin-top:0px; margin-left:0px; margin-bottom:0px; margin-right:0px;" bgColor='#000000'; onKeypress='CheckKeypress(event);'>
+
+<div style="position:relative; z-index:0; width:100%; height:100%; overflow:hidden;">
+
+<div style="position:absolute; z-index:1; left:0px; top:0px;" id="DivBG">
+<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>
+</div>
+
+<div style="position:absolute; z-index:2; left:0px; top:0px;" id="DivMoonImg"></div>
+<div style="position:absolute; z-index:3; left:0px; top:0px;" id="DivMoonStat"></div>
+<div style="position:absolute; z-index:4; left:0px; top:10px;" id="DivSunTimes"></div>
+
+<div style="position:absolute; z-index:5; left:0px; top:0px;" id="DivRadar"></div>
+
+<div style="position:absolute; z-index:6; left:0px; top:0px; visibility:hidden;" id="DivAnalog"></div>
+
+<div style="position:absolute; z-index:7; left:4px; top:0px;" id="DivWeatherForecast"></div>
+<div style="position:absolute; z-index:8; left:0px; top:0px;  text-align:right;" id="DivWeatherCurrent"></div>
+
+<div style="position:absolute; z-index:9; left:2px; top:-22px;" id="DivTime">
+<span id="SpanTime" style='font-family:Arial; color:#000000; text-decoration:bold; text-shadow:0px 0px 16px #FF00DE;'></span>
+</div>
+
+<div style="position:absolute; z-index:10; left:18px; top:0px;" id="DivDate">
+<span id="SpanDate" style='font-family:Arial; color:#000000; text-decoration:bold; text-shadow:0px 0px 16px #ff00de;'></span>
+</div>
+
+<div style="position:absolute; z-index:11; left:0px; top:0px;" id="DivBGdesc"></div>
+
+<div style="position:absolute; z-index:12; left:0px; top:0px;" id="DivAbout">
+<span id="SpanAbout" onClick="alert('iWall : At-a-glance info wall.  Shows time, date, weather, webcams and more.\n\nIdeal for constant-on picoprojected use, dedicated laptop or tablet.\n\nWorks best in Safari or Chrome (press F11 for Full Screen mode).  Speaks forecast on capable browsers.\n\nAndrewBedno.com');" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; text-shadow:0px 0px 14px #FFFFFF;"><b>?</b></span>
+</div>
+
+</div>
+
+<script language="JavaScript">
+// SunCalc.js - (c) 2011-2014, Vladimir Agafonkin * SunCalc is a JavaScript library for calculating sun/mooon position and light phases. * https://github.com/mourner/suncalc
+(function () { 'use strict';
+// shortcuts for easier to read formulas
+var PI   = Math.PI,
+    sin  = Math.sin,
+    cos  = Math.cos,
+    tan  = Math.tan,
+    asin = Math.asin,
+    atan = Math.atan2,
+    acos = Math.acos,
+    rad  = PI / 180;
+// sun calculations are based on http://aa.quae.nl/en/reken/zonpositie.html formulas
+// date/time constants and conversions
+var dayMs = 1000 * 60 * 60 * 24,
+    J1970 = 2440588,
+    J2000 = 2451545;
+function toJulian(date) { return date.valueOf() / dayMs - 0.5 + J1970; }
+function fromJulian(j)  { return new Date((j + 0.5 - J1970) * dayMs); }
+function toDays(date)   { return toJulian(date) - J2000; }
+// general calculations for position
+var e = rad * 23.4397; // obliquity of the Earth
+function rightAscension(l, b) { return atan(sin(l) * cos(e) - tan(b) * sin(e), cos(l)); }
+function declination(l, b)    { return asin(sin(b) * cos(e) + cos(b) * sin(e) * sin(l)); }
+function azimuth(H, phi, dec)  { return atan(sin(H), cos(H) * sin(phi) - tan(dec) * cos(phi)); }
+function altitude(H, phi, dec) { return asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(H)); }
+function siderealTime(d, lw) { return rad * (280.16 + 360.9856235 * d) - lw; }
+// general sun calculations
+function solarMeanAnomaly(d) { return rad * (357.5291 + 0.98560028 * d); }
+function eclipticLongitude(M) {
+    var C = rad * (1.9148 * sin(M) + 0.02 * sin(2 * M) + 0.0003 * sin(3 * M)), // equation of center
+        P = rad * 102.9372; // perihelion of the Earth
+    return M + C + P + PI;
+}
+function sunCoords(d) {
+    var M = solarMeanAnomaly(d),
+        L = eclipticLongitude(M);
+    return {
+        dec: declination(L, 0),
+        ra: rightAscension(L, 0)
+    };
+}
+var SunCalc = {};
+// calculates sun position for a given date and latitude/longitude
+SunCalc.getPosition = function (date, lat, lng) {
+    var lw  = rad * -lng,
+        phi = rad * lat,
+        d   = toDays(date),
+        c  = sunCoords(d),
+        H  = siderealTime(d, lw) - c.ra;
+    return {
+        azimuth: azimuth(H, phi, c.dec),
+        altitude: altitude(H, phi, c.dec)
+    };
+};
+// sun times configuration (angle, morning name, evening name)
+var times = SunCalc.times = [
+    [-0.833, 'sunrise',       'sunset'      ],
+    [  -0.3, 'sunriseEnd',    'sunsetStart' ],
+    [    -6, 'dawn',          'dusk'        ],
+    [   -12, 'nauticalDawn',  'nauticalDusk'],
+    [   -18, 'nightEnd',      'night'       ],
+    [     6, 'goldenHourEnd', 'goldenHour'  ]
+];
+// adds a custom time to the times config
+SunCalc.addTime = function (angle, riseName, setName) {
+    times.push([angle, riseName, setName]);
+};
+// calculations for sun times
+var J0 = 0.0009;
+function julianCycle(d, lw) { return Math.round(d - J0 - lw / (2 * PI)); }
+function approxTransit(Ht, lw, n) { return J0 + (Ht + lw) / (2 * PI) + n; }
+function solarTransitJ(ds, M, L)  { return J2000 + ds + 0.0053 * sin(M) - 0.0069 * sin(2 * L); }
+function hourAngle(h, phi, d) { return acos((sin(h) - sin(phi) * sin(d)) / (cos(phi) * cos(d))); }
+// returns set time for the given sun altitude
+function getSetJ(h, lw, phi, dec, n, M, L) {
+    var w = hourAngle(h, phi, dec),
+        a = approxTransit(w, lw, n);
+    return solarTransitJ(a, M, L);
+}
+// calculates sun times for a given date and latitude/longitude
+SunCalc.getTimes = function (date, lat, lng) {
+    var lw = rad * -lng,
+        phi = rad * lat,
+        d = toDays(date),
+        n = julianCycle(d, lw),
+        ds = approxTransit(0, lw, n),
+        M = solarMeanAnomaly(ds),
+        L = eclipticLongitude(M),
+        dec = declination(L, 0),
+        Jnoon = solarTransitJ(ds, M, L),
+        i, len, time, Jset, Jrise;
+    var result = {
+        solarNoon: fromJulian(Jnoon),
+        nadir: fromJulian(Jnoon - 0.5)
+    };
+    for (i = 0, len = times.length; i < len; i += 1) {
+        time = times[i];
+        Jset = getSetJ(time[0] * rad, lw, phi, dec, n, M, L);
+        Jrise = Jnoon - (Jset - Jnoon);
+        result[time[1]] = fromJulian(Jrise);
+        result[time[2]] = fromJulian(Jset);
+    }
+    return result;
+};
+// moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
+function moonCoords(d) { // geocentric ecliptic coordinates of the moon
+    var L = rad * (218.316 + 13.176396 * d), // ecliptic longitude
+        M = rad * (134.963 + 13.064993 * d), // mean anomaly
+        F = rad * (93.272 + 13.229350 * d),  // mean distance
+        l  = L + rad * 6.289 * sin(M), // longitude
+        b  = rad * 5.128 * sin(F),     // latitude
+        dt = 385001 - 20905 * cos(M);  // distance to the moon in km
+    return {
+        ra: rightAscension(l, b),
+        dec: declination(l, b),
+        dist: dt
+    };
+}
+SunCalc.getMoonPosition = function (date, lat, lng) {
+    var lw  = rad * -lng,
+        phi = rad * lat,
+        d   = toDays(date),
+        c = moonCoords(d),
+        H = siderealTime(d, lw) - c.ra,
+        h = altitude(H, phi, c.dec);
+    // altitude correction for refraction
+    h = h + rad * 0.017 / tan(h + rad * 10.26 / (h + rad * 5.10));
+    return {
+        azimuth: azimuth(H, phi, c.dec),
+        altitude: h,
+        distance: c.dist
+    };
+};
+// calculations for illumination parameters of the moon,
+// based on http://idlastro.gsfc.nasa.gov/ftp/pro/astro/mphase.pro formulas and
+// Chapter 48 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
+SunCalc.getMoonIllumination = function (date) {
+    var d = toDays(date),
+        s = sunCoords(d),
+        m = moonCoords(d),
+        sdist = 149598000, // distance from Earth to Sun in km
+        phi = acos(sin(s.dec) * sin(m.dec) + cos(s.dec) * cos(m.dec) * cos(s.ra - m.ra)),
+        inc = atan(sdist * sin(phi), m.dist - sdist * cos(phi)),
+        angle = atan(cos(s.dec) * sin(s.ra - m.ra), sin(s.dec) * cos(m.dec) -
+                cos(s.dec) * sin(m.dec) * cos(s.ra - m.ra));
+    return {
+        fraction: (1 + cos(inc)) / 2,
+        phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / Math.PI,
+        angle: angle
+    };
+};
+function hoursLater(date, h) {
+    return new Date(date.valueOf() + h * dayMs / 24);
+}
+// calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
+SunCalc.getMoonTimes = function (date, lat, lng) {
+    var t = new Date(date);
+    t.setHours(0);
+    t.setMinutes(0);
+    t.setSeconds(0);
+    t.setMilliseconds(0);
+    var hc = 0.133 * rad,
+        h0 = SunCalc.getMoonPosition(t, lat, lng).altitude - hc,
+        h1, h2, rise, set, a, b, xe, ye, d, roots, x1, x2, dx;
+    // go in 2-hour chunks, each time seeing if a 3-point quadratic curve crosses zero (which means rise or set)
+    for (var i = 1; i <= 24; i += 2) {
+        h1 = SunCalc.getMoonPosition(hoursLater(t, i), lat, lng).altitude - hc;
+        h2 = SunCalc.getMoonPosition(hoursLater(t, i + 1), lat, lng).altitude - hc;
+        a = (h0 + h2) / 2 - h1;
+        b = (h2 - h0) / 2;
+        xe = -b / (2 * a);
+        ye = (a * xe + b) * xe + h1;
+        d = b * b - 4 * a * h1;
+        roots = 0;
+        if (d >= 0) {
+            dx = Math.sqrt(d) / (Math.abs(a) * 2);
+            x1 = xe - dx;
+            x2 = xe + dx;
+            if (Math.abs(x1) <= 1) roots++;
+            if (Math.abs(x2) <= 1) roots++;
+            if (x1 < -1) x1 = x2;
+        }
+        if (roots === 1) {
+            if (h0 < 0) rise = i + x1;
+            else set = i + x1;
+        } else if (roots === 2) {
+            rise = i + (ye < 0 ? x2 : x1);
+            set = i + (ye < 0 ? x1 : x2);
+        }
+        if (rise && set) break;
+        h0 = h2;
+    }
+    var result = {};
+    if (rise) result.rise = hoursLater(t, rise);
+    if (set) result.set = hoursLater(t, set);
+    if (!rise && !set) result[ye > 0 ? 'alwaysUp' : 'alwaysDown'] = true;
+    return result;
+};
+// export as AMD module / Node module / browser variable
+if (typeof define === 'function' && define.amd) define(SunCalc);
+else if (typeof module !== 'undefined') module.exports = SunCalc;
+else window.SunCalc = SunCalc;
+}());
+</script>
+
+</body>
+</html>
