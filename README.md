@@ -1,5 +1,7 @@
 At-a-glance "InfoWall" display for personal use.
-Designed for constant on picoprojector, or any minimal PC, tablet, phone hardware.  Works best in Chrome; press F11 for Full Screen mode.
+
+Designed for constantly on picoprojector, or any minimal laptop or tablet.
+Works best in Chrome; press F11 for Full Screen mode.
 Automatically adjusts all elements to window size and rotation to maximize readability.
 Weather forecast uses "Wunderground" API.  Speaks the forecast on capable browsers.
 
