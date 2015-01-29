@@ -18,7 +18,7 @@
 var InfoZip = '60657';  // Zipcode of this installation.
 var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // Example: http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
 var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // Example: http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
-var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999';  // Detailed local forecast.  Substitute 
+var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Substitute 
 
 var WinWid, WinHgt;
 var WinMin, WinMax;
@@ -48,15 +48,15 @@ var WeatherHgtMult = 0.13;
 var WeatherCurrent = '';
 var WeatherCurrentIcon = '';
 var WeatherForecast = '';
-var WeatherForecastSpoken = '';
-var WeatherForecastDur = 42*60*1000;  // Update forecast every 42 minutes to minimize API calls.
+var WeatherForecastSpoken = [];
+var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
 var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
 var WeatherForecastTimer = 0;
 var WeatherCurrentTimer = 0;
 
 var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
 var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
-var MoonDiam = 80;
+var MoonDiam = 1/6;
 var HourPrev = -1;  var HourCurr = -1;
 
 var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
@@ -64,14 +64,15 @@ var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
 // BGshow = [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
 var BGdata = [
   { BGname:"WebCams", BGcode:"cam", BGshow:"CDFMW", BGslides: [
-    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg#{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg#{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://www.oakstbeach.com/", BGsrc:"http://205.178.49.123:8080/snapshot.cgi?user=guest&amp;pwd=password&amp;t=1421826844#{unq}", BGdesc:"Oak Street Beach", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://www.luc.edu/webcams/", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg#{unq}", BGdesc:"Loyola, Water Tower", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg#{unq}", BGdesc:"Daley Plaza", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://abc7chicago.com/weather/cams/columbiacam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg#{unq}", BGdesc:"Grant Park", BGdur:4000, BGzoom:1 },
-    { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg#{unq}", BGdesc:"Belmont Harbor", BGdur:4000, BGzoom:1 },
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg#{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg#{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://www.oakstbeach.com/", BGsrc:"http://205.178.49.123:8080/snapshot.cgi?user=guest&amp;pwd=password&amp;t=1421826844#{unq}", BGdesc:"Oak Street Beach", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://www.luc.edu/webcams/", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg#{unq}", BGdesc:"Loyola, Water Tower", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg#{unq}", BGdesc:"Daley Plaza", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/columbiacam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg#{unq}", BGdesc:"Grant Park", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg#{unq}", BGdesc:"Belmont Harbor", BGdur:5000, BGzoom:1 },
+    { BGlink:"http://abc7chicago.com/weather/cams/hancock-north/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg#{unq}", BGdesc:"Hancock North", BGdur:5000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
@@ -85,7 +86,7 @@ var BGdata = [
     { BGlink:"http://en.wikipedia.org/wiki/Nighthawks", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nighthawks_by_Edward_Hopper_1942.jpg/800px-Nighthawks_by_Edward_Hopper_1942.jpg", BGdesc:"Nighthawks, Edward Hopper, 1942", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/American_Gothic", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg/497px-Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg", BGdesc:"American Gothic, Grant Wood, 1930", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Paris_Street;_Rainy_Day", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg/792px-Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg", BGdesc:"Paris Street; Rainy Day, Gustave Caillebotte, 1877", BGdur:15000, BGzoom:1 },
-    { BGlink:"http://en.wikipedia.org/wiki/Paul_C%C3%A9zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/C%C3%A9zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-C%C3%A9zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Paul_CÃ©zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/CÃ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-CÃ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/6/67/A_Sunday_on_La_Grande_Jatte,_Georges_Seurat,_1884.png", BGdesc:"Sunday Afternoon on La Grande Jatte, Georges Seurat, 1884", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/The_Grand_Canal_in_Venice_from_Palazzo_Flangini_to_Campo_San_Marcuola", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg/800px-Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg", BGdesc:"The Grand Canal, Canaletto, 1738", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Vanitas", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/7/77/Adriaen_van_Utrecht-_Vanitas_-_Still_Life_with_Bouquet_and_Skull.JPG", BGdesc:"Vanitas, Adriaen van Utrecht, 1642", BGdur:15000, BGzoom:1 },
@@ -303,12 +304,12 @@ function ShowMoon() {
     MoonDaysToFull = (Math.floor(29.53*(0.5-MoonTimes.phase)));
   }
   if (BGdata[BGcurr].BGshow.indexOf('M')>=0) {
-    document.getElementById('DivMoonStat').style.top = ((MoonDiam/2)-28)+'px';
-    document.getElementById('DivMoonStat').style.left = (WinWid-(MoonDiam/2)-24)+'px';
+    document.getElementById('DivMoonStat').style.top = '12px';
+    document.getElementById('DivMoonStat').style.left = (WinWid-(WinMin*MoonDiam)+20)+'px';
     document.getElementById('DivMoonStat').innerHTML = '<span style="font-family:Arial; color:#FF40FF; font-size:32pt; text-shadow:0px 0px 16px #80FFFF;">'+MoonDaysToFull+'</span>';
-    document.getElementById('DivMoonImg').style.left = (WinWid-MoonDiam)+'px';
-    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/iwall/moon/moon'+(MoonPhase)+'.gif" height='+MoonDiam+' width='+MoonDiam+' border=0><br>'+WeatherCurrentIcon;
-    document.getElementById('DivSunTimes').style.left = (WinWid-MoonDiam-80)+'px';
+    document.getElementById('DivMoonImg').style.left = (WinWid-(WinMin*MoonDiam))+'px';
+    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/iwall/moon/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0><br>'+WeatherCurrentIcon;
+    document.getElementById('DivSunTimes').style.left = (WinWid-(WinMin*MoonDiam)-80)+'px';
     document.getElementById('DivSunTimes').innerHTML = '<span style="font-family:Arial; color:#FFFF00; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunRise+'</span><font size=0><br></font><span style="font-family:Arial; color:#FF8000; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunSet+'</span>';
   }
 }
@@ -352,7 +353,7 @@ function SetupRadar() {
   }
 }
 
-function SpeakForecast() {
+function SpeakForecast(WFSnum) {
   if ('speechSynthesis' in window) {
     var SFmsg = new SpeechSynthesisUtterance();
     // var SFvoices = window.speechSynthesis.getVoices();
@@ -362,7 +363,7 @@ function SpeakForecast() {
     SFmsg.rate = .23; // 0.1 to 10
     SFmsg.pitch = 1; //0 to 2
     SFmsg.lang = 'en-US';
-    SFmsg.text = WeatherForecastSpoken;
+    SFmsg.text = WeatherForecastSpoken[WFSnum];
     window.speechSynthesis.speak(SFmsg);
   }
 }
@@ -374,45 +375,49 @@ function WeatherForecastReceive() {
     var FWFread = WeatherForecastHandle.responseText;
     try {
       var FWFrec = JSON.parse(FWFread);
+      function WFspokenPrep(WFSnum) {
+        WeatherForecastSpoken[WFSnum] = FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['date']['weekday']+" ";
+        WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit']+". ";
+        WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['txt_forecast']['forecastday'][WFSnum]['fcttext'];
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].toUpperCase();
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])F/gi,"$1");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])E([^A-Z0-9])/gi,"$1EAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])W([^A-Z0-9])/gi,"$1WEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])N([^A-Z0-9])/gi,"$1NORTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])S([^A-Z0-9])/gi,"$1SOUTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
+      }
       for (var FWFlp=0; FWFlp<2; FWFlp++) {
+        if ('speechSynthesis' in window) {
+          WeatherForecast += '<a href="JavaScript:SpeakForecast('+FWFlp+');" title="Speak the forecast." target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">';
+        } else {
+          WeatherForecast += '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
+        }
         WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor((WinHgt/ForecastRows)*0.8))+'" border=0>';
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+" ";
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit']+"-";
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']+"\n";
-        WeatherForecast += FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext']+"\n";
+        WeatherForecast += FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext']+"</a>\n";
+        WFspokenPrep(FWFlp);
       }
-      WeatherForecastSpoken = FWFrec['forecast']['simpleforecast']['forecastday'][0]['date']['weekday']+" ";
-      WeatherForecastSpoken += FWFrec['forecast']['simpleforecast']['forecastday'][0]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit']+". ";
-      WeatherForecastSpoken += FWFrec['forecast']['txt_forecast']['forecastday'][0]['fcttext'];
-      WeatherForecastSpoken = WeatherForecastSpoken.toUpperCase();
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([0-9])s([^A-Z0-9])/gi,"$1$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([0-9])F/gi,"$1");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])E([^A-Z0-9])/gi,"$1EAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])W([^A-Z0-9])/gi,"$1WEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])N([^A-Z0-9])/gi,"$1NORTH$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])S([^A-Z0-9])/gi,"$1SOUTH$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-      WeatherForecastSpoken = WeatherForecastSpoken.replace(/MPH/gi,"");
     } catch (err) {
       WeatherForecast = '<font size=2>Weather forecast is not available on this browser.</font>';
     }
     if (BGdata[BGcurr].BGshow.indexOf('F')>=0) {
-      if ('speechSynthesis' in window) {
-        document.getElementById('DivWeatherForecast').innerHTML = '<a href="JavaScript:SpeakForecast();" title="Speak the forecast." target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
-      } else {
-        document.getElementById('DivWeatherForecast').innerHTML = '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+(Math.floor(WinHgt/ForecastRows))+'px; line-height:'+(Math.floor((WinHgt/ForecastRows)*ForecastRowsHgt))+'px; text-decoration:none; color:'+ForecastColor+'; text-shadow:0px 0px 22px #0004B2;">'+WeatherForecast+'</a>';
-      }
+      document.getElementById('DivWeatherForecast').innerHTML = WeatherForecast;
     }
   }
 }
@@ -505,9 +510,7 @@ function WeatherCurrentReceive() {
       WeatherCurrent = '';
     }
     if (BGdata[BGcurr].BGshow.indexOf('W')>=0) {
-      var WeatherURLeff = WeatherURL;
-      if ('speechSynthesis' in window) { WeatherURLeff = 'JavaScript:SpeakForecast();' }
-      var FWCout = '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
+      var FWCout = '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
       if (BGdata[BGcurr].BGshow.indexOf('F')<0) {
         document.getElementById('DivWeatherForecast').innerHTML = FWCout;
       } else {
