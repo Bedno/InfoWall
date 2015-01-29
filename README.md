@@ -1,4 +1,4 @@
-At-a-glance "InfoWall" display for personal use.
+At-a-glance Info Wall display for personal use.  Shows time/date, weather, forecast, radar, webcams and more.
 
 Designed for constantly on picoprojector, or any minimal laptop or tablet.
 Works best in Chrome; press F11 for Full Screen mode.
