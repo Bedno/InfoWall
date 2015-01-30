@@ -16,3 +16,4 @@ NEXT PLANNED ENHANCEMENTS:
 1. Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
 2. Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce  network activity.
   
+Incorporates SunCalc.js by Vladimir Agafonkin https://github.com/mourner/suncalc
