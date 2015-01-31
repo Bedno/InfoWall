@@ -387,7 +387,6 @@ function SpeakForecast(WFSnum) {
     SFmsg.pitch = 1; //0 to 2
     SFmsg.lang = 'en-US';
     SFmsg.text = WeatherForecastSpoken[WFSnum];
-    alert(SFmsg.text);
     window.speechSynthesis.speak(SFmsg);
   }
 }
