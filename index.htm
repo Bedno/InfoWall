@@ -3,67 +3,42 @@
 <title>iWall</title>
 
 <script language="JavaScript">
-// At-a-glance "InfoWall" display for personal use.
-// Designed for constant on picoprojector, or any minimal PC, tablet, phone hardware.  Works best in Chrome; press F11 for Full Screen mode.
+// At-a-glance personal "InfoWall" shows time, date, weather, webcams, more..
+// Ideal for constant-on picoprojected use, dedicated laptop or tablet.  Works best in Chrome; press F11 for Full Screen mode.
 // Automatically adjusts all elements to window size and rotation to maximize readability.
-// Weather forecast uses "Wunderground" API.  Speaks the forecast on capable browsers.
-// Demonstrates a number of greate Javascript tricks:
+// Weather forecast uses Wunderground.com API.  Speaks the forecast on capable browsers.
+// Demonstrates a number of advanced Javascript techniques:
 //    Canvas element and drawing.  Analog clock.
 //    Text to speech.  JSON fetch and parse.  Weather API use.
 //    Structured array constant.  Querystring reading.  Use of localstorage.
 //    Responsive auto-formatting.  Keypress handling.
 //    Sun/Moon calculations.  Master updater using timer.
 
-// Configure WeatherUnderground URLs below.  See http://www.wunderground.com/weather/api/
-var InfoZip = '60657';  // Zipcode of this installation.
-var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // Example: http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
-var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // Example: http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
-var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Substitute 
+// CONFIGURABLES:
 
-var WinWid, WinHgt;
-var WinMin, WinMax;
+// Configure Wunderground.com (Weather Underground) aspects below.  See http://www.wunderground.com/weather/api/
+var InfoZip = '60657';  // Zipcode of this installation.  60657=Chicago
+var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this installation.  41.94637,-87.64519=Chicago
+var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
+// Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
+var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
+var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
-var MasterDur = 500;
-var MasterTimer = null;
-
-var SunRise = '';
-var SunSet = '';
-var StartDay = 7;
-var StartNight = 19;
-var ClockDay = '#40FFFF';
-var ClockNight = '#FFFFFF';
-var ClockColor = ClockDay;  var ClockColorPrev = ClockColor;
-var ClockCursor = '';  var ClockBlink = 0;
-var ClockDur = MasterDur;  var ClockTimer = 0;
-var ClockCanvas, ClockContext;
-
-var RadarWid, RadarHgt;
-var RadarIdx = -1;
-var RadarTimer = -1;
-
-var ForecastRows = 14;
-var ForecastRowsHgt = 0.82;
-var ForecastColor = '#FFE3E3';
-var WeatherHgtMult = 0.13;
-var WeatherCurrent = '';
-var WeatherCurrentIcon = '';
-var WeatherForecast = '';
-var WeatherForecastSpoken = [];
+var ClockDay = '#40FFFF';  // Daytime color of time/date.
+var ClockNight = '#FFFFFF';  // Nighttime color of time/date.
+var StartDay = 7;  // Starting hour (0-23) of daytime clock color.
+var StartNight = 19;  // Starting hour (0-23) of nighttime clock color.
+var ForecastColor = '#FFE3E3';  // Forecast text color.
 var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
 var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
-var WeatherForecastTimer = 0;
-var WeatherCurrentTimer = 0;
+var ForecastRows = 14;  // Forecast text sizing...
+var ForecastRowsHgt = 0.82;
+var WeatherHgtMult = 0.13;
+var MoonDiam = 1/6;  // Relative size of the displayed moon.
 
-var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
-var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
-var MoonDiam = 1/6;
-var HourPrev = -1;  var HourCurr = -1;
-
-var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
-
-// BGshow = [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
-var BGdata = [
-  { BGname:"WebCams", BGcode:"cam", BGshow:"CDFMW", BGslides: [
+// BACKGROUNDS and STYLING
+var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
+  { BGcode:"cam", BGshow:"CDFMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL 600-1200px wide.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers)
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:5000, BGzoom:1 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg#{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:5000, BGzoom:1 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg#{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:5000, BGzoom:1 },
@@ -76,17 +51,20 @@ var BGdata = [
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:2000, BGzoom:1 } ] },
-  { BGname:"Wrigley", BGcode:"wrig", BGshow:"CDFMRW", BGslides: [
-    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 } ] },
-  { BGname:"Art", BGcode:"art", BGshow:"ADMSW", BGslides: [
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+  { BGcode:"wrigley", BGshow:"CDFMRW", BGslides: [
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigleyville, Clark and Addison", BGdur:2000, BGzoom:1 } ] },
+  { BGcode:"art", BGshow:"ADMSW", BGslides: [
     { BGlink:"http://en.wikipedia.org/wiki/Mona_Lisa", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg/402px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg", BGdesc:"Mona Lisa, Leonardo da Vinci, 1506", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Nighthawks", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nighthawks_by_Edward_Hopper_1942.jpg/800px-Nighthawks_by_Edward_Hopper_1942.jpg", BGdesc:"Nighthawks, Edward Hopper, 1942", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/American_Gothic", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg/497px-Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg", BGdesc:"American Gothic, Grant Wood, 1930", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Paris_Street;_Rainy_Day", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg/792px-Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg", BGdesc:"Paris Street; Rainy Day, Gustave Caillebotte, 1877", BGdur:15000, BGzoom:1 },
-    { BGlink:"http://en.wikipedia.org/wiki/Paul_CÃ©zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/CÃ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-CÃ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
+    { BGlink:"http://en.wikipedia.org/wiki/Paul_CÃƒÂ©zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/CÃƒÂ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-CÃƒÂ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/6/67/A_Sunday_on_La_Grande_Jatte,_Georges_Seurat,_1884.png", BGdesc:"Sunday Afternoon on La Grande Jatte, Georges Seurat, 1884", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/The_Grand_Canal_in_Venice_from_Palazzo_Flangini_to_Campo_San_Marcuola", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg/800px-Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg", BGdesc:"The Grand Canal, Canaletto, 1738", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Vanitas", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/7/77/Adriaen_van_Utrecht-_Vanitas_-_Still_Life_with_Bouquet_and_Skull.JPG", BGdesc:"Vanitas, Adriaen van Utrecht, 1642", BGdur:15000, BGzoom:1 },
@@ -101,7 +79,7 @@ var BGdata = [
     { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=135937", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=135937", BGdesc:"Green Wheat Fields, Vincent van Gogh, 1853", BGdur:15000, BGzoom:1 },
     { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=21816", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=21816", BGdesc:"Woman Holding a Balance, Johannes Vermeer, 1664", BGdur:15000, BGzoom:1 },
     { BGlink:"http://images.nga.gov/en/asset/show_zoom_window_popup.html?asset=45785", BGsrc:"http://images.nga.gov/?service=asset&action=show_preview&asset=45785", BGdesc:"Self-Portrait, Paul Gauguin, 1848", BGdur:15000, BGzoom:1 } ] },
-  { BGname:"Zoom", BGcode:"zoom", BGshow:"CD", BGslides: [
+  { BGcode:"zoom", BGshow:"CD", BGslides: [
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:2000, BGzoom:1 },
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1500, BGzoom:3 },
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:6 },
@@ -190,7 +168,7 @@ var BGdata = [
     { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1 },
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:6 },
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:3 } ] },
-  { BGname:"Radar", BGcode:"radar", BGshow:"CDFMW", BGslides: [
+  { BGcode:"radar", BGshow:"CDFMW", BGslides: [
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:3000, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer9.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer8.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
@@ -201,7 +179,7 @@ var BGdata = [
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer2.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer1.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
-  { BGname:"Cats", BGcode:"cats", BGshow:"CDFMSW", BGslides: [
+  { BGcode:"cats", BGshow:"CDFMSW", BGslides: [
     { BGsrc:"http://i.pbase.com/o4/89/178289/1/62514812.SZWbPwC1.PICT0024vivitarportrait.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
     { BGsrc:"http://i.pbase.com/u18/minoltaman/upload/36084631.718stockcatscalico.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
     { BGsrc:"http://i.pbase.com/u32/minoltaman/upload/22307525.leothelion08.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
@@ -212,6 +190,31 @@ var BGdata = [
     { BGsrc:"http://i.pbase.com/u48/minoltaman/upload/30640384.9341wastedoncatnip.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 } ] }
   ];
 
+// GLOBALS
+var MasterDur = 500;  // Master update frequency.  All timers and durations are in milliseconds.  500=half second.
+var MasterTimer = null;
+var WinWid, WinHgt, WinMin, WinMax;
+var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
+
+var SunRise = '';  var SunSet = '';
+var ClockColor = ClockDay;  var ClockColorPrev = ClockColor;
+var ClockCursor = '';  var ClockBlink = 0;
+var ClockDur = MasterDur;  var ClockTimer = 0;
+var ClockCanvas, ClockContext;
+var HourPrev = -1;  var HourCurr = -1;
+var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
+var WeatherCurrent = '';
+var WeatherCurrentIcon = '';
+var WeatherForecast = '';
+var WeatherForecastSpoken = [];
+var WeatherForecastTimer = 0;
+var WeatherCurrentTimer = 0;
+var RadarWid, RadarHgt;
+var RadarIdx = -1;
+var RadarTimer = -1;
+
+// Remember user's BG selection.
 function haslocalstorage() { try { return 'localStorage' in window && window['localStorage'] !== null; } catch(e){ return false; } }
 // Recall current BG from local storage.
 if (haslocalstorage()) {
@@ -223,22 +226,24 @@ if (haslocalstorage()) {
   } catch (err) {
   }
 }
-// Optionally set BG from URL.
+// Optionally set BG from URL using parameter like ?n=<code>
 for (var ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
-  if (location.href.indexOf(BGdata[ArgLp].BGcode)>=0) { BGcurr = ArgLp; };
+  if (location.href.indexOf('='+BGdata[ArgLp].BGcode)>=0) { BGcurr = ArgLp; };
 }
-
+// Save current BG in case overriden from URL.
 if (haslocalstorage()) {
   try { localStorage.setItem('BGcurr', BGcurr.toString()); }
   catch (err) {
   }
 }
 
+// Used to force non-caching of webcam images.
 function UnqArg () {
   var UAdt=new Date();
   return(''+UAdt.getYear()+''+(UAdt.getMonth()+1)+''+UAdt.getDate()+''+UAdt.getHours()+''+UAdt.getMinutes()+''+UAdt.getSeconds()+'');
 }
 
+// Configure particulars of current BG.
 function SetupBG() {
   if (BGdata[BGcurr].BGshow.indexOf('C')<0) {
     document.getElementById('SpanTime').style.visibility='hidden';
@@ -267,6 +272,17 @@ function SetupBG() {
   RadarTimer = -1;  BGtimer = -1;
 }
 
+// Increment to next BG on user keypress or click.
+function NextBG() {
+  BGcurr = (BGcurr+1) % BGdata.length;
+  if (haslocalstorage()) {
+    try { localStorage.setItem('BGcurr', BGcurr.toString()); }
+    catch (err) { }
+  }
+  location.reload();
+}
+
+// Background update handler.  Sequences through slides.
 function UpdBG() {
   var ImgSrc = '';
   if (BGtimer < MasterDur) {
@@ -293,6 +309,7 @@ function UpdBG() {
   }
 }
 
+// Show the moon in current phase.
 function ShowMoon() {
   SetupSun();
   var MoonTimes = SunCalc.getMoonIllumination(new Date());
@@ -308,15 +325,17 @@ function ShowMoon() {
     document.getElementById('DivMoonStat').style.left = (WinWid-(WinMin*MoonDiam)+20)+'px';
     document.getElementById('DivMoonStat').innerHTML = '<span style="font-family:Arial; color:#FF40FF; font-size:32pt; text-shadow:0px 0px 16px #80FFFF;">'+MoonDaysToFull+'</span>';
     document.getElementById('DivMoonImg').style.left = (WinWid-(WinMin*MoonDiam))+'px';
-    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/iwall/moon/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0><br>'+WeatherCurrentIcon;
+    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0><br>'+WeatherCurrentIcon;
     document.getElementById('DivSunTimes').style.left = (WinWid-(WinMin*MoonDiam)-80)+'px';
     document.getElementById('DivSunTimes').innerHTML = '<span style="font-family:Arial; color:#FFFF00; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunRise+'</span><font size=0><br></font><span style="font-family:Arial; color:#FF8000; font-size:22pt; font-decoration:bold; text-shadow:0px 0px 18px #80FFFF;">'+SunSet+'</span>';
   }
 }
+
+// Fetch sunrise/set times and moon phase.  Set clock color.
 function SetupSun() {
   var SSdt=new Date();
   SSh=SSdt.getHours();
-  var SunTimes = SunCalc.getTimes(new Date(), 41.94637, -87.64519);
+  var SunTimes = SunCalc.getTimes(new Date(), InfoLat, InfoLon);
   if (SunTimes.sunrise.getHours()<1) { SunRise = '12'; }
   if (SunTimes.sunrise.getHours()>12) { SunRise = ''+(SunTimes.sunrise.getHours()-12); } else { SunRise = ''+SunTimes.sunrise.getHours(); }
   if (SunTimes.sunrise.getMinutes()<10) { SunRise += ':0'+SunTimes.sunrise.getMinutes(); } else { SunRise += ':'+SunTimes.sunrise.getMinutes(); }
@@ -330,6 +349,7 @@ function SetupSun() {
   if ( (SSh >= SunUp) && (SSh < SunDown) ) { ClockColor = ClockDay; } else { ClockColor = ClockNight; }
 }
 
+// Handle frame sequencing for inset radar.
 function NextRadar() {
   if (BGdata[BGcurr].BGshow.indexOf('R')>=0) {
     if (RadarIdx>=0) {
@@ -343,6 +363,8 @@ function NextRadar() {
     RadarIdx = (RadarIdx+1) % 10;
   }
 }
+
+// Configure location and visibility of radar inset.
 function SetupRadar() {
   document.getElementById('DivRadar').style.top = (-2)+'px';
   document.getElementById('DivRadar').style.left = (WinWid-RadarWid+2)+'px';
@@ -353,6 +375,7 @@ function SetupRadar() {
   }
 }
 
+// Speak the weather forecast on capable browsers (including Chrome and Safari)
 function SpeakForecast(WFSnum) {
   if ('speechSynthesis' in window) {
     var SFmsg = new SpeechSynthesisUtterance();
@@ -364,10 +387,12 @@ function SpeakForecast(WFSnum) {
     SFmsg.pitch = 1; //0 to 2
     SFmsg.lang = 'en-US';
     SFmsg.text = WeatherForecastSpoken[WFSnum];
+    alert(SFmsg.text);
     window.speechSynthesis.speak(SFmsg);
   }
 }
 
+// Asynchronous receive and parse of JSON response to weather forecast query (on capable browsers).  Current supports only Wunderground.com format.
 var WeatherForecastHandle = false;
 function WeatherForecastReceive() {
   WeatherForecast = '';
@@ -380,24 +405,24 @@ function WeatherForecastReceive() {
         WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit']+". ";
         WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['txt_forecast']['forecastday'][WFSnum]['fcttext'];
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].toUpperCase();
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1\'s$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])F/gi,"$1");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])E([^A-Z0-9])/gi,"$1EAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])W([^A-Z0-9])/gi,"$1WEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])N([^A-Z0-9])/gi,"$1NORTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])S([^A-Z0-9])/gi,"$1SOUTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])E([^A-Z0-9])/gi,"$1EAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])W([^A-Z0-9])/gi,"$1WEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])N([^A-Z0-9])/gi,"$1NORTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])S([^A-Z0-9])/gi,"$1SOUTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
       }
       for (var FWFlp=0; FWFlp<2; FWFlp++) {
@@ -421,6 +446,7 @@ function WeatherForecastReceive() {
     }
   }
 }
+// Request weather forecast on capable browsers.
 function WeatherForecastRequest() {
   try {
     WeatherForecastHandle = new XMLHttpRequest();
@@ -451,6 +477,7 @@ function WeatherForecastRequest() {
   WeatherForecastTimer = WeatherForecastDur;
 }
 
+// Asynchronous receive and parse of JSON response to weather current conditions query (on capable browsers).  Current supports only Wunderground.com format.
 var WeatherCurrentHandle = false;
 function WeatherCurrentReceive() {
   if ( (WeatherCurrentHandle.readyState==4) && (WeatherCurrentHandle.status==200) ) {
@@ -520,6 +547,7 @@ function WeatherCurrentReceive() {
     ShowMoon();
   }
 }
+// Request weather current conditions on capable browsers.
 function WeatherCurrentRequest() {
   try {
     WeatherCurrentHandle = new XMLHttpRequest();
@@ -548,6 +576,7 @@ function WeatherCurrentRequest() {
   WeatherCurrentTimer = WeatherCurrentDur;
 }
 
+// Setup weather display areas.
 function SetupWeather() {
   if ( (BGdata[BGcurr].BGshow.indexOf('F')<0) && (BGdata[BGcurr].BGshow.indexOf('W')>=0) ) {
     document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*3)))+'px';
@@ -563,6 +592,7 @@ function SetupWeather() {
   WeatherCurrentTimer = 0;
 }
 
+// Display the date.
 function ShowDate() {
   var SDdt = new Date();
   var SDday = SDdt.getDate();
@@ -579,6 +609,7 @@ function ShowDate() {
   }
 }
 
+// Setup analog clock.
 function AnalogSetup() {
   document.getElementById('DivAnalog').innerHTML = '<canvas id="AnalogClock" width="'+WinWid+'" height="'+WinHgt+'" onClick="location.reload();"> </canvas>';
   ClockCanvas = document.getElementById("AnalogClock");
@@ -588,6 +619,7 @@ function AnalogSetup() {
   }
 }
 
+// Display the time (includes both digitial and analog versions).
 function ShowTime() {
   var STdt=new Date();
   STap="A";
@@ -605,6 +637,7 @@ function ShowTime() {
   }
   if (BGdata[BGcurr].BGshow.indexOf('A')>=0) {
     Math.TAU = 2 * Math.PI;
+    // Function for drawing hands.
     function ACdraw(ACtype, ACprogress, ACwidth, AClength) {
       var ACrads = (Math.TAU * ACprogress) - (Math.TAU/4);
       var ACtgtX = Math.floor((WinWid / 2) + Math.cos(ACrads) * (AClength * (WinMin/2)));
@@ -626,9 +659,11 @@ function ShowTime() {
         ClockContext.lineTo(ACtgtX, ACtgtY);
         ClockContext.strokeStyle = ClockColor;
         ClockContext.stroke();
-      }     
-    }     
+      }
+    }
+    // Clears and redraws whole every refresh.  Sloppy but simpe approach.
     ClockContext.clearRect(0, 0, ClockCanvas.width, ClockCanvas.height);
+    // Draw clock outline and ticks.
     var ACtickLp, ACtickI, ACtickO, ACtickR, ACtickX1, ACtickX2, ACtickY1, ACtickY2;
     for (ACtickLp=0; ACtickLp< 12; ACtickLp++) {
       ACtickI = (ACtickLp % 3) ? 0.75 : 0.7;
@@ -640,12 +675,13 @@ function ShowTime() {
       ACtickY2 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickO * (WinMin/2));
       ClockContext.lineWidth = (ACtickLp % 3) ? 4 : 10;
       ClockContext.beginPath();
-      ClockContext.moveTo(ACtickX1, ACtickY1); // Start at the center
-      ClockContext.lineTo(ACtickX2, ACtickY2); // Draw a line outwards
+      ClockContext.moveTo(ACtickX1, ACtickY1);
+      ClockContext.lineTo(ACtickX2, ACtickY2);
       ClockContext.strokeStyle = '#999999';
       ClockContext.lineCap = 'round';
       ClockContext.stroke();
     }
+    // Render clock hands.
     ACdraw('H', (STh+(STm/60)) / 12, 36, 0.40); // Hour
     ACdraw('M', STm / 60, 20, 0.75); // Minute
     ACdraw('S', STs / 60, 4, 0.90); // Second
@@ -653,6 +689,7 @@ function ShowTime() {
   }
 }
 
+// Master update handler.  Uses a single timer.
 function DoUpd() {
   ClockTimer -= MasterDur;
   if (ClockTimer<1) {
@@ -692,6 +729,7 @@ function DoUpd() {
   MasterTimer = setTimeout('DoUpd()',MasterDur);
 }
 
+// Main setup.  Also on resize.
 function DoSetup() {
   WinWid = window.innerWidth && document.documentElement.clientWidth ? Math.min(window.innerWidth, document.documentElement.clientWidth) : window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth;
   WinHgt = window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
@@ -711,15 +749,7 @@ function DoSetup() {
   window.onresize = function(event) { HourPrev = -1; DoSetup(); }
 }
 
-function NextBG() {
-  BGcurr = (BGcurr+1) % BGdata.length;
-  if (haslocalstorage()) {
-    try { localStorage.setItem('BGcurr', BGcurr.toString()); }
-    catch (err) { }
-  }
-  location.reload();
-}
-
+// Handle user keypress.  Used in body tag to catch all.
 function CheckKeypress(e) {
   if (e.keyCode == 32) {
     NextBG();
@@ -761,7 +791,7 @@ function CheckKeypress(e) {
 <div style="position:absolute; z-index:11; left:0px; top:0px;" id="DivBGdesc"></div>
 
 <div style="position:absolute; z-index:12; left:0px; top:0px;" id="DivAbout">
-<span id="SpanAbout" onClick="alert('iWall : At-a-glance info wall.  Shows time, date, weather, webcams and more.\n\nIdeal for constant-on picoprojected use, dedicated laptop or tablet.\n\nWorks best in Safari or Chrome (press F11 for Full Screen mode).  Speaks forecast on capable browsers.\n\nAndrewBedno.com');" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; text-shadow:0px 0px 14px #FFFFFF;"><b>?</b></span>
+<span id="SpanAbout" onClick="alert('iWall : At-a-glance personal info wall.  Shows time, date, weather, webcams, more.\n\nIdeal for constant-on picoprojected use, dedicated laptop or tablet.\n\nWorks best in Safari or Chrome (F11 for Full Screen).  Tap forecast to speak on capable browsers.  Press SPACE for next background.\n\nAndrewBedno.com');" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; text-shadow:0px 0px 14px #FFFFFF;"><b>?</b></span>
 </div>
 
 </div>
