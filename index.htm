@@ -3,7 +3,7 @@
 <title>iWall</title>
 
 <script language="JavaScript">
-// At-a-glance personal "InfoWall" shows time, date, weather, webcams, more..
+// At-a-glance personal Info Wall shows time, date, weather, webcams, more.
 // Ideal for constant-on picoprojected use, dedicated laptop or tablet.  Works best in Chrome; press F11 for Full Screen mode.
 // Automatically adjusts all elements to window size and rotation to maximize readability.
 // Weather forecast uses Wunderground.com API.  Speaks the forecast on capable browsers.
@@ -23,6 +23,9 @@ var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?qu
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
 var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
 var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+// Local radar details link and sequenced (0:new..9:old) img src jpeg base:
+var RadarURLdetails = 'http://www.myfoxchicago.com/weather';
+var RadarURLsrc = 'http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer';
 
 var ClockDay = '#40FFFF';  // Daytime color of time/date.
 var ClockNight = '#FFFFFF';  // Nighttime color of time/date.
@@ -51,12 +54,12 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+    { BGlink:WeatherURL, BGsrc:"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
   { BGcode:"wrigley", BGshow:"CDFMRW", BGslides: [
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigleyville, Clark and Addison", BGdur:2000, BGzoom:1 } ] },
   { BGcode:"art", BGshow:"ADMSW", BGslides: [
@@ -64,7 +67,6 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://en.wikipedia.org/wiki/Nighthawks", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nighthawks_by_Edward_Hopper_1942.jpg/800px-Nighthawks_by_Edward_Hopper_1942.jpg", BGdesc:"Nighthawks, Edward Hopper, 1942", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/American_Gothic", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg/497px-Grant_Wood_-_American_Gothic_-_Google_Art_Project.jpg", BGdesc:"American Gothic, Grant Wood, 1930", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Paris_Street;_Rainy_Day", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg/792px-Gustave_Caillebotte_-_Paris_Street;_Rainy_Day_-_Google_Art_Project.jpg", BGdesc:"Paris Street; Rainy Day, Gustave Caillebotte, 1877", BGdur:15000, BGzoom:1 },
-    { BGlink:"http://en.wikipedia.org/wiki/Paul_CÃƒÂ©zanne", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/CÃƒÂ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg/800px-CÃƒÂ©zanne,_Paul_-_Still_Life_with_a_Curtain.jpg", BGdesc:"Still Life with a Curtain, Paul C&eacute;zanne, 1895", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/A_Sunday_Afternoon_on_the_Island_of_La_Grande_Jatte", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/6/67/A_Sunday_on_La_Grande_Jatte,_Georges_Seurat,_1884.png", BGdesc:"Sunday Afternoon on La Grande Jatte, Georges Seurat, 1884", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/The_Grand_Canal_in_Venice_from_Palazzo_Flangini_to_Campo_San_Marcuola", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg/800px-Canaletto_Grand_Canal_from_Palazzo_Flangini_-_JPGM.jpg", BGdesc:"The Grand Canal, Canaletto, 1738", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Vanitas", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/7/77/Adriaen_van_Utrecht-_Vanitas_-_Still_Life_with_Bouquet_and_Skull.JPG", BGdesc:"Vanitas, Adriaen van Utrecht, 1642", BGdur:15000, BGzoom:1 },
@@ -169,16 +171,16 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:6 },
     { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:1000, BGzoom:3 } ] },
   { BGcode:"radar", BGshow:"CDFMW", BGslides: [
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:3000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer9.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer8.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer7.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer2.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer1.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:3000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"9.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"8.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"7.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"4.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"2.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"1.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
   { BGcode:"cats", BGshow:"CDFMSW", BGslides: [
     { BGsrc:"http://i.pbase.com/o4/89/178289/1/62514812.SZWbPwC1.PICT0024vivitarportrait.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
     { BGsrc:"http://i.pbase.com/u18/minoltaman/upload/36084631.718stockcatscalico.jpg", BGlink:"http://www.pbase.com/minoltaman/great_cats&page=all", BGdesc:"Cats", BGdur:13000, BGzoom:1 },
@@ -354,7 +356,7 @@ function NextRadar() {
   if (BGdata[BGcurr].BGshow.indexOf('R')>=0) {
     if (RadarIdx>=0) {
       document.getElementById('RadarImg').style.visibility='visible';
-      document.getElementById('RadarImg').src = "http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer"+(9-RadarIdx)+'.jpeg#'+UnqArg();
+      document.getElementById('RadarImg').src = RadarURLsrc+(9-RadarIdx)+'.jpeg#'+UnqArg();
       RadarTimer = 1500;
     } else {
       document.getElementById('RadarImg').style.visibility='hidden';
@@ -368,10 +370,11 @@ function NextRadar() {
 function SetupRadar() {
   document.getElementById('DivRadar').style.top = (-2)+'px';
   document.getElementById('DivRadar').style.left = (WinWid-RadarWid+2)+'px';
-  document.getElementById('DivRadar').innerHTML = '<a href="http://www.myfoxchicago.com/weather" target="weather"><img src="" id="RadarImg" width='+RadarWid+' height='+RadarHgt+' onMouseover="this.width='+(RadarWid*2)+';this.height='+(RadarHgt*2)+';" onMouseout="this.width='+RadarWid+';this.height='+RadarHgt+';" style="border-radius:25px;" border=0></a>';
+  document.getElementById('DivRadar').innerHTML = '<a href="'+RadarURLdetails+'" target="weather"><img src="" id="RadarImg" width='+RadarWid+' height='+RadarHgt+' onMouseover="this.width='+(RadarWid*2)+';this.height='+(RadarHgt*2)+';" onMouseout="this.width='+RadarWid+';this.height='+RadarHgt+';" style="border-radius:25px;" border=0></a>';
   RadarTimer = 4000;
   if (BGdata[BGcurr].BGshow.indexOf('R')<1) {
     document.getElementById('RadarImg').style.visibility='hidden';
+    document.getElementById('DivRadar').style.visibility='hidden';
   }
 }
 
@@ -484,7 +487,7 @@ function WeatherCurrentReceive() {
     try {
       var FWCrec = JSON.parse(FWCread);
       WeatherCurrent = '';
-      WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 width=56 height=56>';
+      WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 width=56 height=56 onClick="window.open(WeatherURL);">';
       WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*1.1)+'pt;">'+FWCrec['current_observation']['temp_f']+'</span><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;">F</span></nobr> ';
       var WindText = '';
       var WindDir = FWCrec['current_observation']['wind_dir'];
@@ -536,7 +539,9 @@ function WeatherCurrentReceive() {
       WeatherCurrent = '';
     }
     if (BGdata[BGcurr].BGshow.indexOf('W')>=0) {
-      var FWCout = '<a href="'+WeatherURL+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
+      var WeatherURLeff = WeatherURL;
+      if ('speechSynthesis' in window) { WeatherURLeff = 'JavaScript:SpeakForecast(0);'; }
+      var FWCout = '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
       if (BGdata[BGcurr].BGshow.indexOf('F')<0) {
         document.getElementById('DivWeatherForecast').innerHTML = FWCout;
       } else {
@@ -768,13 +773,13 @@ function CheckKeypress(e) {
 <img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>
 </div>
 
-<div style="position:absolute; z-index:2; left:0px; top:0px;" id="DivMoonImg"></div>
-<div style="position:absolute; z-index:3; left:0px; top:0px;" id="DivMoonStat"></div>
-<div style="position:absolute; z-index:4; left:0px; top:10px;" id="DivSunTimes"></div>
+<div style="position:absolute; z-index:6; left:0px; top:0px; visibility:hidden;" id="DivAnalog"></div>
 
 <div style="position:absolute; z-index:5; left:0px; top:0px;" id="DivRadar"></div>
 
-<div style="position:absolute; z-index:6; left:0px; top:0px; visibility:hidden;" id="DivAnalog"></div>
+<div style="position:absolute; z-index:2; left:0px; top:0px;" id="DivMoonImg"></div>
+<div style="position:absolute; z-index:3; left:0px; top:0px;" id="DivMoonStat"></div>
+<div style="position:absolute; z-index:4; left:0px; top:10px;" id="DivSunTimes"></div>
 
 <div style="position:absolute; z-index:7; left:4px; top:0px;" id="DivWeatherForecast"></div>
 <div style="position:absolute; z-index:8; left:0px; top:0px;  text-align:right;" id="DivWeatherCurrent"></div>
