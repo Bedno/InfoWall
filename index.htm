@@ -1,18 +1,24 @@
 <html>
 <head>
 <title>iWall</title>
+<meta property="og:title" content="iWall">
+<meta property="og:description" content="iWall : At-a-glance personal Info Wall shows time, date, weather, webcams, more.">
+<meta property="og:image" content="http://bedno.com/g/iwall.jpg">
+<meta property="og:url" content="http://bedno.com/iwall">
+<meta property="og:site_name" content="Bedno.com">
 
 <script language="JavaScript">
-// At-a-glance personal Info Wall shows time, date, weather, webcams, more.
-// Ideal for constant-on picoprojected use, dedicated laptop or tablet.  Works best in Chrome; press F11 for Full Screen mode.
-// Automatically adjusts all elements to window size and rotation to maximize readability.
-// Weather forecast uses Wunderground.com API.  Speaks the forecast on capable browsers.
+var About = 'iWall : At-a-glance personal Info Wall.<br>Time, date, weather, webcams, more.<br><br>' +
+            'Press <b>SPACE</b> for next background.<br>Tap the weather forecast to speak it.<br><br>' +
+            '<span style="font-size:10pt;">Works best in Safari and Chrome (F11 for Full Screen).<br>Ideal for constant-on picoprojector, dedicated laptop or tablet.</span><br><br>' +
+            '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a>';
 // Demonstrates a number of advanced Javascript techniques:
-//    Canvas element and drawing.  Analog clock.
-//    Text to speech.  JSON fetch and parse.  Weather API use.
-//    Structured array constant.  Querystring reading.  Use of localstorage.
-//    Responsive auto-formatting.  Keypress handling.
-//    Sun/Moon calculations.  Master updater using timer.
+//    Responsive auto-formatting.  Text to speech.  Canvas element and drawing.  Analog clock.
+//    Weather API use (Wunderground.com).  JSON fetch and parse.
+//    Querystring checking.  Read/write localstorage.
+//    Catch/try feature detection.    Structured constant array.
+//    Keypress handling.  Master updater using timer.
+//    Sun/Moon calculations.  No dependencies.
 
 // CONFIGURABLES:
 
@@ -23,6 +29,7 @@ var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?qu
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
 var WeatherForecastURL = 'http://massup.us/d/w-forecast.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
 var WeatherCurrentURL = 'http://massup.us/d/w-current.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+
 // Local radar details link and sequenced (0:new..9:old) img src jpeg base:
 var RadarURLdetails = 'http://www.myfoxchicago.com/weather';
 var RadarURLsrc = 'http://content.foxtvmedia.com/wfld/weather/radar/IRIS_midwest_closer';
@@ -34,14 +41,14 @@ var StartNight = 19;  // Starting hour (0-23) of nighttime clock color.
 var ForecastColor = '#FFE3E3';  // Forecast text color.
 var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
 var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
-var ForecastRows = 14;  // Forecast text sizing...
+var ForecastRows = 16;  // Forecast text sizing...
 var ForecastRowsHgt = 0.82;
 var WeatherHgtMult = 0.13;
 var MoonDiam = 1/6;  // Relative size of the displayed moon.
 
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
-  { BGcode:"cam", BGshow:"CDFMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL 600-1200px wide.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers)
+  { BGcode:"webcams", BGshow:"CDFMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers)
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:5000, BGzoom:1 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg#{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:5000, BGzoom:1 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg#{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:5000, BGzoom:1 },
@@ -51,10 +58,10 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://abc7chicago.com/weather/cams/columbiacam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg#{unq}", BGdesc:"Grant Park", BGdur:5000, BGzoom:1 },
     { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg#{unq}", BGdesc:"Belmont Harbor", BGdur:5000, BGzoom:1 },
     { BGlink:"http://abc7chicago.com/weather/cams/hancock-north/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg#{unq}", BGdesc:"Hancock North", BGdur:5000, BGzoom:1 },
-    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Sluggers, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:RadarURLsrc+"3.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:RadarURLsrc+"0.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
     { BGlink:WeatherURL, BGsrc:RadarURLsrc+"6.jpeg#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
@@ -196,7 +203,7 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
 var MasterDur = 500;  // Master update frequency.  All timers and durations are in milliseconds.  500=half second.
 var MasterTimer = null;
 var WinWid, WinHgt, WinMin, WinMax;
-var BGcurr = 0;  var BGframe = 0;  var BGtimer = -1;
+var BGcurr = 0;  var BGcurrArg = '';  var BGframe = 0;  var BGtimer = -1;
 
 var SunRise = '';  var SunSet = '';
 var ClockColor = ClockDay;  var ClockColorPrev = ClockColor;
@@ -215,28 +222,33 @@ var WeatherCurrentTimer = 0;
 var RadarWid, RadarHgt;
 var RadarIdx = -1;
 var RadarTimer = -1;
+var IntroDur = 10000;  var IntroTimer = IntroDur+1;
 
 // Remember user's BG selection.
 function haslocalstorage() { try { return 'localStorage' in window && window['localStorage'] !== null; } catch(e){ return false; } }
 // Recall current BG from local storage.
 if (haslocalstorage()) {
   try {
-    if ( (localStorage.getItem('BGcurr')!='') && (localStorage.getItem('BGcurr')!='null') ) {
-      var BGcurrTmp = parseInt(localStorage.getItem('BGcurr'));
-      if ( (BGcurrTmp >= 0) && (BGcurrTmp < BGdata.length) ) { BGcurr = BGcurrTmp; }
-    }
+    BGcurrArg = localStorage.getItem('BGcurr');  if ( (BGcurrArg.length<1) || (BGcurrArg.length>2) ) { BGcurrArg = ''; }
+    if (BGcurrArg.length > 0) {
+      var BGcurrTmp = parseInt(BGcurrArg);
+      if ( (BGcurrTmp >= 0) && (BGcurrTmp < BGdata.length) ) { BGcurr = BGcurrTmp; } else { BGcurrArg = ''; }
+    } else { }
   } catch (err) {
+    BGcurrArg = '';
   }
 }
+
 // Optionally set BG from URL using parameter like ?n=<code>
 for (var ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
-  if (location.href.indexOf('='+BGdata[ArgLp].BGcode)>=0) { BGcurr = ArgLp; };
-}
-// Save current BG in case overriden from URL.
-if (haslocalstorage()) {
-  try { localStorage.setItem('BGcurr', BGcurr.toString()); }
-  catch (err) {
-  }
+  if (location.href.indexOf('='+BGdata[ArgLp].BGcode)>=0) {
+    BGcurr = ArgLp;
+    if (haslocalstorage()) {
+      try { localStorage.setItem('BGcurr', BGcurr.toString()); }
+      catch (err) {
+      }
+    }
+  };
 }
 
 // Used to force non-caching of webcam images.
@@ -407,24 +419,24 @@ function WeatherForecastReceive() {
         WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit']+". ";
         WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['txt_forecast']['forecastday'][WFSnum]['fcttext'];
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].toUpperCase();
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1\'s$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1's$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])F/gi,"$1");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])E([^A-Z0-9])/gi,"$1EAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])W([^A-Z0-9])/gi,"$1WEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])N([^A-Z0-9])/gi,"$1NORTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])S([^A-Z0-9])/gi,"$1SOUTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-\'\,])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])E([^A-Z0-9])/gi,"$1EAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])W([^A-Z0-9])/gi,"$1WEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])N([^A-Z0-9])/gi,"$1NORTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])S([^A-Z0-9])/gi,"$1SOUTH$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
       }
       for (var FWFlp=0; FWFlp<2; FWFlp++) {
@@ -436,8 +448,13 @@ function WeatherForecastReceive() {
         WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor((WinHgt/ForecastRows)*0.8))+'" border=0>';
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+" ";
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit']+"-";
-        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']+"\n";
+        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']+"<span style='font-size:"+(Math.floor(WinHgt/(ForecastRows*1.5)))+"px;'>F</span>\n";
         WeatherForecast += FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext']+"</a>\n";
+        WeatherForecast = WeatherForecast.replace(/([0-9])F/gi,"$1"+'<span style="font-size:'+(Math.floor(WinHgt/(ForecastRows*1.5)))+'px;">F</span>');
+        WeatherForecast = WeatherForecast.replace(/at ([0-9]+) to ([0-9]+)/gi," $1-$2");
+        WeatherForecast = WeatherForecast.replace(/ ([0-9]+) to ([0-9]+)/gi," $1-$2");
+        WeatherForecast = WeatherForecast.replace(/ mph/gi,"");
+        WeatherForecast = WeatherForecast.replace(/ inches/gi," in");
         WFspokenPrep(FWFlp);
       }
     } catch (err) {
@@ -540,7 +557,7 @@ function WeatherCurrentReceive() {
     }
     if (BGdata[BGcurr].BGshow.indexOf('W')>=0) {
       var WeatherURLeff = WeatherURL;
-      if ('speechSynthesis' in window) { WeatherURLeff = 'JavaScript:SpeakForecast(0);'; }
+      if ( (BGdata[BGcurr].BGshow.indexOf('F')<0) && ('speechSynthesis' in window) ) { WeatherURLeff = 'JavaScript:SpeakForecast(0);'; }
       var FWCout = '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather" style="font-family:Arial; font-size:'+Math.floor(RadarWid*WeatherHgtMult)+'pt; line-height:'+Math.floor(RadarWid*WeatherHgtMult*0.85)+'pt; color:#FFFFFF; text-decoration:none; text-shadow:0px 0px 22px #0004B2;">'+WeatherCurrent+'</a>';
       if (BGdata[BGcurr].BGshow.indexOf('F')<0) {
         document.getElementById('DivWeatherForecast').innerHTML = FWCout;
@@ -586,7 +603,7 @@ function SetupWeather() {
     document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*3)))+'px';
     document.getElementById('DivWeatherForecast').style.left = '30px';
   } else {
-    document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*4.8)))+'px';
+    document.getElementById('DivWeatherForecast').style.top = (WinHgt-(Math.floor(((WinHgt/ForecastRows)*ForecastRowsHgt)*5)))+'px';
   }
   document.getElementById('DivWeatherCurrent').style.left = (WinWid-Math.floor(RadarWid*0.85))+'px';
   document.getElementById('DivWeatherCurrent').style.width = (Math.floor(RadarWid*0.8))+'px';
@@ -726,6 +743,15 @@ function DoUpd() {
   if (WeatherCurrentTimer<1) {
     WeatherCurrentRequest();
   }
+  if (IntroTimer <= IntroDur) {
+    IntroTimer -= MasterDur;
+    if (IntroTimer < MasterDur) {
+      document.getElementById('DivIntro').style.visibility = 'hidden';
+      IntroTimer = IntroDur+1;
+    } else {
+      document.getElementById('DivIntro').style.visibility = 'visible';
+    }
+  }
   if (MasterTimer!=null) {
     clearTimeout(MasterTimer);
     MasterTimer = null;
@@ -750,7 +776,24 @@ function DoSetup() {
   document.getElementById('DivAbout').style.top = (Math.round(WinHgt*.9))+'px';
   document.getElementById('DivAbout').style.left = (Math.round(WinWid*.96))+'px';
   document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
+  document.getElementById('DivIntro').style.top = (Math.round(WinHgt*.25))+'px';
+  document.getElementById('DivIntro').style.left = (Math.round(WinWid*.25))+'px';
+  document.getElementById('DivIntro').innerHTML = About;
   window.onresize = function(event) { HourPrev = -1; DoSetup(); }
+  if (BGcurrArg.length < 1) {
+    var IntroDT = new Date();
+    var IntroHr = IntroDT.getHours();
+    var IntroPrev = '';
+    try {
+      IntroPrev = localStorage.getItem('IntroPrev');
+    } catch (err) { }
+    if (IntroPrev!=IntroHr) {
+      IntroTimer=IntroDur;
+      try {
+        localStorage.setItem('IntroPrev', IntroHr);
+      } catch (err) { }
+    }
+  }
 }
 
 // Handle user keypress.  Used in body tag to catch all.
@@ -773,13 +816,13 @@ function CheckKeypress(e) {
 <img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>
 </div>
 
-<div style="position:absolute; z-index:6; left:0px; top:0px; visibility:hidden;" id="DivAnalog"></div>
+<div style="position:absolute; z-index:2; left:0px; top:0px; visibility:hidden;" id="DivAnalog"></div>
 
-<div style="position:absolute; z-index:5; left:0px; top:0px;" id="DivRadar"></div>
+<div style="position:absolute; z-index:3; left:0px; top:0px;" id="DivMoonImg"></div>
+<div style="position:absolute; z-index:4; left:0px; top:0px;" id="DivMoonStat"></div>
+<div style="position:absolute; z-index:5; left:0px; top:10px;" id="DivSunTimes"></div>
 
-<div style="position:absolute; z-index:2; left:0px; top:0px;" id="DivMoonImg"></div>
-<div style="position:absolute; z-index:3; left:0px; top:0px;" id="DivMoonStat"></div>
-<div style="position:absolute; z-index:4; left:0px; top:10px;" id="DivSunTimes"></div>
+<div style="position:absolute; z-index:6; left:0px; top:0px;" id="DivRadar"></div>
 
 <div style="position:absolute; z-index:7; left:4px; top:0px;" id="DivWeatherForecast"></div>
 <div style="position:absolute; z-index:8; left:0px; top:0px;  text-align:right;" id="DivWeatherCurrent"></div>
@@ -795,8 +838,9 @@ function CheckKeypress(e) {
 <div style="position:absolute; z-index:11; left:0px; top:0px;" id="DivBGdesc"></div>
 
 <div style="position:absolute; z-index:12; left:0px; top:0px;" id="DivAbout">
-<span id="SpanAbout" onClick="alert('iWall : At-a-glance personal info wall.  Shows time, date, weather, webcams, more.\n\nIdeal for constant-on picoprojected use, dedicated laptop or tablet.\n\nWorks best in Safari or Chrome (F11 for Full Screen).  Tap forecast to speak on capable browsers.  Press SPACE for next background.\n\nAndrewBedno.com');" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; text-shadow:0px 0px 14px #FFFFFF;"><b>?</b></span>
+<span id="SpanAbout" onClick="IntroTimer=IntroDur;" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; text-shadow:0px 0px 14px #FFFFFF;"><b>?</b></span>
 </div>
+<div style="position:absolute; z-index:13; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" id="DivIntro" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
 
 </div>
 
