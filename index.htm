@@ -2,13 +2,13 @@
 <head>
 <title>iWall</title>
 <meta property="og:title" content="iWall">
-<meta property="og:description" content="iWall : At-a-glance personal Info Wall shows time, date, weather, webcams, more.">
+<meta property="og:description" content="iWall : Personal Info Wall. At-a-glance time, date, weather, webcams, more.">
 <meta property="og:image" content="http://bedno.com/g/iwall.jpg">
 <meta property="og:url" content="http://bedno.com/iwall">
 <meta property="og:site_name" content="Bedno.com">
 
 <script language="JavaScript">
-var About = 'iWall : At-a-glance personal Info Wall.<br>Time, date, weather, webcams, more.<br><br>' +
+var About = 'iWall : Personal Info Wall.<br>At-a-glance time, date, weather, webcams, more.<br><br>' +
             'Press <b>SPACE</b> for next background.<br>Tap the weather forecast to speak it.<br><br>' +
             '<span style="font-size:10pt;">Works best in Safari and Chrome (F11 for Full Screen).<br>Ideal for constant-on picoprojector, dedicated laptop or tablet.</span><br><br>' +
             '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a>';
@@ -19,6 +19,7 @@ var About = 'iWall : At-a-glance personal Info Wall.<br>Time, date, weather, web
 //    Catch/try feature detection.    Structured constant array.
 //    Keypress handling.  Master updater using timer.
 //    Sun/Moon calculations.  No dependencies.
+// Incorporates SunCalc.js by Vladimir Agafonkin https://github.com/mourner/suncalc
 
 // CONFIGURABLES:
 
@@ -211,6 +212,7 @@ var ClockCursor = '';  var ClockBlink = 0;
 var ClockDur = MasterDur;  var ClockTimer = 0;
 var ClockCanvas, ClockContext;
 var HourPrev = -1;  var HourCurr = -1;
+var MinutePrev = -1;  var MinuteCurr = -1;
 var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
 var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
 var WeatherCurrent = '';
@@ -372,7 +374,7 @@ function NextRadar() {
       RadarTimer = 1500;
     } else {
       document.getElementById('RadarImg').style.visibility='hidden';
-      RadarTimer = 4000;
+      RadarTimer = 9000;
     }
     RadarIdx = (RadarIdx+1) % 10;
   }
@@ -451,7 +453,6 @@ function WeatherForecastReceive() {
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']+"<span style='font-size:"+(Math.floor(WinHgt/(ForecastRows*1.5)))+"px;'>F</span>\n";
         WeatherForecast += FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext']+"</a>\n";
         WeatherForecast = WeatherForecast.replace(/([0-9])F/gi,"$1"+'<span style="font-size:'+(Math.floor(WinHgt/(ForecastRows*1.5)))+'px;">F</span>');
-        WeatherForecast = WeatherForecast.replace(/at ([0-9]+) to ([0-9]+)/gi," $1-$2");
         WeatherForecast = WeatherForecast.replace(/ ([0-9]+) to ([0-9]+)/gi," $1-$2");
         WeatherForecast = WeatherForecast.replace(/ mph/gi,"");
         WeatherForecast = WeatherForecast.replace(/ inches/gi," in");
@@ -647,6 +648,7 @@ function ShowTime() {
   STh=STdt.getHours();
   HourCurr = STh;
   STm=STdt.getMinutes();
+  MinuteCurr = STm;
   STs=STdt.getSeconds();
   if (STh>11) { STap = "P"; }
   if (STh>12) { STh = STh-12; }
@@ -724,6 +726,10 @@ function DoUpd() {
     HourPrev = HourCurr;
     ShowMoon();
     ShowDate();
+  }
+  if (MinuteCurr != MinutePrev) {
+    MinutePrev = MinuteCurr;
+    RadarIdx = -1;
   }
   if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
     ShowMoon();
