@@ -1,0 +1,23 @@
+Future possible enhancements:
+
+Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
+
+Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
+
+Sanity check all weather JSON response fields, abort parsing if invalids.  Cache best recent parse to local storage.  Handles occassional Wunderground.com weird JSON replies having all fields but incomplete values.
+
+Optionally automatically read time hourly.  Maybe chime at other intervals.
+
+Automatically read weather at programmable intervals or times.  Possibly as alarm.
+
+Implement alarm clock.
+
+Add time of day range field to frame records, to configure webcams or art specific to day or night.
+
+Implement shuffle start for  default background which skips considering the shortest frames.
+
+Somehow implement notifications, such as schedule and priorities.
+Displayed as a periodic background frame?  Alternating with weather forecast?  Marquee or vertical scrolling over background?
+Personalize using a querystring field for user ID.  Create minimal AJAX server to save/recall text blocks.  Create web-based maintenance of text block.
+Later implement server processing of email / SMS text for display.
+
