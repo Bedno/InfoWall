@@ -1,4 +1,4 @@
-At-a-glance personal Info Wall shows time/date, weather/forecast/radar, webcams, more.  Ideal for constant-on picoprojected use, dedicated laptop or tablet.  All javascript.
+Personal Info Wall. At-a-glance time/date, weather/forecast/radar, webcams, more. Ideal for constant-on picoprojected use, dedicated laptop or tablet. All javascript.
 
 Works best in Chrome; press F11 for Full Screen mode.  Automatically adjusts all elements to window size and rotation to maximize readability.  Weather forecast uses Wunderground.com API.  Speaks the forecast on capable browsers.
 
