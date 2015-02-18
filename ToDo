@@ -1,16 +1,16 @@
 Future possible enhancements:
 
-Sanity check all weather JSON response fields, abort parsing if invalids.  Cache best recent parse to local storage.  Handles occassional Wunderground.com weird JSON replies having all fields but incomplete values.
+Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
 
-Differently display hyphens and minus (temps below zero), maybe by superscripting.
+Add a deadman timer to force reload if running extremely slow.  Workaround for Android memory leak problem.
+
+Sanity check all weather JSON response fields, abort parsing if invalids.  Cache best recent parse to local storage.  Handles occassional Wunderground.com weird JSON replies having all fields but incomplete values.
 
 Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
 
-Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
+Optionally automatically speak the time aloud hourly.  Maybe chime at other intervals.
 
-Optionally automatically read time hourly.  Maybe chime at other intervals.
-
-Automatically read weather at programmable intervals or times.  Possibly as alarm.
+Automatically speak the weather forecast aloud at programmable intervals or times.  Possibly as alarm.
 
 Implement alarm clock.
 
