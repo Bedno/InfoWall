@@ -1,8 +1,10 @@
-Future possible enhancements:
+Possible future enhancements:
 
-Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
+Force full screen on mobile browsers.
 
 Add a deadman timer to force reload if running extremely slow.  Workaround for Android memory leak problem.
+
+Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
 
 Sanity check all weather JSON response fields, abort parsing if invalids.  Cache best recent parse to local storage.  Handles occassional Wunderground.com weird JSON replies having all fields but incomplete values.
 
