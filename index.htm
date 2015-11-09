@@ -40,6 +40,8 @@ var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezone
 if (IsAndroid()) { InfoZone = -6; }
 
 // Local radar details link and sequenced (0:new..9:old) img src jpeg base:
+var RadarQty=11;  var RadarMin=1;
+var RadarStartTop=4;  var RadarStartBot=0;
 var RadarURLdetails = 'http://www.fox32chicago.com/weather/radar';
 var RadarURLsrc = 'http://static.lakana.com/media.fox32chicago.com/photo/MAP/4439741/4439741_Position';
 
@@ -58,7 +60,7 @@ var MoonDiam = 1/6;  // Relative size of the displayed moon.
 
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
-  { BGcode:"webcams", BGshow:"CDFMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers)
+  { BGcode:"webcams", BGshow:"CDFMRW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers)
     // Dead as of 2015.04.14: { BGlink:"http://www.luc.edu/webcams/", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg#{unq}", BGdesc:"Loyola, Water Tower", BGdur:4000, BGzoom:1 },
     // Dead as of 2015.04.14: { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg#{unq}", BGdesc:"Daley Plaza", BGdur:5000, BGzoom:1 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg#{unq}", BGdesc:"WGN, Western and Addison", BGdur:5000, BGzoom:1 },
@@ -71,21 +73,22 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"5.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"8.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"11.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"5.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"8.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"11.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-5+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-4+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-3+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-2+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-1+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1600, BGzoom:1 } ] },
   { BGcode:"wrigley", BGshow:"CDFMRW", BGslides: [
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigleyville, Clark and Addison", BGdur:2000, BGzoom:1 } ] },
   { BGcode:"radar", BGshow:"CDFMW", BGslides: [
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"11.JPEG#{unq}", BGdesc:"Local Radar", BGdur:3000, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"1.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"3.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"5.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"7.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"9.JPEG#{unq}", BGdesc:"Local Radar", BGdur:1500, BGzoom:1 } ] },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:2200, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-6+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-5+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-4+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-3+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-2+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 },
+    { BGlink:WeatherURL, BGsrc:RadarURLsrc+(((RadarQty-1+RadarStartTop)%RadarQty)+RadarMin)+".JPEG#{unq}", BGdesc:"Local Radar", BGdur:1300, BGzoom:1 } ] },
   { BGcode:"art", BGshow:"ADMSW", BGslides: [
     { BGlink:"http://en.wikipedia.org/wiki/Mona_Lisa", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg/402px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg", BGdesc:"Mona Lisa, Leonardo da Vinci, 1506", BGdur:15000, BGzoom:1 },
     { BGlink:"http://en.wikipedia.org/wiki/Nighthawks", BGsrc:"http://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Nighthawks_by_Edward_Hopper_1942.jpg/800px-Nighthawks_by_Edward_Hopper_1942.jpg", BGdesc:"Nighthawks, Edward Hopper, 1942", BGdur:15000, BGzoom:1 },
@@ -429,13 +432,14 @@ function NextRadar() {
   if (BGdata[BGcurr].BGshow.indexOf('R')>=0) {
     if (RadarIdx>=0) {
       document.getElementById('RadarImg').style.visibility='visible';
-      document.getElementById('RadarImg').src = RadarURLsrc+(((RadarIdx+1)*2)+1)+'.JPEG#'+UnqArg();
+      document.getElementById('RadarImg').src = RadarURLsrc+(((RadarIdx+RadarStartTop)%RadarQty)+RadarMin)+'.JPEG#'+UnqArg();
       RadarTimer = 1500;
+      if (RadarIdx==RadarStartTop) { RadarTimer *= 2; }
     } else {
       document.getElementById('RadarImg').style.visibility='hidden';
-      RadarTimer = 9000;
+      RadarTimer = 6000;
     }
-    RadarIdx = (RadarIdx+1) % 5;
+    RadarIdx = (RadarIdx+1) % RadarQty;
   }
 }
 
@@ -618,10 +622,10 @@ function WeatherCurrentReceive() {
         if (SpkMn.length<2) SpkMn = " OH "+SpkMn;
       }
       WeatherCurrentSpoken += "AT "+SpkHr.toString()+" "+SpkMn+" IT'S ";
+      WeatherCurrentSpoken += FWCrec['current_observation']['temp_f']+", ";
       if (FWCrec['current_observation']['weather'].length>1) {
         WeatherCurrentSpoken += FWCrec['current_observation']['weather']+", "
       }
-      WeatherCurrentSpoken += FWCrec['current_observation']['temp_f'];
       if ( (FWCrec['current_observation']['wind_mph']>2) || (FWCrec['current_observation']['wind_gust_mph']>2) ) {
         WeatherCurrentSpoken += ", ";
         if (FWCrec['current_observation']['wind_dir'].length<1) {
@@ -782,11 +786,11 @@ function ShowDate() {
   if (BGdata[BGcurr].BGshow.indexOf('D')>=0) {
     if (BGdata[BGcurr].BGshow.indexOf('A')>=0) {
       document.getElementById('DivDate').style.top = (OfsY+WinHgt*0.65)+'px';
-      document.getElementById('DivDate').style.left = (OfsX+24)+'px';
+      document.getElementById('DivDate').style.left = (OfsX+1)+'px';
       document.getElementById('SpanDate').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.10)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + " " + AbrvMon[SDmonth] + " " + SDday + '</span>';
     } else {
       document.getElementById('DivDate').style.top = (OfsY+WinHgt*0.45)+'px';
-      document.getElementById('DivDate').style.left = (OfsX+24)+'px';
+      document.getElementById('DivDate').style.left = (OfsX+1)+'px';
       document.getElementById('SpanDate').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.14)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + " " + AbrvMon[SDmonth] + " " + SDday + '</span>';
     }
   }
@@ -986,8 +990,10 @@ function DoSetup() {
   document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
   document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
   document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
-  document.getElementById('DivTime').style.left = (OfsX+21)+'px';
+  document.getElementById('DivTime').style.left = (OfsX+1)+'px';
   document.getElementById('DivTime').style.top = (OfsY-10)+'px';
+  document.getElementById('DivTime').style.width = (WinWid-RadarWid+2)+'px';
+  document.getElementById('DivDate').style.width = (WinWid-RadarWid+2)+'px';
   document.getElementById('DivAnalog').style.left = (OfsX)+'px';
   document.getElementById('DivAnalog').style.top = (OfsY)+'px';
   document.getElementById('DivBGdesc').style.left = (10+OfsX)+'px';
@@ -1108,11 +1114,11 @@ function CheckKeypress(e) {
 
 <div style="position:absolute; z-index:9; left:0px; top:0px;" id="DivBGdesc"></div>
 
-<div style="position:absolute; z-index:10; left:21px; top:-10px;" id="DivTime">
+<div style="position:absolute; z-index:10; left:1px; top:-10px; text-align:center;" id="DivTime">
 <span id="SpanTime" style='font-family:Arial; color:#000000; text-decoration:bold; text-shadow:0px 0px 16px #9A008D;'></span>
 </div>
 
-<div style="position:absolute; z-index:11; left:24px; top:0px;" id="DivDate">
+<div style="position:absolute; z-index:11; left:1px; top:0px; text-align:center;" id="DivDate">
 <span id="SpanDate" style='font-family:Arial; color:#000000; text-decoration:bold; text-shadow:0px 0px 16px #9A008D;'></span>
 </div>
 
