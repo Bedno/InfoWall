@@ -1,27 +1,14 @@
+Immediate Planned Work:
+* Write a full quick setup guide.
+* Sanity check weather response, abort parsing if invalids. Cache best recent parse to local storage. Handles occasional Wunderground.com broken JSON replies having all fields but incomplete values.
+* Add more slideshows: US & world cams, stretches, bikes, adult.
+
 Possible future enhancements:
-
-Force full screen on mobile browsers.
-
-Add a deadman timer to force reload if running extremely slow.  Workaround for Android memory leak problem.
-
-Internally animate radar frames (using visibility) and only load new frame every few minutes, rather than constantly reloading the radar image, to reduce network activity.
-
-Sanity check all weather JSON response fields, abort parsing if invalids.  Cache best recent parse to local storage.  Handles occassional Wunderground.com weird JSON replies having all fields but incomplete values.
-
-Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
-
-Optionally automatically speak the time aloud hourly.  Maybe chime at other intervals.
-
-Automatically speak the weather forecast aloud at programmable intervals or times.  Possibly as alarm.
-
-Implement alarm clock.
-
-Add time of day range field to frame records, to configure webcams or art specific to day or night.
-
-Implement shuffle start for default background which skips considering the shortest frames.
-
-Somehow implement notifications, such as schedule and priorities.
-Displayed as a periodic background frame?  Alternating with weather forecast?  Marquee or vertical scrolling over background?
-Personalize using a querystring field for user ID.  Create minimal AJAX server to save/recall text blocks.  Create web-based maintenance of text block.
-Later implement server processing of email / SMS text for display.
-
+* Periodically recheck Android software market for cheap kiosk browser software.
+* Implement configurable overall brightness.
+* Add support for NWS (National Weather Service) forecasts (as alternative to Wunderground), using their XML API: http://graphical.weather.gov/xml/
+* Automatically speak the time and/or weather at programmable times or intervals.
+* Implement extensibility. Eventually add Facebook, Twitter, email, SMS, ...
+* Personalize using a URL part for user ID. Create minimal AJAX server to save/recall configuration. Create web-based maintenance.
+* Add a deadman timer to force reload if running extremely slow, as workaround for memory leaks.
+* Add time of day range field to frame records, to configure webcams or art specific to day or night.
