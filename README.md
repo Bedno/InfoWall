@@ -17,8 +17,8 @@ MAIN KEYS: (designed for use with a wireless numeric keypad for quick access to 
 * space : Next slideshow.
 * 1-9 : Jump to selected slideshow.
 * + : Next frame.
-* / : Pause|Resume
-* - : Time/Date
+* - : Pause|Resume
+* / : Clock/Weather options.
 * 0 : Off. (Zero or Oh blanks display to black)
 
 OTHER KEYS:
