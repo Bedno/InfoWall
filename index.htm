@@ -1,4 +1,4 @@
-<html>
+  <html>
 <head>
 <title>InfoWall</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0" />
@@ -54,18 +54,20 @@ var ForecastRowsHgt = 0.75;
 var WeatherHgtMult = 0.13;
 var WeatherCurrentSizing = 0.15;
 var MoonDiam = 1/6;  // Relative size of the displayed moon.
+var TimeSizeMult = 0.44;
+var FloodDur = 500; // Cycle time between flood color changes.
 
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [W]eather
   { BGcode:"webcams", BGshow:"CDFIMRW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.
     // Dead as of 2015.04.14: { BGlink:"http://www.luc.edu/webcams/", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unq}", BGdesc:"Loyola, Water Tower", BGdur:4000, BGzoom:1, BGsub:0 },
-    // Dead as of 2015.04.14: { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unq}", BGdesc:"Daley Plaza", BGdur:5000, BGzoom:1, BGsub:0 },
     // Dead as of 2015.11.27: { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unq}", BGdesc:"Wrigley Field, Clark and Addison", BGdur:5000, BGzoom:1, BGsub:0 },
+    // Dead as of 2015.12.28: { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unq}", BGdesc:"Belmont Harbor", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unq}", BGdesc:"WGN, Western and Addison", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unq}", BGdesc:"St. Clement School, 2524 N Orchard", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://www.oakstbeach.com/", BGsrc:"http://205.178.49.123:8080/snapshot.cgi?user=guest&amp;pwd=password&amp;t=1421826844?{unq}", BGdesc:"Oak Street Beach", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://abc7chicago.com/weather/cams/columbiacam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unq}", BGdesc:"Grant Park", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unq}", BGdesc:"Belmont Harbor", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGlink:"http://abc7chicago.com/weather/cams/daleycam/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unq}", BGdesc:"Daley Plaza", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://abc7chicago.com/weather/cams/hancock-north/", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unq}", BGdesc:"Hancock North", BGdur:5000, BGzoom:1, BGsub:0 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1, BGsub:0 },
     { BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unq}", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1, BGsub:0 },
@@ -168,7 +170,7 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGlink:"http://bedno.com/g/infowall/yoga/10.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/10.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0 },
     { BGlink:"http://bedno.com/g/infowall/yoga/11.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/11.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0 },
     { BGlink:"http://bedno.com/g/infowall/yoga/12.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/12.jpg", BGdesc:"Namaste", BGdur:2000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/workout.png", BGsrc:"http://bedno.com/g/infowall/yoga/workout.png", BGdesc:"Workout", BGdur:3000, BGzoom:1, BGsub:0 } ] },
+    { BGlink:"http://bedno.com/g/infowall/yoga/workout.png", BGsrc:"http://bedno.com/g/infowall/yoga/workout.png", BGdesc:"Workout", BGdur:6000, BGzoom:1, BGsub:0 } ] },
   { BGcode:"maps", BGshow:"", BGslides: [
     { BGlink:"http://tinyurl.com/3510npinegrove", BGsrc:"http://bedno.com/g/infowall/maps/neighborhood.jpg", BGdesc:"Neighborhood", BGdur:999999, BGzoom:1, BGsub:0 },
     { BGlink:"http://tinyurl.com/3510npinegrove", BGsrc:"http://bedno.com/g/infowall/maps/city.jpg", BGdesc:"City", BGdur:999999, BGzoom:1, BGsub:0 },
@@ -218,7 +220,36 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGsrc:"http://bedno.com/g/infowall/v/space/space-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:595 },
     { BGsrc:"http://bedno.com/g/infowall/v/sun/sun-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:543 },
     { BGsrc:"http://bedno.com/g/infowall/v/warp/warp-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:211 },
-    { BGsrc:"http://bedno.com/g/infowall/v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:37 } ] }
+    { BGsrc:"http://bedno.com/g/infowall/v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:37 } ] },
+  { BGcode:"colors", BGshow:"", BGslides: [
+    { BGsrc:"#303030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#505050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#707070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#909090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#B0B0B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#D0D0D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#FFFFFF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#000030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#000050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#000070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#000090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#0000B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#0000D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#0000FF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#003000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#005000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#007000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#009000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#00B000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#00D000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#00FF00", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#300000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#500000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#700000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#900000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#B00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#D00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
+    { BGsrc:"#FF0000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 } ] }
   ];
 
 // GLOBALS
@@ -227,11 +258,14 @@ var MasterTimer = null;
 var WinWidPhys, WinHgtPhys, WinWid, WinHgt, WinMin, WinMax;
 var MarginTop = 0;  var MarginLeft = 0;  var MarginBottom = 0;  var MarginRight = 0;
 var OfsX = 0;  var OfsY = 0;  // Randomized slight offsets to reduce screen burn-in.
-var BGcurr = 0;
-var BGshowCurr = "";
+var BGcurr = 0;  var BGcurrChk = 0;
+var BGprev  = -1;
+var BGshowCurr = "";  var BGshowOverride = 0;
+var BGshowArr = new Array('','CI', 'CDI', 'CDFI', 'CDFIMRW', 'AI','ADI','ADWI');
 var ShowIntro = 1;
 var BGframe = 0;  var BGframePrev = BGframe;
-var BGframeInc = 1;  var BGtimer = -1;
+var BGframeInc = 1;  var BGtimer = -1;  var BGframeIncPrev = BGframeInc;
+var BGdescBG = "";
 var BGsubIdx = 0;  var SaveFrame = false;
 
 var SunRise = '';  var SunSet = '';  var SunTimeSizing = 0.04;
@@ -285,12 +319,12 @@ function HasAniSubs () {
   return(false)
 }
 
-// Initialize and arrange all screen elements based on options.
-function SetupScreen () {
-  var FrameCheck = '';
+// Setup required mix of visibilities.
+function SetupVisibilities () {
   // BGshow= [A]nalog [C]lock [D]ate [F]orecast [M]oon [R]adar [S]huffle [W]eather
   if (document.getElementById('DivIntro')) { document.getElementById('DivIntro').style.visibility='hidden'; }
   if (document.getElementById('DivWhole')) { document.getElementById('DivWhole').style.visibility='visible'; }
+  if (document.getElementById('DivIntro')) { document.getElementById('DivIntro').style.visibility='hidden'; }
   if (document.getElementById('DivBG')) {
     document.getElementById('DivBG').style.visibility='visible';
   }
@@ -360,6 +394,12 @@ function SetupScreen () {
   if (BGshowCurr=="") {
     document.getElementById('DivBG').addEventListener("click", NextBG, false);
   }
+}
+
+// Initialize and arrange all screen elements based on options.
+function SetupScreen () {
+  var FrameCheck = '';
+  SetupVisibilities();
   RadarTimer = -1;  BGtimer = -1;
   if (HasAniSubs()) { // Subanimate frame.
     BGframe = 0;  // Recall which animated frame is in use.
@@ -380,16 +420,17 @@ function SetupScreen () {
     BGsubIdx = -1;
     BGframeInc = 1;
   }
+  document.getElementById('DivWhole').style.backgroundColor = '#000000';
 }
 
 // Increment to next BG on user keypress or click.
 function NextBG () {
-  BGcurr = (BGcurr+1) % BGdata.length;
+  BGcurr = (BGcurr+BGframeInc) % BGdata.length;  BGprev = -1;
   if (haslocalstorage()) {
     try { localStorage.setItem('main', BGcurr.toString()); }
     catch (err) { }
   }
-  BGshowCurr = BGdata[BGcurr].BGshow;
+  BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
   ShowIntro = 0;  IntroTimer = -1;
   DoRefresh();
 }
@@ -438,24 +479,30 @@ function UpdBG () {
       }
       SaveFrame = false;
     }
-    if (ImgSrc.toLowerCase().indexOf('.htm')>=0) {  // Incomplete support for HTM/JS backgrounds.
-      if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<iframe')<0) { document.getElementById('DivBG').innerHTML = '<iframe id="ImgBG" align="center" frameborder=0 height="'+WinHgt.toString()+'" width="'+WinWid.toString()+'" scrolling=no src="" onClick="NextBG();"></iframe>'; }
-      document.getElementById('ImgBG').src = ImgSrc;
+    if (ImgSrc.length<12) {  // Simple color flood.
+      DrawFloodlight(ImgSrc);
     } else {
-      ImgSrc = ImgSrc.replace(/{unq}/,UnqArg());
-      if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
-      document.getElementById('ImgBG').src = ImgSrc;
-      document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom);
-      document.getElementById('ImgBG').width = Math.floor(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+      if (ImgSrc.toLowerCase().indexOf('.htm')>=0) {  // Incomplete support for HTM/JS backgrounds.
+        if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<iframe')<0) { document.getElementById('DivBG').innerHTML = '<iframe id="ImgBG" align="center" frameborder=0 height="'+WinHgt.toString()+'" width="'+WinWid.toString()+'" scrolling=no src="" onClick="NextBG();"></iframe>'; }
+        document.getElementById('ImgBG').src = ImgSrc;
+      } else {
+        ImgSrc = ImgSrc.replace(/{unq}/,UnqArg());
+        if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
+        document.getElementById('ImgBG').src = ImgSrc;
+        document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+        document.getElementById('ImgBG').width = Math.floor(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+      }
+      document.getElementById('DivBG').style.visibility='visible';
     }
-    document.getElementById('DivBG').style.visibility='visible';
     BGlinkEff = BGdata[BGcurr].BGslides[BGframe].BGlink;
     if (BGlinkEff == WeatherURL) { BGlinkEff = WeatherURLeff; }
     if (IsIOS()) { DescSize = 8; } else { DescSize = 12; }
-    if (BGlinkEff!="") {
-      document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#000000; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:.1em .1em 0px #EEEEEE; -webkit-font-smoothing:antialiased;">'+BGdata[BGcurr].BGslides[BGframe].BGdesc+'</a>';
-    } else {
-      document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#000000; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:.1em .1em 0px #EEEEEE; -webkit-font-smoothing:antialiased;">'+BGdata[BGcurr].BGslides[BGframe].BGdesc+'</span>';
+    if (BGdata[BGcurr].BGslides[BGframe].BGdesc) {
+      if (BGlinkEff!="") {
+        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; '+BGdescBG+' text-shadow:-2px 2px 0px #000000; -webkit-font-smoothing:antialiased;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGframe].BGdesc+'&nbsp;</a>';
+      } else {
+        document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000; -webkit-font-smoothing:antialiased;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGframe].BGdesc+'&nbsp;</span>';
+      }
     }
     if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if frame is same radar
       if (ImgSrc.toUpperCase().indexOf(RadarURLsrc.toUpperCase())>=0) {
@@ -471,7 +518,7 @@ function UpdBG () {
     }
     BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur;
     BGframePrev = BGframe;
-    BGframe = (BGframe+BGframeInc) % BGdata[BGcurr].BGslides.length;
+    if (BGframeInc>0) { BGframe = (BGframe+BGframeInc) % BGdata[BGcurr].BGslides.length; }
   } else {
     if (BGtimer<999999) { BGtimer -= MasterDur; }
   }
@@ -494,14 +541,17 @@ function ShowMoon () {
     document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0>';
     document.getElementById('DivSunTimes').style.left = (OfsX)+'px';
     document.getElementById('DivSunTimes').style.top = (OfsY)+'px';
-    document.getElementById('DivSunTimes').style.width = (WinWid-40)+'px';
-    SunMoonOut += '<span style="font-family:Arial; color:#FDFF59; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px; font-decoration:bold; -webkit-font-smoothing:antialiased;" title="Sunrise time.">'+SunRise+'</span>&nbsp;';
-    SunMoonOut += '<span style="font-family:Arial; color:#FFB883; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px; font-decoration:bold; -webkit-font-smoothing:antialiased;" title="Sunset time.">'+SunSet+'</span>&nbsp;';
+    document.getElementById('DivSunTimes').style.width = (WinWid-4)+'px';
+    SunMoonOut += '<span style="line-height:'+Math.floor(WinWid*SunTimeSizing*.77)+'px;">';
+    SunMoonOut += '<span style="line-height:'+Math.floor(WinWid*SunTimeSizing*1.2)+'px; font-size:'+Math.floor(WinWid*SunTimeSizing*1.15)+'px; text-decoration:bold; font-family:Arial; ';
     if (MoonDaysToFull<0) {
-      SunMoonOut += '<span style="font-family:Arial; color:#000000; font-size:'+Math.floor(WinWid*SunTimeSizing*.9)+'px; -webkit-font-smoothing:antialiased;" title="Days SINCE full moon.">'+Math.abs(MoonDaysToFull)+'</span>';
+      SunMoonOut += 'color:#000000; text-shadow:-2px 2px 0px #FFFFFF;" title="Days SINCE full moon.';
     } else {
-      SunMoonOut += '<span style="font-family:Arial; color:#FFFFFF; font-size:'+Math.floor(WinWid*SunTimeSizing*.9)+'px; -webkit-font-smoothing:antialiased;" title="Days UNTIL full moon.">'+Math.abs(MoonDaysToFull)+'</span>';
+      SunMoonOut += 'color:#FFFFFF; text-shadow:-2px 2px 0px #000000;" title="Days UNTIL full moon.';
     }
+    SunMoonOut += '">'+Math.abs(MoonDaysToFull).toString()+'&nbsp;&nbsp;</span><br>';
+    SunMoonOut += '<span style="font-family:Arial; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" title="Sunrise time.">'+SunRise+'<br></span>';
+    SunMoonOut += '<span style="font-family:Arial; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" title="Sunset time.">'+SunSet+'</span></span>';
     document.getElementById('DivSunTimes').innerHTML = SunMoonOut;
   }
 }
@@ -514,14 +564,14 @@ function SetupSun () {
   if (SunAdjDT.getHours()<1) { SunRise = '12'; }
   if (SunAdjDT.getHours()>12) { SunRise = ''+(SunAdjDT.getHours()-12); } else { SunRise = ''+SunAdjDT.getHours(); }
   if (SunAdjDT.getMinutes()<10) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunAdjDT.getMinutes(); } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunAdjDT.getMinutes(); }
-  if (SunAdjDT.getHours()>11) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">P</span>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">A</font>'; }
+  if (SunAdjDT.getHours()>11) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</span>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
   SunUp = Math.floor(SunAdjDT.getHours());
   SunAdjMS = SunTimes.sunset.getTime() + (InfoZone*60*60*1000);
   SunAdjDT = new Date(SunAdjMS);
   if (SunAdjDT.getHours()<1) { SunSet = '12'; }
   if (SunAdjDT.getHours()>12) { SunSet = ''+(SunAdjDT.getHours()-12); } else { SunSet = ''+SunAdjDT.getHours(); }
   if (SunAdjDT.getMinutes()<10) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunAdjDT.getMinutes(); } else { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunAdjDT.getMinutes(); }
-  if (SunAdjDT.getHours()>11) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">P</font>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">A</font>'; }
+  if (SunAdjDT.getHours()>11) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</font>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
   SunDown = Math.floor(SunAdjDT.getHours());
   var SSdt=new Date(DTadj()); SSh=SSdt.getHours();
   if ( (SSh >= SunUp) && (SSh < SunDown) ) { ClockColor = ClockDay; ClockColorOpp = ClockNight; } else { ClockColor = ClockNight; ClockColorOpp = ClockDay; }
@@ -617,7 +667,7 @@ function SpeakForecast(WFSnum) {
 // Asynchronous receive and parse of JSON response to weather forecast query (on capable browsers).  Current supports only Wunderground.com format.
 var WeatherForecastHandle = 0;
 function FmtMinus (FMin) {
-  return(FMin.toString().replace(/-([0-9]+)/gi,"<nobr><span style='font-size:80%; vertical-align:40%;'>-</span>$1</nobr>"));
+  return(FMin.toString().replace(/-([0-9]+)/gi,"<span style='font-size:80%; vertical-align:40%;'>-</span>$1"));
 }
 function WeatherForecastReceive () {
   WeatherForecast = '';
@@ -650,6 +700,7 @@ function WeatherForecastReceive () {
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
+        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])PRECIP([^A-Z0-9])/gi,"$1PRECIPITATION$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
       }
       for (var FWFlp=0; FWFlp<2; FWFlp++) {
@@ -662,19 +713,19 @@ function WeatherForecastReceive () {
           }
         }
         if (IsIOS()) { ForecastRowsEff = Math.floor(ForecastRows*1.5); } else { ForecastRowsEff = ForecastRows; }
-        WeatherForecast += '<span style="font-family:Arial; font-size:'+(Math.floor(WinMin/ForecastRowsEff))+'px; line-height:90%; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;">';
+        WeatherForecast += '<span style="font-family:Arial; font-size:'+(Math.floor(WinMin/ForecastRowsEff))+'px; line-height:84%; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;">';
         WeatherForecast += '<nobr><img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor((WinMin/ForecastRowsEff)*0.8))+'; margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px;" border=0>';
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+":&nbsp;";
         if (FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'] != FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']) {
-          WeatherForecast += FmtMinus(FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'])+"-";
+          WeatherForecast += FmtMinus(FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'])+"<span style='font-size:70%;'>&#8209;</span>";
         }
         WeatherForecast += FmtMinus(FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit'])+"&deg;</nobr>\n";
         WFtext = FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext'];
-        WFtext = WFtext.replace(/ -([0-9]+)/gi," <nobr><span style='font-size:80%; vertical-align:40%;'>-</span>$1</nobr>");
+        WFtext = WFtext.replace(/ -([0-9]+)/gi," <span style='font-size:80%; vertical-align:40%;'>-</span>$1");
         WeatherForecast += WFtext+"</span>";
         if ( ('speechSynthesis' in window) || (WeatherURLeff!="") ) { WeatherForecast += "</a>"; }
         WeatherForecast = WeatherForecast.replace(/([0-9])F/gi,"$1&deg;");
-        WeatherForecast = WeatherForecast.replace(/([0-9<>;]+) to ([0-9<>;]+)/gi,"$1-$2");
+        WeatherForecast = WeatherForecast.replace(/([0-9<>;]+) to ([0-9<>;]+)/gi,"$1<span style='font-size:70%;'>&#8209;</span>$2");
         WeatherForecast = WeatherForecast.replace(/ at ([0-9<>;]+)/gi," $1");
         WeatherForecast = WeatherForecast.replace(/ mph/gi,"");
         WeatherForecast = WeatherForecast.replace(/\.\.\./gi,"; ");
@@ -816,7 +867,7 @@ function WeatherCurrentReceive () {
       }
       if ( (FWCrec['current_observation']['windchill_f']!="") && (FWCrec['current_observation']['windchill_f']!="NA") && (FWCrec['current_observation']['windchill_f']!="N/A") && (FWCrec['current_observation']['windchill_f']!="null") && (FWCrec['current_observation']['windchill_f']!="undefined") &&
            (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['windchill_f'])>4) ) {
-        WeatherCurrent += '<span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;"><i>'+FmtMinus(FWCrec['current_observation']['windchill_f'])+'<span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.7)+'pt;">&#8226;</span></i></span></nobr> ';
+        WeatherCurrent += '<nobr><span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.9)+'pt;"><i>'+FmtMinus(FWCrec['current_observation']['windchill_f'])+'<span style="font-size:'+Math.floor(RadarWid*WeatherHgtMult*0.7)+'pt;">&#8226;</span></i></span></nobr> ';
       } else {
         if ( (FWCrec['current_observation']['heat_index_f']!="") && (FWCrec['current_observation']['heat_index_f']!="NA") && (FWCrec['current_observation']['heat_index_f']!="N/A") && (FWCrec['current_observation']['heat_index_f']!="null") && (FWCrec['current_observation']['heat_index_f']!="undefined") &&
              (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['heat_index_f'])>4) ) {
@@ -921,13 +972,13 @@ function ShowDate () {
     if (BGshowCurr.indexOf('A')>=0) {
       document.getElementById('DivDate').style.textAlign = 'left';
       document.getElementById('DivDate').style.top = (OfsY+WinHgt*0.65)+'px';
-      document.getElementById('DivDate').style.left = (OfsX+1)+'px';
-      document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.10)+'pt;" onClick="NextBG();">&nbsp;' + AbrvDoW[SDdow] + " " + AbrvMon[SDmonth] + " " + SDday + '</span>';
+      document.getElementById('DivDate').style.left = (OfsX+48)+'px';
+      document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.10)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
     } else {
-      document.getElementById('DivDate').style.textAlign = 'center';
-      document.getElementById('DivDate').style.top = (OfsY+WinHgt*0.45)+'px';
-      document.getElementById('DivDate').style.left = (OfsX+1)+'px';
-      document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.14)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp; " + AbrvMon[SDmonth] + "&nbsp; " + SDday + '</span>';
+      document.getElementById('DivDate').style.textAlign = 'left';
+      document.getElementById('DivDate').style.top = (OfsY+14)+'px';
+      document.getElementById('DivDate').style.left = (OfsX+48)+'px';
+      document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinMin*0.14)+'pt;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
     }
   }
 }
@@ -964,19 +1015,43 @@ function FetchUptimes () {
   }
 }
 
+// Draw floodlight.
+function DrawFloodlight (DFLin) {
+  try {
+    ClearTimers();
+    AllDivsOff();
+    document.getElementById('DivCanvas').style.visibility='visible';
+    CanvasDiv = document.getElementById("DivCanvas");
+    if (CanvasDiv) {
+      CanvasContext = CanvasDiv.getContext("2d");
+      if (CanvasContext) {
+        var CanvasGradient=CanvasContext.createRadialGradient(150,50,70,150,50,200);
+        CanvasGradient.addColorStop(0,DFLin);
+        CanvasGradient.addColorStop(1,"#000000");
+        CanvasContext.fillStyle=CanvasGradient;
+        CanvasContext.fillRect(0,0,999,999);
+      }
+    }
+  } catch (err) { }
+}
+
 // Setup analog clock.
 function AnalogSetup () {
-  ClockCanvas = document.getElementById("AnalogClock");
-  if (ClockCanvas) {
-    ClockContext = ClockCanvas.getContext("2d");
-    if (ClockContext) {
-      ClockCanvas.width = (WinWid-(Math.abs(OfsX)*2));
-      ClockCanvas.height = (WinHgt-(Math.abs(OfsY)*2));
+  try {
+    ClockCanvas = document.getElementById("AnalogClock");
+    if (ClockCanvas) {
+      ClockContext = ClockCanvas.getContext("2d");
+      if (ClockContext) {
+        ClockCanvas.width = (WinWid-(Math.abs(OfsX)*2));
+        ClockCanvas.height = (WinHgt-(Math.abs(OfsY)*2));
+      } else {
+        BGshowCurr = BGshowCurr.replace(/A/gi,'')+'C';  BGshowOverride = 0;
+      }
     } else {
-      BGshowCurr = BGshowCurr.replace(/A/gi,'')+'C';
+      BGshowCurr = BGshowCurr.replace(/A/gi,'')+'C';  BGshowOverride = 0;
     }
-  } else {
-    BGshowCurr = BGshowCurr.replace(/A/gi,'')+'C';
+  } catch (err) {
+    BGshowCurr = BGshowCurr.replace(/A/gi,'')+'C';  BGshowOverride = 0;
   }
 }
 
@@ -993,7 +1068,6 @@ function ShowTime () {
   if (STh>12) { STh = STh-12; }
   if (STh==0) { STh = 12; }
   if (STm<10) { STm = "0" + STm; }
-  var TimeSizeMult = 0.40;
   if (BGshowCurr.indexOf('C')>=0) {
     document.getElementById('SpanTime').innerHTML = '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*TimeSizeMult)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased;" onClick="NextFrame();">' + STh + '</span>' + ClockCursor + '<span style="color:'+ClockColor+'; font-size:'+Math.floor(WinMin*TimeSizeMult)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px #9A008D; -webkit-font-smoothing:antialiased;" onClick="NextFrame();">' + STm + '</span><span style="font-size:'+Math.floor(WinMin*0.07)+'pt; font-family:Arial; color:'+ClockColor+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';
   }
@@ -1023,31 +1097,34 @@ function ShowTime () {
         ClockContext.stroke();
       }
     }
-    // Clears and redraws whole every refresh.  Sloppy but simpe approach.
-    ClockContext.clearRect(0, 0, ClockCanvas.width, ClockCanvas.height);
-    // Draw clock outline and ticks.
-    var ACtickLp, ACtickI, ACtickO, ACtickR, ACtickX1, ACtickX2, ACtickY1, ACtickY2;
-    for (ACtickLp=0; ACtickLp< 12; ACtickLp++) {
-      ACtickI = (ACtickLp % 3) ? 0.75 : 0.7;
-      ACtickO = (ACtickLp % 3) ? 0.95 : 1.0;
-      ACtickR = (Math.TAU * (ACtickLp/12)) - (Math.TAU/4);
-      ACtickX1 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickI * (WinMin/2));
-      ACtickY1 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickI * (WinMin/2));
-      ACtickX2 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickO * (WinMin/2));
-      ACtickY2 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickO * (WinMin/2));
-      ClockContext.lineWidth = (ACtickLp % 3) ? 4 : 10;
-      ClockContext.beginPath();
-      ClockContext.moveTo(ACtickX1, ACtickY1);
-      ClockContext.lineTo(ACtickX2, ACtickY2);
-      ClockContext.strokeStyle = '#999999';
-      ClockContext.lineCap = 'round';
-      ClockContext.stroke();
+    try {
+      // Clears and redraws whole every refresh.  Sloppy but simpe approach.
+      ClockContext.clearRect(0, 0, ClockCanvas.width, ClockCanvas.height);
+      // Draw clock outline and ticks.
+      var ACtickLp, ACtickI, ACtickO, ACtickR, ACtickX1, ACtickX2, ACtickY1, ACtickY2;
+      for (ACtickLp=0; ACtickLp< 12; ACtickLp++) {
+        ACtickI = (ACtickLp % 3) ? 0.75 : 0.7;
+        ACtickO = (ACtickLp % 3) ? 0.95 : 1.0;
+        ACtickR = (Math.TAU * (ACtickLp/12)) - (Math.TAU/4);
+        ACtickX1 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickI * (WinMin/2));
+        ACtickY1 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickI * (WinMin/2));
+        ACtickX2 = (WinWid / 2) + Math.cos(ACtickR) * (ACtickO * (WinMin/2));
+        ACtickY2 = (WinHgt / 2) + Math.sin(ACtickR) * (ACtickO * (WinMin/2));
+        ClockContext.lineWidth = (ACtickLp % 3) ? 4 : 10;
+        ClockContext.beginPath();
+        ClockContext.moveTo(ACtickX1, ACtickY1);
+        ClockContext.lineTo(ACtickX2, ACtickY2);
+        ClockContext.strokeStyle = '#999999';
+        ClockContext.lineCap = 'round';
+        ClockContext.stroke();
+      }
+      // Render clock hands.
+      ACdraw('H', (STh+(STm/60)) / 12, 36, 0.40); // Hour
+      ACdraw('M', STm / 60, 20, 0.75); // Minute
+      ACdraw('S', STs / 60, 4, 0.90); // Second
+      document.getElementById('DivAnalog').style.visibility='visible';
+    } catch (err) {
     }
-    // Render clock hands.
-    ACdraw('H', (STh+(STm/60)) / 12, 36, 0.40); // Hour
-    ACdraw('M', STm / 60, 20, 0.75); // Minute
-    ACdraw('S', STs / 60, 4, 0.90); // Second
-    document.getElementById('DivAnalog').style.visibility='visible';
   }
 }
 
@@ -1178,15 +1255,19 @@ function DoSetup () {
   document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
   document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
   document.getElementById('DivTime').style.left = (OfsX+1)+'px';
-  document.getElementById('DivTime').style.top = (OfsY-10)+'px';
+  document.getElementById('DivTime').style.top = Math.floor(OfsY+(WinHgt/6)).toString()+'px';
   document.getElementById('DivTime').style.width = (WinWid-OfsX-1-RadarWid)+'px';
   document.getElementById('DivTime').style.textAlign = 'center';
   document.getElementById('DivDate').style.width = (WinWid-(RadarWid*0.7)+2)+'px';
   document.getElementById('DivAnalog').style.left = (OfsX)+'px';
   document.getElementById('DivAnalog').style.top = (OfsY)+'px';
-  document.getElementById('DivBGdesc').style.left = (10+OfsX)+'px';
-  document.getElementById('DivBGdesc').style.top = (10+OfsX)+'px';
+  document.getElementById('DivBGdesc').style.left = '0px';
+  document.getElementById('DivBGdesc').style.top = '0px';
   document.getElementById('DivIntro').innerHTML = About;
+  document.getElementById("DivCanvas").style.top = '0px';
+  document.getElementById("DivCanvas").style.left = '0px';
+  document.getElementById("DivCanvas").style.width = (WinWid-(Math.abs(OfsX)*2))+'px';
+  document.getElementById("DivCanvas").style.height = (WinHgt-(Math.abs(OfsY)*2))+'px';
   window.onresize = function(event) { 
     if (ResizeTimer) { clearTimeout(ResizeTimer); }
     ResizeTimer = setTimeout('DoResize()',1200);
@@ -1223,6 +1304,7 @@ function AllDivsOff () {
   if (document.getElementById('DivDate')) { document.getElementById('DivDate').style.visibility='hidden'; }
   if (document.getElementById('SpanDate')) { document.getElementById('SpanDate').style.visibility='hidden'; }
   if (document.getElementById('DivIntro')) { document.getElementById('DivIntro').style.visibility='hidden'; }
+  if (document.getElementById('DivCanvas')) { document.getElementById('DivCanvas').style.visibility='hidden'; }
   if (document.getElementById('DivMoonImg')) { document.getElementById('DivMoonImg').style.visibility='hidden'; }
   if (document.getElementById('DivRadarProgress')) { document.getElementById('DivRadarProgress').style.visibility='hidden'; }
   if (document.getElementById('DivRadar')) { document.getElementById('DivRadar').style.visibility='hidden'; }
@@ -1232,7 +1314,10 @@ function AllDivsOff () {
   if (document.getElementById('SpanTime')) { document.getElementById('SpanTime').style.visibility='hidden'; }
   if (document.getElementById('DivWeatherCurrent')) { document.getElementById('DivWeatherCurrent').style.visibility='hidden'; }
   if (document.getElementById('DivWeatherForecast')) { document.getElementById('DivWeatherForecast').style.visibility='hidden'; }
-  if (document.getElementById('DivWhole')) { document.getElementById('DivWhole').style.visibility='hidden'; }
+  if (document.getElementById('DivWhole')) {
+    document.getElementById('DivWhole').style.visibility='hidden';
+    document.getElementById('DivWhole').style.backgroundColor = '#000000';
+  }
 }
 
 // Stop everything.
@@ -1250,14 +1335,15 @@ function NextFrame() {
     BGframePrev = BGframe;
     SaveFrame = true;
   } else {
-    // Skip over repeated frames.
-    BaseFrame = BGframe;
-    while ( ((BaseFrame+1)< BGdata[BGcurr].BGslides.length) &&
-            (BGdata[BGcurr].BGslides[BGframe].BGsrc.substr(0,(RadarURLsrc.length-2))==BGdata[BGcurr].BGslides[BaseFrame+1].BGsrc.substr(0,(RadarURLsrc.length-2))) ) {
-      BaseFrame++;
+    if (BGframeInc > 0) {
+      // Skip over repeated frames.
+      BaseFrame = BGframe;
+      while ( ((BaseFrame+1)< BGdata[BGcurr].BGslides.length) &&
+              (BGdata[BGcurr].BGslides[BGframe].BGsrc.substr(0,(RadarURLsrc.length-2))==BGdata[BGcurr].BGslides[BaseFrame+1].BGsrc.substr(0,(RadarURLsrc.length-2))) ) {
+        BaseFrame++;
+      }
+      BGframe = BaseFrame;
     }
-    BGframe = BaseFrame;
-    BGframeInc=1;
   }
   UpdBG();
   MasterTimer = setTimeout('DoUpd()',MasterDur);
@@ -1299,7 +1385,7 @@ function ParseMargins (PMin) {
                   }
                 }
               }
-            }
+           }
           }
         }
       }
@@ -1345,42 +1431,69 @@ function CheckKeypress (e) {
       DoDiags();
     } else {
       if ( (KeyPressedCode == 48) || (KeyPressedCode == 96) ) {  // '0' = Display Off
-        ClearTimers();
-        AllDivsOff();
+        if (BGprev<0) {
+          BGprev = BGcurr;
+          ClearTimers();
+          AllDivsOff();
+        } else {
+          BGcurr = BGprev;  BGprev = -1;
+          BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
+          SetupVisibilities();
+          ClockTimer = -1;
+          DoUpd();
+        }
       } else {
         if (KeyPressedCode == 106) {  // '*' = Unused
         } else {
-          if ( (KeyPressedCode == 111) || (KeyPressedCode == 191) )  {  // '/' = Pause | Resume background sequencing.
+          if ( (KeyPressedCode == 109) || (KeyPressedCode == 189) ) {  // '-' = Pause | Resume background sequencing.
             if (! HasAniSubs()) {
-              ClearTimers();
-              if (BGframeInc>0) { BGframeInc=0; } else { BGframeInc=1; }
+              if (BGframeInc>0) { BGframeInc = 0; } else { BGframeInc = 1; }              
+              if (BGframeInc>0) {
+                NextFrame();
+                BGdescBG = '';
+                if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
+              } else {
+                ClearTimers();
+                BGdescBG = ' background-color:#020066; ';
+                if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = '#020066'; }
+              }
               MasterTimer = setTimeout('DoUpd()',MasterDur);
             }
           } else {
             if ( (KeyPressedCode == 107) || (KeyPressedCode == 187) ) {  // '+' = Next frame in current slideshow.
-              NextFrame();
-            } else {  // Quick jump to specified mode, from numeric keypad.
-              if ( (KeyPressedCode > 48) && (KeyPressedCode <= 48+BGdata.length) ) {
-                ClearTimers();
-                BGcurr = KeyPressedCode - (48+1);
-                if (haslocalstorage()) {
-                  try { localStorage.setItem('main', BGcurr.toString()); }
-                  catch (err) { }
-                }
-                BGshowCurr = BGdata[BGcurr].BGshow;
-                ShowIntro = 0;  IntroTimer = -1;
-                DoRefresh();
-              } else {  // Quick jump to specified mode, from number keys.
-                if ( (KeyPressedCode > 96) && (KeyPressedCode <= 96+BGdata.length) ) {
+              BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+            } else {
+              if ( (KeyPressedCode > 48) && (KeyPressedCode <= 48+BGdata.length) ) {  // Quick jump to specified mode, from numeric keypad.
+                BGcurrChk = KeyPressedCode - (48+1);
+                if (BGcurrChk == BGcurr) {
+                  BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+                } else {
                   ClearTimers();
-                  BGcurr = KeyPressedCode - (96+1);
+                  BGcurr = BGcurrChk;  BGprev = -1;
                   if (haslocalstorage()) {
                     try { localStorage.setItem('main', BGcurr.toString()); }
                     catch (err) { }
                   }
-                  BGshowCurr = BGdata[BGcurr].BGshow;
+                  BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
                   ShowIntro = 0;  IntroTimer = -1;
                   DoRefresh();
+                }
+              } else {
+                if ( (KeyPressedCode > 96) && (KeyPressedCode <= 96+BGdata.length) ) {  // Quick jump to specified mode, from number keys.
+                  BGcurrChk = KeyPressedCode - (96+1);
+                  if (BGcurrChk == BGcurr) {
+                    BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+                  } else {
+                    ClearTimers();
+                    BGcurr = BGcurrChk;  BGprev = -1;
+                    if (haslocalstorage()) {
+                      try { localStorage.setItem('main', BGcurr.toString()); }
+                      catch (err) { }
+                    }
+                    BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
+                    ShowIntro = 0;  IntroTimer = -1;
+                    DoRefresh();
+                  }
                 } else {
                   if ( (KeyPressedCode == 10) || (KeyPressedCode == 13) || (KeyPressedCode == 0) ) {  // ENTER speaks forecast.
                     ClearTimers();
@@ -1391,21 +1504,21 @@ function CheckKeypress (e) {
                       ClearTimers();
                       DoRefresh();
                     } else {
-                      if ( (KeyPressedCode == 109) || (KeyPressedCode == 189) ) {  // '-' = unused
-                        if (BGshowCurr=="") {
-                          BGshowCurr = BGdata[BGcurr].BGshow;
+                      if ( (KeyPressedCode == 111) || (KeyPressedCode == 191) )  {  // '/' = Clock display manual options
+                        if (BGshowOverride < 1) {  // Initialize override mode.
+                          BGshowOverride = 1;
                         } else {
-                          if (BGshowCurr.indexOf('C')>=0) {
-                            BGshowCurr = "ADW";
-                          } else {
-                            if (BGshowCurr.indexOf('A')>=0) {
-                              BGshowCurr = "";
-                            }
-                          }
+                          BGshowOverride++;  if (BGshowOverride > BGshowArr.length) { BGshowOverride = 1; }
                         }
+                        BGshowCurr = BGshowArr[BGshowOverride-1];
+                        BGframeIncPrev = BGframeInc;  BGframePrev = BGframe;  BGframeInc = 0;
                         AllDivsOff();
+                        ClockCursor = '<font style="vertical-align:20%; margin-left:-5px; font-size:'+Math.floor(WinMin*0.19)+'pt; color:'+ClockColor+'; text-shadow:none;" onClick="NextFrame();">:</font>';
                         DoSetup();
+                        ShowTime();
                         ShowDate();
+                        BGframe = BGframePrev;  
+                        BGframeInc = BGframeIncPrev;
                       } else {
                         switch(KeyPressedCode) {
                           case 85:
@@ -1529,8 +1642,8 @@ function DoBoot () {
       if (BGcurrArg.length > 0) {
         var BGcurrTmp = parseInt(BGcurrArg);
         if ( (BGcurrTmp >= 0) && (BGcurrTmp < BGdata.length) ) {
-          BGcurr = BGcurrTmp;
-          BGshowCurr = BGdata[BGcurr].BGshow;
+          BGcurr = BGcurrTmp;  BGprev = -1;
+          BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
           ShowIntro = 0; IntroTimer = -1;
         }
       } else { }
@@ -1539,12 +1652,13 @@ function DoBoot () {
   // Optionally set BG from URL using parameter like ?<code>
   var CodePatt = '';  var CodeMatch = '';  var CodeIn = '';
   CodeIn = ' '+location.href.toUpperCase()+' ';
-  for (var ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
+  var ArgLp = 0;
+  for (ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
     CodePatt = '[^a-zA-Z0-9]'+BGdata[ArgLp].BGcode.toUpperCase()+'[^a-zA-Z0-9]';
     CodeMatch = new RegExp(CodePatt);
     if (CodeMatch.test(CodeIn)) {
-      BGcurr = ArgLp;
-      BGshowCurr = BGdata[BGcurr].BGshow;
+      BGcurr = ArgLp;  BGprev = -1;
+      BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
       ShowIntro = 0;  IntroTimer = -1;
       // Check for optional .[frame] extension, launches slideshow at particular frame.  Esp. useful for movie slideshow.
       for (var SubLp=0; SubLp<BGdata[BGcurr].BGslides.length; SubLp++) {
@@ -1592,7 +1706,7 @@ function DoInit () {
   HourPrev = -1;  HourCurr = -1;  MinutePrev = -1;  MinuteCurr = -1;
   RadarIdx = -1;  RadarTimer = -1;
   BGsubIdx = -1;
-  BGshowCurr = BGdata[BGcurr].BGshow;
+  BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;
 }
 
 // Completely refresh screen to update from major display changes.
@@ -1607,29 +1721,30 @@ function DoRefresh () {
 
 <body onLoad="DoBoot();" style="margin-top:0px; margin-left:0px; margin-bottom:0px; margin-right:0px; overflow:hidden;" bgColor='#000000'; onKeydown='CheckKeypress(event);'>
 
-<div id="DivWhole" style="z-index:0; position:relative; width:100%; height:100%; overflow:hidden;">
+<div id="DivWhole" style="z-index:0; position:relative; width:100%; height:100%; overflow:hidden; border-radius:25px;">
+<canvas id="DivCanvas" style="z-index:1;"> </canvas>
 
-<div id="DivBG" style="z-index:1; position:absolute; left:0px; top:0px; overflow:hidden;"></div>
+<div id="DivBG" style="z-index:2; position:absolute; left:0px; top:0px; overflow:hidden;"></div>
 
-<div id="DivAnalog" style="z-index:2; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClock" onClick="NextFrame();"> </canvas></div>
+<div id="DivAnalog" style="z-index:3; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClock" onClick="NextFrame();"> </canvas></div>
 
-<div id="DivRadarProgress" style="z-index:3; position:absolute; left:0px; top:0px; width:10px; height:40px; background-color:#779368; border-radius:25px;"> &nbsp; </div>
-<div id="DivRadar" style="z-index:4; position:absolute; left:0px; top:0px;"></div>
-<div id="DivMoonImg" style="z-index:5; position:absolute; left:0px; top:-34px;"></div>
-<div id="DivSunTimes" style="z-index:6; position:absolute; left:0px; top:0px; text-align:right;"></div>
+<div id="DivRadarProgress" style="z-index:4; position:absolute; left:0px; top:0px; width:10px; height:40px; background-color:#779368; border-radius:25px;"> &nbsp; </div>
+<div id="DivRadar" style="z-index:5; position:absolute; left:0px; top:0px;"></div>
+<div id="DivMoonImg" style="z-index:6; position:absolute; left:0px; top:-34px;"></div>
+<div id="DivSunTimes" style="z-index:7; position:absolute; left:0px; top:0px; text-align:right;"></div>
 
-<div id="DivWeatherForecast" style="z-index:7; position:absolute; left:0px; top:0px;"></div>
-<div id="DivWeatherCurrent" style="z-index:8; position:absolute; left:0px; top:0px; text-align:right;"></div>
+<div id="DivWeatherForecast" style="z-index:8; position:absolute; left:0px; top:0px;"></div>
+<div id="DivWeatherCurrent" style="z-index:9; position:absolute; left:0px; top:0px; text-align:right;"></div>
 
-<div id="DivBGdesc" style="z-index:9; position:absolute; left:0px; top:0px;"></div>
+<div id="DivBGdesc" style="z-index:10; position:absolute; left:0px; top:0px;"></div>
 
-<div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:right;"><span id="SpanTime"></span></div>
+<div id="DivTime" style="z-index:11; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime"></span></div>
 
-<div id="DivDate" style="z-index:11; position:absolute; left:1px; top:0px; text-align:center;"><span id="SpanDate"></span></div>
+<div id="DivDate" style="z-index:12; position:absolute; left:1px; top:0px;"><span id="SpanDate"></span></div>
 
-<div id="DivAbout" style="z-index:12; position:absolute; left:0px; top:0px; visibility:hidden;"><span id="SpanAbout" onClick="IntroTimer=IntroDur;" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; -webkit-font-smoothing:antialiased;"><b>?</b></span></div>
+<div id="DivAbout" style="z-index:13; position:absolute; left:0px; top:0px; visibility:hidden;"><span id="SpanAbout" onClick="IntroTimer=IntroDur;" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; -webkit-font-smoothing:antialiased;"><b>?</b></span></div>
 
-<div id="DivIntro" style="z-index:13; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
+<div id="DivIntro" style="z-index:14; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
 
 </div>
 
