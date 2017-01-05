@@ -22,7 +22,8 @@ MAIN KEYS: (designed for use with a wireless numeric keypad for quick access to 
 	•	0 : Off. (Zero or Oh blanks display to black)<br>
 
 OTHER KEYS:<br>
-	•	* : Stopwatch.<br>
+	•	. : Stopwatch.<br>
+	•	* : Slower.<br>
 	•	c : Screen tests.<br>
 	•	q : Technical info.<br>
 	•	uiophjkl : Screen position/size adjust.<br>
