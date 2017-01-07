@@ -36,8 +36,8 @@ var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this ins
 var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezoneOffset()/60 but reads wrong on most browsers?!?
 var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
-var WeatherForecastURL = 'http://chi.bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
-var WeatherCurrentURL = 'http://chi.bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+var WeatherForecastURL = 'http://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
+var WeatherCurrentURL = 'http://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
 var ClockColorDay = '#000000';  // Daytime color of some time/date parts.
 var ClockColorNight = '#FFFFFF';  // Nighttime color of some mtime/date parts.
