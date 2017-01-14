@@ -1,8 +1,6 @@
-InfoWall : At-a-glance time/date, weather/forecast/radar, webcams, more. Ideal for constant-on projector, netbook or tablet.
+InfoWall : At-a-glance information wall.  Shows time/date, weather/forecast/radar, webcams, more. Ideal for constant-on projector, netbook or tablet.  Javascript software runs in a browser. Automatically adjusts all elements to window size and rotation to maximize readability.
 
-Web-based Javascript software runs in a browser. Automatically adjusts all elements to window size and rotation to maximize readability. Weather forecast uses Wunderground.com API. Speaks the forecast on capable browsers. Works well on Android dongles.
-
-Demonstrates numerous advanced Javascript and HTML techniques such as canvas element and drawing, analog clock, text to speech, JSON fetch and parse, weather API use, structured array constant config, querystring reading, use of localstorage, responsive auto-formatting, keypress handling, sun/moon calculations, timer based centralized update handling and more.
+Demonstrates many advanced Javascript / HTML / DOM techniques such as canvas element and drawing, JSON handling, API use, structured array constant config, querystring reading, use of localstorage, text to speech, responsive auto-formatting, keypress handling, celestial calculations, centralized timer update handling and more.
 
 USAGE:<br>
 	•	Simply open the index.htm<br>
