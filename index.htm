@@ -59,20 +59,22 @@ var TwisterDur = 10000;  // Time between Twister spins.
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [W]eather [V]ocal
   { BGcode:"webcams", BGshow:"CDFIMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.
-    // Dead as of 2015.04.14: { BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unqsec}", BGlink:"http://www.luc.edu/webcams/", BGdesc:"Loyola, Water Tower", BGdur:4000, BGzoom:1, BGsub:0 },
-    // Dead as of 2015.11.27: { BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdesc:"Wrigley Field, Clark and Addison", BGdur:5000, BGzoom:1, BGsub:0 },
-    // Dead as of 2016.06.30: { BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdesc:"Wrigley, Clark and Addison", BGdur:2000, BGzoom:1, BGsub:0 },
-    // Dead as of 2016.09.02: { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdesc:"Belmont Harbor", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://icons.wunderground.com/webcamramdisk/r/h/RhodesNET/1/current.jpg?{unqmin}", BGlink:"https://www.wunderground.com/webcams/RhodesNET/1/show.html", BGdesc:"Water Station", BGdur:6000, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqmin}", BGdesc:"Riverwalk", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqmin}", BGdesc:"Hancock North", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqmin}", BGdesc:"Downtown and the Lake", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },    
-    { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqmin}", BGdesc:"Grant Park", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqmin}", BGdesc:"Daley Plaza", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqmin}", BGdesc:"Western and Addison", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqmin}", BGdesc:"St. Clement, 2524 N Orchard", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://www.oakstbeach.com/", BGsrc:"http://205.178.49.123:8080/snapshot.cgi?user=guest&amp;pwd=password&amp;t=1421826844?{unqmin}", BGdesc:"Oak Street Beach", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdesc:"Local Radar", BGdur:5000, BGzoom:1, BGsub:0 } ] },
+    // 2015.04.14 { BGdesc:"Loyola, Water Tower", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unqsec}", BGlink:"http://www.luc.edu/webcams/", BGdur:4000, BGzoom:1, BGsub:0 },
+    // 2015.11.27 { BGdesc:"Wrigley Field, Clark and Addison", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2016.06.30 { BGdesc:"Wrigley, Clark and Addison", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdur:2000, BGzoom:1, BGsub:0 },
+    // 2016.09.02 { BGdesc:"Belmont Harbor", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2017.01.07 { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqmin}", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Water Station", BGsrc:"http://icons.wunderground.com/webcamramdisk/r/h/RhodesNET/1/current.jpg?{unqmin}", BGlink:"https://www.wunderground.com/webcams/RhodesNET/1/show.html", BGdur:6000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqmin}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqmin}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },    
+    { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqmin}", BGdur:5000, BGzoom:1, BGsub:0 } ] },
   { BGcode:"art", BGshow:"ADISW", BGslides: [
     { BGlink:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGsrc:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:15000, BGzoom:1, BGsub:0 },
     { BGlink:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:15000, BGzoom:1, BGsub:0 },
@@ -2019,3 +2021,4 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
+\
