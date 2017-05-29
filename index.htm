@@ -8,15 +8,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta property="og:title" content="InfoWall">
 <meta property="og:description" content="InfoWall : At-a-glance time, date, weather, webcams, more.">
-<meta property="og:image" content="http://bedno.com/g/infowall.jpg">
-<meta property="og:url" content="http://bedno.com/infowall">
+<meta property="og:image" content="https://bedno.com/g/infowall.jpg">
+<meta property="og:url" content="https://bedno.com/infowall">
 <meta property="og:site_name" content="Bedno.com">
 
 <script>
 var About = 'InfoWall : At-a-glance time, date, weather, webcams, more.<br><br>' +
             'Click Time for next background. Click Date for next slideshow. Click Forecast to speak it.<br>' +
             '<span style="font-size:10pt;">Works best in Safari and Chrome (F11 for Full Screen).</span><br><br>' +
-            '<a href="http://Bedno.com/infowall/about" target="About">More info...</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
+            '<a href="https://Bedno.com/infowall/about" target="About">More info...</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
             '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
             '<span onClick="TechReadout();" title="Click for technical details." style="font-size:8pt; color:#C0C0C0;">&#128295;</span>';  // Wrench icon.
 // Demonstrates a number of advanced Javascript techniques:
@@ -30,25 +30,26 @@ var About = 'InfoWall : At-a-glance time, date, weather, webcams, more.<br><br>'
 
 // CONFIGURABLES:
 
-// Configure Wunderground.com (Weather Underground) aspects below.  See http://www.wunderground.com/weather/api/
+// Configure Wunderground.com (Weather Underground) aspects below.  See https://www.wunderground.com/weather/api/
 var InfoZip = '60657';  // Zipcode of this installation.  60657=Chicago
 var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this installation.  41.94637,-87.64519=Chicago
 var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezoneOffset()/60 but reads wrong on most browsers?!?
-var WeatherURL = 'http://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
+var WeatherURL = 'https://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
-var WeatherForecastURL = 'http://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
-var WeatherCurrentURL = 'http://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
+var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
 var ClockColorDay = '#000000';  // Daytime color of some time/date parts.
 var ClockColorNight = '#FFFFFF';  // Nighttime color of some mtime/date parts.
 // Quick B&W: var ClockShadows = new Array('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
 // Simple rainbow: var ClockShadows = new Array('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
 var ClockShadows = new Array('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FAF2BC','FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
+var ClockOpacity = new Array(     0.4,     0.5,     0.6,     0.8,     0.9,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1);
 var ClockUpdDur = Math.floor(1000/ClockShadows.length);
 var ForecastColor = '#EEEEEE';  // Forecast text color.
 var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
 var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
-var RadarURLsrc = "http://radar.weather.gov/ridge/lite/N0R/LOT_loop.gif";
+var RadarURLsrc = "https://radar.weather.gov/ridge/lite/N0R/LOT_loop.gif";  // XXX_loop: LOT=Chicago(down since 2017.03), ILX=Springfield
 var WeatherShadow = " text-shadow:-2px 2px 0px #000000;"
 var MoonDiam = 1/6;  // Relative size of the displayed moon.
 var WeatherCurrentHgt = 0.13;
@@ -63,18 +64,24 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     // 2015.11.27 { BGdesc:"Wrigley Field, Clark and Addison", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdur:5000, BGzoom:1, BGsub:0 },
     // 2016.06.30 { BGdesc:"Wrigley, Clark and Addison", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdur:2000, BGzoom:1, BGsub:0 },
     // 2016.09.02 { BGdesc:"Belmont Harbor", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.01.07 { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqmin}", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Water Station", BGsrc:"http://icons.wunderground.com/webcamramdisk/r/h/RhodesNET/1/current.jpg?{unqmin}", BGlink:"https://www.wunderground.com/webcams/RhodesNET/1/show.html", BGdur:6000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqmin}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqmin}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },    
-    { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqmin}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqmin}", BGdur:5000, BGzoom:1, BGsub:0 } ] },
+    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2017.02.11 { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2017.04.30 { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqdec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0 },
+    // 2017.05.09 { BGdesc:"1 S Wacker", BGsrc:"http://166.241.64.227:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/434502/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:6000, BGzoom:1, BGsub:0 },
+    { BGdesc:"NOAA Skyline", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi1.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"NOAA Navy Pier", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi2.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"NOAA Harbor", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi3.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Shedd", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/SheddAquarium.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"1200 W Harrison", BGsrc:"http://131.193.91.50:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/241329/", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0 },
+    { BGdesc:"Satellite", BGlink:"http://www.goes.noaa.gov/nhemi.html", BGsrc:"http://www.ssd.noaa.gov/goes/comp/nhem/ft-animated.gif?{unqdec}", BGdur:6000, BGzoom:1, BGsub:0 } ] },  // Still image: http://www.ssd.noaa.gov/goes/comp/nhem/ft.jpg
   { BGcode:"art", BGshow:"ADISW", BGslides: [
     { BGlink:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGsrc:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:15000, BGzoom:1, BGsub:0 },
     { BGlink:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:15000, BGzoom:1, BGsub:0 },
@@ -305,13 +312,13 @@ function DTadj () {
 
 // Used to force non-caching of webcam images.
 function UnqSec () {
-  var UAdt=new Date(DTadj());
-  return(''+UAdt.getYear().toString()+''+UAdt.getMonth().toString()+''+UAdt.getDate().toString()+''+UAdt.getHours().toString()+''+UAdt.getMinutes().toString()+''+UAdt.getSeconds().toString()+'');
+  var Udt=new Date(DTadj());
+  return(''+Udt.getYear().toString()+''+Udt.getMonth().toString()+''+Udt.getDate().toString()+''+Udt.getHours().toString()+''+Udt.getMinutes().toString()+''+Udt.getSeconds().toString()+'');
 }
-function UnqMin () {
-  var UAdt=new Date(DTadj());
-  var UAMinFrac = Math.floor(UAdt.getMinutes()/5);
-  return(''+UAdt.getYear().toString()+''+UAdt.getMonth().toString()+''+UAdt.getDate().toString()+''+UAdt.getHours().toString()+''+UAMinFrac.toString()+'');
+function UnqDec () {
+  var Udt=new Date(DTadj());
+  var UFrac = Math.floor(Udt.getMinutes()/6);
+  return(''+Udt.getYear().toString()+''+Udt.getMonth().toString()+''+Udt.getDate().toString()+''+Udt.getHours().toString()+''+UFrac.toString()+'');
 }
 
 // Check if current slideshow contains any movie slides.
@@ -386,7 +393,7 @@ function SetupVisibilities () {
   if ( (BGshowCurr.indexOf('A')<0) && (BGshowCurr.indexOf('C')<0) && (BGshowCurr.indexOf('D')<0) ) {
     document.getElementById('DivBG').addEventListener("click", NextBG, false);
   }
-  if (StopwatchStarted > 0) { 
+  if (StopwatchStarted > 0) {
     document.getElementById('DivStopwatch').style.visibility='visible';
   }
 }
@@ -505,7 +512,7 @@ function UpdBG () {
         document.getElementById('ImgBG').src = ImgSrc;
       } else {
         ImgSrc = ImgSrc.replace(/{unqsec}/,UnqSec());
-        ImgSrc = ImgSrc.replace(/{unqmin}/,UnqMin());
+        ImgSrc = ImgSrc.replace(/{unqdec}/,UnqDec());
         if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
         document.getElementById('ImgBG').src = ImgSrc;
         document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom);
@@ -556,7 +563,7 @@ function ShowMoon () {
   }
   if (BGshowCurr.indexOf('M')>=0) {
     document.getElementById('DivMoonImg').style.left = OfsX+Math.floor(WinWid-(WinMin*MoonDiam)+11)+'px';
-    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="http://bedno.com/g/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0>';
+    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="https://bedno.com/g/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0>';
     document.getElementById('DivSunTimes').style.left = (OfsX)+'px';
     document.getElementById('DivSunTimes').style.top = (OfsY)+'px';
     document.getElementById('DivSunTimes').style.width = (WinWid-4)+'px';
@@ -622,7 +629,7 @@ function SpeakForecast(WFSnum) {
     var SpkMn = "";
     if (SpkDT.getMinutes()>0) {
       SpkMn = SpkDT.getMinutes().toString();
-      if (SpkMn.length<2) SpkMn = " OH "+SpkMn;
+      if (SpkMn.length<2) SpkMn = " O "+SpkMn;
     }
     if (typeof WeatherForecastSpoken[0] !== 'undefined') {
       if (WFSnum==0) {
@@ -757,7 +764,7 @@ function WeatherForecastRequest () {
   if (WeatherForecastHandle) {
     try {
       if (WeatherForecastURL.length>1) {
-        WeatherForecastHandle.open('GET', WeatherForecastURL, true);
+        WeatherForecastHandle.open('GET', WeatherForecastURL+'?'+UnqSec(), true);
         WeatherForecastHandle.timeout = 20000;
         WeatherForecastHandle.onreadystatechange = WeatherForecastReceive;
         WeatherForecastHandle.send(null);
@@ -889,7 +896,6 @@ function WeatherCurrentReceive () {
       var FWCout = "";
       FWCout += '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:Arial; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px; line-height:'+Math.floor(WinHgt*WeatherCurrentHgt*0.7)+'px; color:#FFFFFF; text-decoration:none; font-stretch:condensed; -webkit-font-smoothing:antialiased;'+WeatherShadow+'" title="Detailed Weather Forecast" onMousedown="'+WeatherURLtmp+'">'+WeatherCurrent+'</span>';
       document.getElementById('DivWeatherCurrent').innerHTML = FWCout;
-      // alert(FWCout);
     }
     ShowMoon();
   }
@@ -917,7 +923,7 @@ function WeatherCurrentRequest () {
   if (WeatherCurrentHandle) {
     try {
       if (WeatherCurrentURL.length>1) {
-        WeatherCurrentHandle.open('GET', WeatherCurrentURL, true);
+        WeatherCurrentHandle.open('GET', WeatherCurrentURL+'?'+UnqSec(), true);
         WeatherCurrentHandle.timeout = 20000;
         WeatherCurrentHandle.onreadystatechange = WeatherCurrentReceive;
         WeatherCurrentHandle.send(null);
@@ -942,6 +948,7 @@ function SetupWeather () {
   document.getElementById('DivWeatherForecast').style.height = Math.floor(WinHgt*.3)+'px';
   document.getElementById('DivWeatherForecast').style.left = (OfsX+18)+'px';
   document.getElementById('DivWeatherForecast').style.width = (WinWid-OfsX-36)+'px';
+  document.getElementById('DivWeatherForecast').style.opacity = 0.8;
   WeatherForecastTimer = 0;
   WeatherCurrentTimer = 0;
 }
@@ -957,6 +964,7 @@ function ShowDate () {
     document.getElementById('DivDate').style.top = (OfsY)+'px';
     document.getElementById('DivDate').style.left = (OfsX+48)+'px';
     document.getElementById('DivDate').style.width = (WinWid-OfsX-48)+'px';
+    document.getElementById('DivDate').style.opacity = 1.0;
     document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+ClockColorOpp+'; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinHgt*0.18)+'px;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
   }
 }
@@ -1080,7 +1088,7 @@ function ShowTime () {
   ClockShade = "#"+ClockShadows[(ClockShadowSeq+Math.floor(ClockShadows.length/2))%ClockShadows.length];
   if (BGshowCurr.indexOf('C')>=0) {
     ColonElev = Math.floor((STs/59)*80)+10;
-    document.getElementById('SpanTime').innerHTML = '<span style="color:'+ClockShade+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span><span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(WinMin*0.05)+'px; font-size:'+Math.floor(WinMin*0.2)+'px; color:'+ClockShadow+'; text-shadow:none;">:</span><span style="color:'+ClockShade+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span><span style="font-size:'+Math.floor(WinMin*0.09)+'px; font-family:Arial; color:'+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';
+    document.getElementById('SpanTime').innerHTML = '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity[ClockShadowSeq].toString()+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span><span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(WinMin*0.05)+'px; font-size:'+Math.floor(WinMin*0.2)+'px; color:'+ClockShadow+'; text-shadow:none;">:</span><span style="color:'+ClockShade+'; opacity:'+ClockOpacity[ClockShadowSeq].toString()+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span><span style="font-size:'+Math.floor(WinMin*0.09)+'px; font-family:Arial; color:'+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';
   }
   if (BGshowCurr.indexOf('A')>=0) {
     Math.TAU = 2 * Math.PI;
@@ -1260,7 +1268,7 @@ function DoTestPattern () {
   if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
   document.getElementById('ImgBG').height = WinHgt;
   document.getElementById('ImgBG').width = WinWid;
-  document.getElementById('ImgBG').src = "http://bedno.com/g/Test_Pattern.jpg";
+  document.getElementById('ImgBG').src = "https://bedno.com/g/Test_Pattern.jpg";
 }
 function DoDiags () {
   if (STmode==0) { DoTestPattern(); STmode=1; } else { if (STmode==1) { DoColors(); STmode=2; } else { if (STmode==2) { STdur = 5000; DoBlink(); STmode=3; } else { if (STmode==3) { STdur = 250; DoBlink(); STmode=4; } else { STdur = 20; DoBlink(); STmode=0; } } } }
@@ -1303,7 +1311,7 @@ function DoSetup () {
   document.getElementById("DivCanvas").style.left = '0px';
   document.getElementById("DivCanvas").style.width = (WinWid-(Math.abs(OfsX)*2))+'px';
   document.getElementById("DivCanvas").style.height = (WinHgt-(Math.abs(OfsY)*2))+'px';
-  window.onresize = function(event) { 
+  window.onresize = function(event) {
     if (ResizeTimer) { clearTimeout(ResizeTimer); }
     ResizeTimer = setTimeout('DoResize()',1200);
   }
@@ -1384,6 +1392,8 @@ function NextFrame() {
         BaseFrame++;
       }
       BGframe = BaseFrame;
+    } else {
+      BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
     }
   }
   UpdBG();
@@ -1494,7 +1504,7 @@ function CheckKeypress (e) {
         } else {
           if ( (KeyPressedCode == 109) || (KeyPressedCode == 189) ) {  // '-' = Pause | Resume background sequencing.
             if (! HasAniSubs()) {
-              if (BGframeInc>0) { BGframeInc = 0; } else { BGframeInc = 1; }              
+              if (BGframeInc>0) { BGframeInc = 0; } else { BGframeInc = 1; }
               if (BGframeInc>0) {
                 NextFrame();
                 BGdescBG = '';
@@ -1571,11 +1581,12 @@ function CheckKeypress (e) {
                         if (BGdata[BGcurr].BGshow.indexOf('V')>=0) { BGshowCurr += 'V'; }
                         if (BGdata[BGcurr].BGshow.indexOf('S')>=0) { BGshowCurr += 'S'; }
                         BGframeIncPrev = BGframeInc;  BGframePrev = BGframe;  BGframeInc = 0;
+                        BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
                         AllDivsOff();
                         DoSetup();
                         ShowTime();
                         ShowDate();
-                        BGframe = BGframePrev;  
+                        BGframe = BGframePrev;
                         BGframeInc = BGframeIncPrev;
                       } else {
                         switch(KeyPressedCode) {
@@ -1619,7 +1630,6 @@ function CheckKeypress (e) {
                             break;
                           default:
                            // Unhandled keys do nothing.
-                           // alert(KeyPressedCode.toString());
                         }
                       }
                     }
@@ -1698,7 +1708,7 @@ function DoBoot () {
   FetchUptimes();
   var ShowPatt = /show=([A-Z0-9]+)/i;
   var ShowMatches = location.href.toUpperCase().match(ShowPatt);
-  if (ShowMatches) { if (ShowMatches.length>0) { if (ShowMatches[1].length>0) { BGshowArg = ShowMatches[1]; ShowIntro = 0; alert('Override option: '+BGshowArg); } } }
+  if (ShowMatches) { if (ShowMatches.length>0) { if (ShowMatches[1].length>0) { BGshowArg = ShowMatches[1]; ShowIntro = 0; } } }
   if (haslocalstorage()) {
     try {
       var BGcurrArg = localStorage.getItem('main');  if ( (BGcurrArg.length<1) || (BGcurrArg.length>2) ) { BGcurrArg = ''; }
@@ -1708,7 +1718,7 @@ function DoBoot () {
           BGcurr = BGcurrTmp;  BGprev = -1;
           if (BGshowArg.length > 0) { BGshowCurr = BGshowArg; } else { BGshowCurr = BGdata[BGcurr].BGshow; }
           BGshowOverride = 0;  BGdurMult = 0;  BGdurMultStr = '';
-          ShowIntro = 0; IntroTimer = -1;
+          ShowIntro = 0;  IntroTimer = -1;
         }
       } else { }
     } catch (err) { }
@@ -1765,7 +1775,7 @@ function DoInit () {
   if (STtimer!=null) { clearTimeout(STtimer); }
   if (MasterTimer!=null) { clearTimeout(MasterTimer); }
   MasterTimer = null;
-  BGframe = 0;  BGframePrev = BGframe;  BGframeInc = 1;  BGtimer = -1;
+  BGframe = 0;  BGframePrev = BGframe;  BGframeInc = 1;  BGtimer = -1;  BGdurMult = 0;
   ClockColor = ClockColorDay;  ClockColorPrev = '';  ClockColorOpp = ClockColorNight;
   ClockUpdTimer = 0;
   HourPrev = -1;  HourCurr = -1;  MinutePrev = -1;  MinuteCurr = -1;
@@ -1805,7 +1815,7 @@ function DoRefresh () {
 
 <div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextFrame();'></span></div>
 
-<div id="DivWeatherCurrent" style="z-index:11; position:absolute; left:0px; top:0px; text-align:center;"></div>
+<div id="DivWeatherCurrent" style="z-index:11; position:absolute; left:0px; top:0px; text-align:center; opacity:1.0;"></div>
 
 <div id="DivDate" style="z-index:12; position:absolute; left:1px; top:0px;"><span id="SpanDate"></span></div>
 
@@ -2021,4 +2031,3 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
-\
