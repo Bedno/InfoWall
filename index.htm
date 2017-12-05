@@ -58,202 +58,209 @@ var FloodDur = 250; // Cycle time between flood color changes.
 var TwisterDur = 10000;  // Time between Twister spins.
 
 // BACKGROUNDS and STYLING
-var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [W]eather [V]ocal
-  { BGcode:"webcams", BGshow:"CDFIMW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.
-    // 2015.04.14 { BGdesc:"Loyola, Water Tower", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unqsec}", BGlink:"http://www.luc.edu/webcams/", BGdur:4000, BGzoom:1, BGsub:0 },
-    // 2015.11.27 { BGdesc:"Wrigley Field, Clark and Addison", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2016.06.30 { BGdesc:"Wrigley, Clark and Addison", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdur:2000, BGzoom:1, BGsub:0 },
-    // 2016.09.02 { BGdesc:"Belmont Harbor", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.02.11 { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.04.30 { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqdec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0 },
-    // 2017.05.09 { BGdesc:"1 S Wacker", BGsrc:"http://166.241.64.227:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/434502/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:6000, BGzoom:1, BGsub:0 },
-    { BGdesc:"NOAA Skyline", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi1.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"NOAA Navy Pier", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi2.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"NOAA Harbor", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi3.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Shedd", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/SheddAquarium.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"1200 W Harrison", BGsrc:"http://131.193.91.50:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/241329/", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0 },
-    { BGdesc:"Satellite", BGlink:"http://www.goes.noaa.gov/nhemi.html", BGsrc:"http://www.ssd.noaa.gov/goes/comp/nhem/ft-animated.gif?{unqdec}", BGdur:6000, BGzoom:1, BGsub:0 } ] },  // Still image: http://www.ssd.noaa.gov/goes/comp/nhem/ft.jpg
-  { BGcode:"art", BGshow:"ADISW", BGslides: [
-    { BGlink:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGsrc:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGdesc:"Botticelli: Allegoria della Primavera (1478)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGdesc:"Botticelli: Nascita di Venere (1485)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGdesc:"Bruegel: Babel Tower (1563)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGdesc:"Bruegel: Bethlem (1566)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGdesc:"Bruegel: Dutch Proverbs (1559)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGdesc:"Bruegel: Massacre of the Innocents (1567)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGdesc:"Bruegel: Procession to Calvary (1564)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGdesc:"Bruegel: The Battle Between Carnival and Lent (1559)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGdesc:"Bruegel: Triumph of Death (1562)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGsrc:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGdesc:"Caravaggio: Davide/ Galea (1607)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGsrc:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGdesc:"Chagall: I and the Village (1911)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGdesc:"Cranach: Flugelaltar mit dem Jungsten Gericht (1524)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGdesc:"Cranach: Johan Friedun (1544)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGdesc:"Dali: L'Enigme du Desire (1929)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGdesc:"Dali: Metamorphose de Narcisse (1937)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGdesc:"Dali: Persistence of Memory (1931)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGdesc:"Dali: Soft Construction with Boiled Beans (1936)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGdesc:"Ernst: Europe After the Rain II (1942)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGdesc:"Ernst: La Ville Entiere (1936)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGdesc:"Greco: Lacoonte (1610)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGdesc:"Greco: Toledo (1599)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGdesc:"Holbein: Ambassadors (1533)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGdesc:"Holbein: Georg Gisze (1532)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGdesc:"Holbein: Nikolaus Kratzer (1528)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGdesc:"Klee: Ad Marginen (1930)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGdesc:"Klimt: Adele Blochbauer (1907)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGdesc:"Klimt: Avenue Schloss Kaven (1912)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGdesc:"Klimt: Beethovenfries (1902)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGdesc:"Klimt: Fritza Riedler (1906)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGdesc:"Klimt: Judith I (1901)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGdesc:"Klimt: Melo (1912)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGdesc:"Klimt: The Kiss (1908)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGdesc:"Klimt: The Virgin (1913)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGdesc:"Leonardo: Gioconda/ Mona Lisa (1505)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGdesc:"Leonardo: Il Cenacolo/ The Last Supper (1497)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGdesc:"Magritte: Condition Humain (1934)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGdesc:"Magritte: Specchio Falso (1928)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGsrc:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGdesc:"Millet: Harvesters Resting (1853)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGdesc:"Monet: Nimphee (1926)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGdesc:"Monet: The Grainstack (1896)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGdesc:"Raffaello: Sposalizio della Vergine (1504)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGdesc:"Raffaello: Trasfigurazione (1519)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGdesc:"Rembrandt: Anatomy Lesson of Dr Nicolaes Tulp (1632)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGdesc:"Rembrandt: Belshazzar's Feast (1635)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGdesc:"Rembrandt: Militia Company (1642)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGdesc:"Renoir: Bal du Moulin de la Galette (1876)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGdesc:"Renoir: Le Dejeuner des Canotiers (1881)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGdesc:"Rousseau: Carnival Evening (1886)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGdesc:"Rousseau: Sleeping Gypsy (1897)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGdesc:"Rubens: Feast of Venus/ Vennsfest (1637)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGdesc:"Schiele: Death and the Maiden (1915)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGdesc:"Schiele: Family (1917)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGdesc:"Seurat: La Grande Jatte (1886)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGdesc:"Seurat: La Parade du Cirque (1888)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGdesc:"Tansey: Forward Retreat (1986)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGdesc:"Tansey: Mont Sainte-Victoire (1987)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGsrc:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGdesc:"Uccello: Battaglia di San Romano/Part I (1456)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGdesc:"Van Eyck: Giovanni Arnolfini and his Wife (1434)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGdesc:"Van Eyck: The Virgin of Ivers (1435)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGdesc:"Van Gogh: Cypresses (1889)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGdesc:"Van Gogh: Potato Eaters (1885)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGdesc:"Van Gogh: Starry Night (1889)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGsrc:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGdesc:"Velasquez: Las Meninas (1656)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGdesc:"Vermeer: Malkunst (1666)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGdesc:"Vermeer: The Astronomer (1668)", BGdur:15000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGdesc:"Veronese: Nozze di Cana (1563)", BGdur:15000, BGzoom:1, BGsub:0 } ] },
-  { BGcode:"yoga", BGshow:"I", BGslides: [
-    { BGlink:"http://bedno.com/g/infowall/yoga/01.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/01.jpg", BGdesc:"Namaste", BGdur:6200, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/02.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/02.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/03.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/03.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/04.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/04.jpg", BGdesc:"Left Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/05.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/05.jpg", BGdesc:"Plank", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/06.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/06.jpg", BGdesc:"8 Point", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/07.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/07.jpg", BGdesc:"Cobra", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/08.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/08.jpg", BGdesc:"Downward Dog", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/09.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/09.jpg", BGdesc:"Right Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/10.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/10.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/11.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/11.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/12.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/12.jpg", BGdesc:"Namaste", BGdur:2000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/g/infowall/yoga/workout.png", BGsrc:"http://bedno.com/g/infowall/yoga/workout.png", BGdesc:"Workout", BGdur:6000, BGzoom:1, BGsub:0 } ] },
-  { BGcode:"zoom", BGshow:"CDI", BGslides: [
-    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:2000, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0 },
-    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0 } ] },
-  { BGcode:"movie", BGshow:"ADIW", BGslides: [
-    { BGsrc:"http://bedno.com/g/infowall/v/beach/beach-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:50 },
-    { BGsrc:"http://bedno.com/g/infowall/v/candles/candles-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:36 },
-    { BGsrc:"http://bedno.com/g/infowall/v/clouds/clouds-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:21 },
-    { BGsrc:"http://bedno.com/g/infowall/v/fire/fire-000.jpg", BGlink:"", BGdesc:"", BGdur:333, BGzoom:1, BGsub:424 },
-    { BGsrc:"http://bedno.com/g/infowall/v/fish/fish-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:330 },
-    { BGsrc:"http://bedno.com/g/infowall/v/lava/lava-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:258 },
-    { BGsrc:"http://bedno.com/g/infowall/v/lcars/lcars-000.jpg", BGlink:"", BGdesc:"", BGdur:250, BGzoom:1, BGsub:627 },
-    { BGsrc:"http://bedno.com/g/infowall/v/matrix/matrix-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:70 },
-    { BGsrc:"http://bedno.com/g/infowall/v/snow/snow-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:80 },
-    { BGsrc:"http://bedno.com/g/infowall/v/space/space-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:595 },
-    { BGsrc:"http://bedno.com/g/infowall/v/sun/sun-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:543 },
-    { BGsrc:"http://bedno.com/g/infowall/v/warp/warp-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:211 },
-    { BGsrc:"http://bedno.com/g/infowall/v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:37 } ] },
+var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [T]itle [W]eather [V]ocal
+  { BGcode:"webcams", BGshow:"CDFIMTW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.
+    // 2015.04.14 { BGdesc:"Loyola, Water Tower", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unqsec}", BGlink:"http://www.luc.edu/webcams/", BGdur:4000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2015.11.27 { BGdesc:"Wrigley Field, Clark and Addison", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2016.06.30 { BGdesc:"Wrigley, Clark and Addison", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2016.09.02 { BGdesc:"Belmont Harbor", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.02.11 { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.04.30 { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqdec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.05.09 { BGdesc:"1 S Wacker", BGsrc:"http://166.241.64.227:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/434502/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.10.13 { BGdesc:"Shedd", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/SheddAquarium.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.10.13 { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    // 2017.10.20 { BGdesc:"Wrigley", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Cubs_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:6000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"NOAA Skyline", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi1.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"NOAA Navy Pier", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi2.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"NOAA Harbor", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi3.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"1200 W Harrison", BGsrc:"http://131.193.91.50:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/241329/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Satellite", BGlink:"http://www.goes.noaa.gov/nhemi.html", BGsrc:"http://www.ssd.noaa.gov/goes/comp/nhem/ft-animated.gif?{unqdec}", BGdur:6000, BGzoom:1, BGsub:0, BGauth:"" } ] },  // Still image: http://www.ssd.noaa.gov/goes/comp/nhem/ft.jpg
+  { BGcode:"art", BGshow:"ADISTW", BGslides: [
+    { BGlink:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGsrc:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGdesc:"Botticelli: Allegoria della Primavera (1478)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGdesc:"Botticelli: Nascita di Venere (1485)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGdesc:"Bruegel: Babel Tower (1563)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGdesc:"Bruegel: Bethlem (1566)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGdesc:"Bruegel: Dutch Proverbs (1559)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGdesc:"Bruegel: Massacre of the Innocents (1567)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGdesc:"Bruegel: Procession to Calvary (1564)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGdesc:"Bruegel: The Battle Between Carnival and Lent (1559)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGdesc:"Bruegel: Triumph of Death (1562)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGsrc:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGdesc:"Caravaggio: Davide/ Galea (1607)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGsrc:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGdesc:"Chagall: I and the Village (1911)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGdesc:"Cranach: Flugelaltar mit dem Jungsten Gericht (1524)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGdesc:"Cranach: Johan Friedun (1544)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGdesc:"Dali: L'Enigme du Desire (1929)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGdesc:"Dali: Metamorphose de Narcisse (1937)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGdesc:"Dali: Persistence of Memory (1931)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGdesc:"Dali: Soft Construction with Boiled Beans (1936)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGdesc:"Ernst: Europe After the Rain II (1942)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGdesc:"Ernst: La Ville Entiere (1936)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGdesc:"Greco: Lacoonte (1610)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGdesc:"Greco: Toledo (1599)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGdesc:"Holbein: Ambassadors (1533)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGdesc:"Holbein: Georg Gisze (1532)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGdesc:"Holbein: Nikolaus Kratzer (1528)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGdesc:"Klee: Ad Marginen (1930)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGdesc:"Klimt: Adele Blochbauer (1907)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGdesc:"Klimt: Avenue Schloss Kaven (1912)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGdesc:"Klimt: Beethovenfries (1902)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGdesc:"Klimt: Fritza Riedler (1906)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGdesc:"Klimt: Judith I (1901)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGdesc:"Klimt: Melo (1912)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGdesc:"Klimt: The Kiss (1908)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGdesc:"Klimt: The Virgin (1913)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGdesc:"Leonardo: Gioconda/ Mona Lisa (1505)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGdesc:"Leonardo: Il Cenacolo/ The Last Supper (1497)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGdesc:"Magritte: Condition Humain (1934)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGdesc:"Magritte: Specchio Falso (1928)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGsrc:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGdesc:"Millet: Harvesters Resting (1853)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGdesc:"Monet: Nimphee (1926)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGdesc:"Monet: The Grainstack (1896)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGdesc:"Raffaello: Sposalizio della Vergine (1504)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGdesc:"Raffaello: Trasfigurazione (1519)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGdesc:"Rembrandt: Anatomy Lesson of Dr Nicolaes Tulp (1632)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGdesc:"Rembrandt: Belshazzar's Feast (1635)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGdesc:"Rembrandt: Militia Company (1642)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGdesc:"Renoir: Bal du Moulin de la Galette (1876)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGdesc:"Renoir: Le Dejeuner des Canotiers (1881)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGdesc:"Rousseau: Carnival Evening (1886)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGdesc:"Rousseau: Sleeping Gypsy (1897)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGdesc:"Rubens: Feast of Venus/ Vennsfest (1637)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGdesc:"Schiele: Death and the Maiden (1915)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGdesc:"Schiele: Family (1917)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGdesc:"Seurat: La Grande Jatte (1886)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGdesc:"Seurat: La Parade du Cirque (1888)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGdesc:"Tansey: Forward Retreat (1986)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGdesc:"Tansey: Mont Sainte-Victoire (1987)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGsrc:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGdesc:"Uccello: Battaglia di San Romano/Part I (1456)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGdesc:"Van Eyck: Giovanni Arnolfini and his Wife (1434)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGdesc:"Van Eyck: The Virgin of Ivers (1435)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGdesc:"Van Gogh: Cypresses (1889)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGdesc:"Van Gogh: Potato Eaters (1885)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGdesc:"Van Gogh: Starry Night (1889)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGsrc:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGdesc:"Velasquez: Las Meninas (1656)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGdesc:"Vermeer: Malkunst (1666)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGdesc:"Vermeer: The Astronomer (1668)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGdesc:"Veronese: Nozze di Cana (1563)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"" } ] },
+  { BGcode:"yoga", BGshow:"IT", BGslides: [
+    { BGlink:"http://bedno.com/g/infowall/yoga/01.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/01.jpg", BGdesc:"Namaste", BGdur:6200, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/02.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/02.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/03.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/03.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/04.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/04.jpg", BGdesc:"Left Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/05.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/05.jpg", BGdesc:"Plank", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/06.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/06.jpg", BGdesc:"8 Point", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/07.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/07.jpg", BGdesc:"Cobra", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/08.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/08.jpg", BGdesc:"Downward Dog", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/09.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/09.jpg", BGdesc:"Right Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/10.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/10.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/11.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/11.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/12.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/12.jpg", BGdesc:"Namaste", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/g/infowall/yoga/workout.png", BGsrc:"http://bedno.com/g/infowall/yoga/workout.png", BGdesc:"Workout", BGdur:6000, BGzoom:1, BGsub:0, BGauth:"" } ] },
+  { BGcode:"zoom", BGshow:"CDIT", BGslides: [
+    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"" } ] },
+  { BGcode:"movie", BGshow:"ADITW", BGslides: [
+    { BGsrc:"http://bedno.com/g/infowall/v/beach/beach-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:50, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/candles/candles-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:36, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/clouds/clouds-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:21, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/fire/fire-000.jpg", BGlink:"", BGdesc:"", BGdur:333, BGzoom:1, BGsub:424, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/fish/fish-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:330, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/lava/lava-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:258, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/lcars/lcars-000.jpg", BGlink:"", BGdesc:"", BGdur:250, BGzoom:1, BGsub:627, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/matrix/matrix-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:70, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/snow/snow-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:80, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/space/space-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:595, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/sun/sun-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:543, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/warp/warp-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:211, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:37, BGauth:"" } ] },
   { BGcode:"colors", BGshow:"", BGslides: [
-    { BGsrc:"#303030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#505050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#707070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#909090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#B0B0B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#D0D0D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#FFFFFF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#000030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#000050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#000070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#000090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#0000B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#0000D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#0000FF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#003000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#005000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#007000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#009000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#00B000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#00D000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#00FF00", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#300000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#500000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#700000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#900000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#B00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#D00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"#FF0000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0 } ] },
-  { BGcode:"twister", BGshow:"ISV", BGslides: [
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0 },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0 } ] }
+    { BGsrc:"#303030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#505050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#707070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#909090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#B0B0B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#D0D0D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#FFFFFF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#000030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#000050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#000070", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#000090", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#0000B0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#0000D0", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#0000FF", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#003000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#005000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#007000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#009000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#00B000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#00D000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#00FF00", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#300000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#500000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#700000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#900000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#B00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#D00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"#FF0000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"" } ] },
+  { BGcode:"twister", BGshow:"ISTV", BGslides: [
+    { BGsrc:"http://bedno.com/g/infowall/twister/lfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/lhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/twister/rhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"" } ] },
+  { BGcode:"loops", BGshow:"", BGslides: [
+    { BGsrc:"http://bedno.com/g/infowall/loops/rings_of_water.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Rings of Water", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/loops/hypercube.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Hypercube", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/loops/icositetrachoric.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Icositetrachoric", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/loops/tasks.gif", BGlink:"http://icloud.com", BGdesc:"Tasks", BGdur:60000, BGzoom:1, BGsub:-1, BGauth:"" },
+    { BGsrc:"http://bedno.com/g/infowall/loops/coupling.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Coupling", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"lair" } ] }
   ];
 
 // GLOBALS
@@ -267,10 +274,10 @@ var BGprev  = -1;
 var BGshowCurr = "";  var BGshowOverride = 0;  var BGdurMult = 0;  var BGdurMultStr = '';  var BGshowArg = '';
 var BGshowArr = new Array('','CI', 'CDI', 'CDIW', 'CDFIMRW', 'AI','ADI','ADWI');  // [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [W]eather
 var ShowIntro = 1;
-var BGframe = 0;  var BGframePrev = BGframe;  var BGframePrevs = new Array(-1,-1,-1);
-var BGframeInc = 1;  var BGtimer = -1;  var BGframeIncPrev = BGframeInc;
+var BGslide = 0;  var BGslidePrev = BGslide;  var BGslidePrevs = new Array(-1,-1,-1);
+var BGslideInc = 1;  var BGtimer = -1;  var BGslideIncPrev = BGslideInc;
 var BGdescBG = "";
-var BGsubIdx = 0;  var SaveFrame = false;
+var BGframe = 0;
 
 var SunRise = '';  var SunSet = '';  var SunTimeSizing = 0.04;
 var ClockColor = ClockColorDay;  var ClockColorPrev = '';  var ClockColorOpp = ClockColorNight;
@@ -322,9 +329,9 @@ function UnqDec () {
 }
 
 // Check if current slideshow contains any movie slides.
-function HasAniSubs () {
+function HasFrames () {
   for (var AniLp=0; AniLp<BGdata[BGcurr].BGslides.length; AniLp++) {
-    if (BGdata[BGcurr].BGslides[AniLp].BGsub>0) { return(true); }
+    if (BGdata[BGcurr].BGslides[AniLp].BGsub!=0) { return(true); }
   }
   return(false)
 }
@@ -338,7 +345,13 @@ function SetupVisibilities () {
   if (document.getElementById('DivBG')) {
     document.getElementById('DivBG').style.visibility='visible';
   }
-  if (document.getElementById('DivBGdesc')) { document.getElementById('DivBGdesc').style.visibility='visible'; }
+  if (document.getElementById('DivBGdesc')) {
+    if (BGshowCurr.indexOf('T')<0) {
+      document.getElementById('DivBGdesc').style.visibility='hidden';
+    } else {
+      document.getElementById('DivBGdesc').style.visibility='visible';
+    }
+  }
   if (BGshowCurr.indexOf('C')<0) {
     document.getElementById('DivTime').style.visibility='hidden';
     document.getElementById('SpanTime').style.visibility='hidden';
@@ -398,29 +411,28 @@ function SetupVisibilities () {
   }
 }
 
-// Initialize and arrange all screen elements based on options.
+// Initialize and arrange all screen elements based on options. Happens on slideshow change.
 function SetupScreen () {
-  var FrameCheck = '';
+  var SlideCheck = '';
   SetupVisibilities();
   BGtimer = -1;
-  if (HasAniSubs()) { // Subanimate frame.
-    BGframe = 0;  // Recall which animated frame is in use.
+  if (HasFrames()) { // If show has animated or looped frames
+    BGslide = 0;  // Recall which slide was in use.
     if (haslocalstorage()) {
       try {
-        FrameCheck = ''+localStorage.getItem('sub');
+        SlideCheck = ''+localStorage.getItem('slide');
       } catch (err) { }
     }
-    FrameCheck = FrameCheck.replace(/\D/g, '');
-    if (FrameCheck.length>0) {
-      BGframe = parseInt(FrameCheck);
-      if ( (BGframe<0) || (BGframe>=BGdata[BGcurr].BGslides.length) ) { BGframe = 0; }
-      BGframePrev = BGframe;
+    SlideCheck = SlideCheck.replace(/\D/g, '');
+    if (SlideCheck.length>0) {
+      BGslide = parseInt(SlideCheck);
+      if ( (BGslide<0) || (BGslide>=BGdata[BGcurr].BGslides.length) ) { BGslide = 0; }
+      BGslidePrev = BGslide;
     }
-    BGframeInc = 0;  // Pause frame incrementing.
-    SaveFrame = true;
-  } else {  // Handle frames normally.
+    BGslideInc = 0;  // Pause slide incrementing.
+  } else {  // Normally start from first slide.
     BGsubIdx = -1;
-    BGframeInc = 1;
+    BGslideInc = 1;
   }
   document.getElementById('DivWhole').style.backgroundColor = '#000000';
 }
@@ -459,43 +471,36 @@ function UpdBG () {
   var ImgIdxStr = '';
   var BGlinkEff = "";
   if (BGtimer < MasterDur) {
-    if (BGframeInc < 1) {  // If not incrementing frame, restore last index.
-      BGframe = BGframePrev;
-    } else {  // If shuffling, pick semi-random frame.
+    if (BGslideInc < 1) {  // If not incrementing slides, restore last index.
+      BGslide = BGslidePrev;
+    } else {  // If shuffling, pick semi-random slide.
       if (BGshowCurr.indexOf('S')>=0) {
-        BGframePrev = BGframe;
-        do { BGframe = Math.floor(Math.random()*BGdata[BGcurr].BGslides.length); }
-        while ( (BGframePrev==BGframe) || (BGframePrevs[0]==BGframe) || (BGframePrevs[1]==BGframe) || (BGframePrevs[2]==BGframe) );
-        BGframePrevs[2]=BGframePrevs[1];  BGframePrevs[1]=BGframePrevs[0];  BGframePrevs[0]=BGframe;
+        BGslidePrev = BGslide;
+        do { BGslide = Math.floor(Math.random()*BGdata[BGcurr].BGslides.length); }
+        while ( (BGslidePrev==BGslide) || (BGslidePrevs[0]==BGslide) || (BGslidePrevs[1]==BGslide) || (BGslidePrevs[2]==BGslide) );
+        BGslidePrevs[2]=BGslidePrevs[1];  BGslidePrevs[1]=BGslidePrevs[0];  BGslidePrevs[0]=BGslide;
       }
-      // Otherwise use current frame index (incremented in NextBG() function)
+      // Otherwise use current slide index (incremented in NextBG() function)
     }
     document.getElementById('DivBGdesc').innerHTML = '';
-    if (BGdata[BGcurr].BGslides[BGframe].BGzoom==1) {
+    if (BGdata[BGcurr].BGslides[BGslide].BGzoom==1) {
       document.getElementById('DivBG').style.top = 0;
       document.getElementById('DivBG').style.left = 0;
     } else {
-      document.getElementById('DivBG').style.top = Math.floor(0.5*(WinHgt-(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom)));
-      document.getElementById('DivBG').style.left = Math.floor(0.5*(WinWid-(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom)));
+      document.getElementById('DivBG').style.top = Math.floor(0.5*(WinHgt-(WinHgt*BGdata[BGcurr].BGslides[BGslide].BGzoom)));
+      document.getElementById('DivBG').style.left = Math.floor(0.5*(WinWid-(WinWid*BGdata[BGcurr].BGslides[BGslide].BGzoom)));
     }
-    ImgSrc = BGdata[BGcurr].BGslides[BGframe].BGsrc;
-    if (BGdata[BGcurr].BGslides[BGframe].BGsub > 0) {  // Subanimate frame.
+    ImgSrc = BGdata[BGcurr].BGslides[BGslide].BGsrc;
+    if (BGdata[BGcurr].BGslides[BGslide].BGsub > 0) {  // Subanimate frames in slide.
       ImgNumStr = ImgSrc.replace(/\D/g, '');
       if (ImgNumStr.length>0) {
-        if ( (BGsubIdx < 0) || (BGsubIdx > BGdata[BGcurr].BGslides[BGframe].BGsub) ) { BGsubIdx = 0; }
-        ImgIdxStr = BGsubIdx.toString();
+        if ( (BGframe < 0) || (BGframe > BGdata[BGcurr].BGslides[BGslide].BGsub) ) { BGframe = 0; }
+        ImgIdxStr = BGframe.toString();
         if (ImgIdxStr.length < ImgNumStr.length) ImgIdxStr = new Array(ImgNumStr.length - ImgIdxStr.length + 1).join("0") + ImgIdxStr;
         ImgSrc = ImgSrc.replace(ImgNumStr, ImgIdxStr);
-        BGsubIdx++;
-        if (BGsubIdx > BGdata[BGcurr].BGslides[BGframe].BGsub) { BGsubIdx = 0; }
+        BGframe++;
+        if (BGframe > BGdata[BGcurr].BGslides[BGslide].BGsub) { BGframe = 0; }
       }
-    }
-    if (SaveFrame) {
-      if (haslocalstorage()) {
-        try { localStorage.setItem('sub', BGframe.toString()); }
-        catch (err) { }
-      }
-      SaveFrame = false;
     }
     if (ImgSrc.length<12) {  // Simple color flood.
       if (BGflooded < 1) {
@@ -515,24 +520,24 @@ function UpdBG () {
         ImgSrc = ImgSrc.replace(/{unqdec}/,UnqDec());
         if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
         document.getElementById('ImgBG').src = ImgSrc;
-        document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGframe].BGzoom);
-        document.getElementById('ImgBG').width = Math.floor(WinWid*BGdata[BGcurr].BGslides[BGframe].BGzoom);
+        document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGslide].BGzoom);
+        document.getElementById('ImgBG').width = Math.floor(WinWid*BGdata[BGcurr].BGslides[BGslide].BGzoom);
       }
       document.getElementById('DivBG').style.visibility='visible';
     }
-    BGlinkEff = BGdata[BGcurr].BGslides[BGframe].BGlink;
+    BGlinkEff = BGdata[BGcurr].BGslides[BGslide].BGlink;
     if (BGlinkEff == WeatherURL) { BGlinkEff = WeatherURLeff; }
     if (IsIOS()) { DescSize = 8; } else { DescSize = 12; }
-    if (BGdata[BGcurr].BGslides[BGframe].BGdesc) {
+    if (BGdata[BGcurr].BGslides[BGslide].BGdesc) {
       if (BGlinkEff!="") {
-        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; '+BGdescBG+' text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGframe].BGdesc+BGdurMultStr+'&nbsp;</a>';
+        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; '+BGdescBG+' text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</a>';
       } else {
-        document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGframe].BGdesc+BGdurMultStr+'&nbsp;</span>';
+        document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</span>';
       }
       // Speak the current image description (used by Twister mode)
-      if (BGshowCurr.indexOf('V')>=0) { DoSpeech(BGdata[BGcurr].BGslides[BGframe].BGdesc.substr(0,99)); }
+      if (BGshowCurr.indexOf('V')>=0) { DoSpeech(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
     }
-    if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if frame is same radar
+    if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if slide is same radar
       if (ImgSrc.toUpperCase().indexOf(RadarURLsrc.toUpperCase())>=0) {
         document.getElementById('RadarImg').style.visibility='hidden';
       } else {
@@ -541,11 +546,11 @@ function UpdBG () {
     } else {
       document.getElementById('RadarImg').style.visibility='hidden';
     }
-    BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
-    BGframePrev = BGframe;
-    if (BGframeInc>0) { BGframe = (BGframe+BGframeInc) % BGdata[BGcurr].BGslides.length; }
+    BGtimer = BGdata[BGcurr].BGslides[BGslide].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
+    BGslidePrev = BGslide;
+    if ( (BGslideInc>0) && (! HasFrames()) ) { BGslide = (BGslide+BGslideInc) % BGdata[BGcurr].BGslides.length; }
   } else {
-    if (BGtimer<999999) { BGtimer -= MasterDur; }
+    if ( (BGtimer<9999999) && (BGdata[BGcurr].BGslides[BGslide].BGsub>=0) ) { BGtimer -= MasterDur; }
   }
 }
 
@@ -1284,7 +1289,7 @@ function DoResize () {
   HourPrev = -1; DoReBoot();
 }
 
-// Main setup, refreshes all screen elements.
+// Main setup, refreshes all screen elements. Happens on slideshow change and other major screen events.
 function DoSetup () {
   SetupOfs();
   SetupSun();
@@ -1375,25 +1380,29 @@ function ClearTimers () {
   if (MasterTimer!=null) { clearTimeout(MasterTimer); }
 }
 
-// Manually advance frame in current slideshow.
-function NextFrame() {
+// Manually advance slide in current slideshow.
+function NextSlide() {
   ClearTimers();
   BGtimer = -1;
-  if (HasAniSubs()) {
-    BGframe = (BGframe+1) % BGdata[BGcurr].BGslides.length;
-    BGframePrev = BGframe;
-    SaveFrame = true;
+  if (HasFrames()) {
+    BGslidePrev = BGslide;
+    BGslide = (BGslide+1) % BGdata[BGcurr].BGslides.length;
+    if (haslocalstorage()) {
+      try { localStorage.setItem('slide', BGslide.toString()); }
+      catch (err) { }
+    }
   } else {
-    if (BGframeInc > 0) {
-      // Skip over repeated frames.
-      BaseFrame = BGframe;
+    if (BGslideInc > 0) {
+      // Skip over repeated radar frames.
+      BaseFrame = BGslide;
       while ( ((BaseFrame+1)< BGdata[BGcurr].BGslides.length) &&
-              (BGdata[BGcurr].BGslides[BGframe].BGsrc.substr(0,(RadarURLsrc.length-2))==BGdata[BGcurr].BGslides[BaseFrame+1].BGsrc.substr(0,(RadarURLsrc.length-2))) ) {
+              (BGdata[BGcurr].BGslides[BGslide].BGsrc.substr(0,RadarURLsrc.length)==RadarURLsrc) &&
+              (BGdata[BGcurr].BGslides[BGslide].BGsrc.substr(0,(RadarURLsrc.length-2))==BGdata[BGcurr].BGslides[BaseFrame+1].BGsrc.substr(0,(RadarURLsrc.length-2))) ) {
         BaseFrame++;
       }
-      BGframe = BaseFrame;
+      BGslide = BaseFrame;
     } else {
-      BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
+      BGtimer = BGdata[BGcurr].BGslides[BGslide].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
     }
   }
   UpdBG();
@@ -1492,7 +1501,7 @@ function CheckKeypress (e) {
         } else {
           BGcurr = BGprev;  BGprev = -1;
           BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;  BGshowArg = '';  BGdurMult = 0;  BGdurMultStr = '';
-          SetupVisibilities();
+          SetupScreen();
           ClockUpdTimer = -1;
           DoUpd();
         }
@@ -1503,10 +1512,10 @@ function CheckKeypress (e) {
           if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').innerText += BGdurMultStr; }
         } else {
           if ( (KeyPressedCode == 109) || (KeyPressedCode == 189) ) {  // '-' = Pause | Resume background sequencing.
-            if (! HasAniSubs()) {
-              if (BGframeInc>0) { BGframeInc = 0; } else { BGframeInc = 1; }
-              if (BGframeInc>0) {
-                NextFrame();
+            if (! HasFrames()) {
+              if (BGslideInc>0) { BGslideInc = 0; } else { BGslideInc = 1; }
+              if (BGslideInc>0) {
+                NextSlide();
                 BGdescBG = '';
                 if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
               } else {
@@ -1517,13 +1526,19 @@ function CheckKeypress (e) {
               MasterTimer = setTimeout('DoUpd()',MasterDur);
             }
           } else {
-            if ( (KeyPressedCode == 107) || (KeyPressedCode == 187) ) {  // '+' = Next frame in current slideshow.
-              BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+            if ( (KeyPressedCode == 107) || (KeyPressedCode == 187) ) {  // '+' = Next slide in current slideshow.
+              BGslideIncPrev = BGslideInc;  BGslideInc = 1;  NextSlide();  BGslideInc = BGslideIncPrev;
             } else {
               if ( (KeyPressedCode > 48) && (KeyPressedCode <= 48+BGdata.length) ) {  // Quick jump to specified mode, from numeric keypad.
                 BGcurrChk = KeyPressedCode - (48+1);
                 if (BGcurrChk == BGcurr) {
-                  BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+                  if (BGprev >= 0) {  // Screen was off.
+                    BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;  BGshowArg = '';  BGdurMult = 0;  BGdurMultStr = '';
+                    SetupScreen();  ClockUpdTimer = -1;
+                    DoUpd();
+                  } else {
+                    BGslideIncPrev = BGslideInc;  BGslideInc = 1;  NextSlide();  BGslideInc = BGslideIncPrev;
+                  }
                 } else {
                   ClearTimers();
                   BGcurr = BGcurrChk;  BGprev = -1;
@@ -1539,7 +1554,13 @@ function CheckKeypress (e) {
                 if ( (KeyPressedCode > 96) && (KeyPressedCode <= 96+BGdata.length) ) {  // Quick jump to specified mode, from number keys.
                   BGcurrChk = KeyPressedCode - (96+1);
                   if (BGcurrChk == BGcurr) {
-                    BGframeIncPrev = BGframeInc;  BGframeInc = 1;  NextFrame();  BGframeInc = BGframeIncPrev;
+                    if (BGprev >= 0) {  // Screen was off.
+                      BGshowCurr = BGdata[BGcurr].BGshow;  BGshowOverride = 0;  BGshowArg = '';  BGdurMult = 0;  BGdurMultStr = '';
+                      SetupScreen();  ClockUpdTimer = -1;
+                      DoUpd();
+                    } else {
+                      BGslideIncPrev = BGslideInc;  BGslideInc = 1;  NextSlide();  BGslideInc = BGslideIncPrev;
+                    }
                   } else {
                     ClearTimers();
                     BGcurr = BGcurrChk;  BGprev = -1;
@@ -1580,14 +1601,14 @@ function CheckKeypress (e) {
                         BGshowCurr = BGshowArr[BGshowOverride-1];
                         if (BGdata[BGcurr].BGshow.indexOf('V')>=0) { BGshowCurr += 'V'; }
                         if (BGdata[BGcurr].BGshow.indexOf('S')>=0) { BGshowCurr += 'S'; }
-                        BGframeIncPrev = BGframeInc;  BGframePrev = BGframe;  BGframeInc = 0;
-                        BGtimer = BGdata[BGcurr].BGslides[BGframe].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
+                        BGslideIncPrev = BGslideInc;  BGslidePrev = BGslide;  BGslideInc = 0;
+                        BGtimer = BGdata[BGcurr].BGslides[BGslide].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
                         AllDivsOff();
                         DoSetup();
                         ShowTime();
                         ShowDate();
-                        BGframe = BGframePrev;
-                        BGframeInc = BGframeIncPrev;
+                        BGslide = BGslidePrev;
+                        BGslideInc = BGslideIncPrev;
                       } else {
                         switch(KeyPressedCode) {
                           case 85:
@@ -1706,7 +1727,17 @@ function DoReBoot () {
 // Boot happens only once, after page load.
 function DoBoot () {
   FetchUptimes();
-  var ShowPatt = /show=([A-Z0-9]+)/i;
+  // Remove secured images if not at authorized installation.
+  var ArgLp = 0;  var SubLp = 0;  var BGslideMax = 0;
+  for (ArgLp=BGdata.length-1; ArgLp>=0; ArgLp--) {
+    BGslideMax=BGdata[ArgLp].BGslides.length-1;
+    for (SubLp=BGslideMax; SubLp>=0; SubLp--) {
+      if ( (BGdata[ArgLp].BGslides[SubLp].BGauth.length>1) && (location.href.toLowerCase().indexOf(BGdata[ArgLp].BGslides[SubLp].BGauth.toLowerCase())<0) ) {
+        BGdata[ArgLp].BGslides.splice(SubLp,1);
+      }
+    }
+  }
+  var ShowPatt = /view=([A-Z0-9]+)/i;
   var ShowMatches = location.href.toUpperCase().match(ShowPatt);
   if (ShowMatches) { if (ShowMatches.length>0) { if (ShowMatches[1].length>0) { BGshowArg = ShowMatches[1]; ShowIntro = 0; } } }
   if (haslocalstorage()) {
@@ -1726,7 +1757,6 @@ function DoBoot () {
   // Optionally set BG from URL using parameter like ?<code>
   var CodePatt = '';  var CodeMatch = '';  var CodeIn = '';
   CodeIn = ' '+location.href.toUpperCase()+' ';
-  var ArgLp = 0;
   for (ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
     CodePatt = '[^a-zA-Z0-9]'+BGdata[ArgLp].BGcode.toUpperCase()+'[^a-zA-Z0-9]';
     CodeMatch = new RegExp(CodePatt);
@@ -1734,12 +1764,12 @@ function DoBoot () {
       BGcurr = ArgLp;  BGprev = -1;
       if (BGshowArg.length > 0) { BGshowCurr = BGshowArg; } else { BGshowCurr = BGdata[BGcurr].BGshow; }
       BGshowOverride = 0;  BGdurMult = 0;  BGdurMultStr = '';  ShowIntro = 0;  IntroTimer = -1;
-      // Check for optional .[frame] extension, launches slideshow at particular frame.  Esp. useful for movie slideshow.
-      for (var SubLp=0; SubLp<BGdata[BGcurr].BGslides.length; SubLp++) {
+      // Check for optional .[slide] extension, launches slideshow at particular slide.  Esp. useful for movie slideshow.
+      for (SubLp=0; SubLp<BGdata[BGcurr].BGslides.length; SubLp++) {
         if (location.href.toLowerCase().indexOf(BGdata[BGcurr].BGcode.toLowerCase()+'.'+SubLp.toString())>=0) {
-          BGframe = SubLp;  BGframePrev = BGframe;
+          BGslide = SubLp;  BGslidePrev = BGslide;
           if (haslocalstorage()) {
-            try { localStorage.setItem('sub', BGframe.toString()); }
+            try { localStorage.setItem('slide', BGslide.toString()); }
             catch (err) { }
           }
         }
@@ -1775,11 +1805,11 @@ function DoInit () {
   if (STtimer!=null) { clearTimeout(STtimer); }
   if (MasterTimer!=null) { clearTimeout(MasterTimer); }
   MasterTimer = null;
-  BGframe = 0;  BGframePrev = BGframe;  BGframeInc = 1;  BGtimer = -1;  BGdurMult = 0;
+  BGslide = 0;  BGslidePrev = BGslide;  BGslideInc = 1;  BGtimer = -1;  BGdurMult = 0;
   ClockColor = ClockColorDay;  ClockColorPrev = '';  ClockColorOpp = ClockColorNight;
   ClockUpdTimer = 0;
   HourPrev = -1;  HourCurr = -1;  MinutePrev = -1;  MinuteCurr = -1;
-  BGsubIdx = -1;
+  BGframe = -1;
   if (BGshowArg.length > 0) { BGshowCurr = BGshowArg; } else { BGshowCurr = BGdata[BGcurr].BGshow; }
   BGshowOverride = 0;  BGdurMult = 0;  BGdurMultStr = '';
 }
@@ -1801,8 +1831,8 @@ function DoRefresh () {
 
 <div id="DivBG" style="z-index:2; position:absolute; left:0px; top:0px; overflow:hidden;"></div>
 
-<div id="DivAnalogBG" style="z-index:3; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClockBG" onClick="NextFrame();"> </canvas>
-<div id="DivAnalog" style="z-index:4; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClock" onClick="NextFrame();"> </canvas></div>
+<div id="DivAnalogBG" style="z-index:3; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClockBG" onClick="NextSlide();"> </canvas>
+<div id="DivAnalog" style="z-index:4; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClock" onClick="NextSlide();"> </canvas></div>
 </div>
 
 <div id="DivRadar" style="z-index:5; position:absolute; left:0px; top:0px;"></div>
@@ -1813,7 +1843,7 @@ function DoRefresh () {
 
 <div id="DivBGdesc" style="z-index:9; position:absolute; left:0px; top:0px;"></div>
 
-<div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextFrame();'></span></div>
+<div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextSlide();'></span></div>
 
 <div id="DivWeatherCurrent" style="z-index:11; position:absolute; left:0px; top:0px; text-align:center; opacity:1.0;"></div>
 
