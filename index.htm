@@ -36,17 +36,19 @@ var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this ins
 var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezoneOffset()/60 but reads wrong on most browsers?!?
 var WeatherURL = 'https://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
-var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
-var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA60.json  Was KILCHICA173, then KILCHICA173
+var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA60.json
 
 var ClockColorDay = '#000000';  // Daytime color of some time/date parts.
 var ClockColorNight = '#FFFFFF';  // Nighttime color of some mtime/date parts.
-// Quick B&W: var ClockShadows = new Array('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
-// Simple rainbow: var ClockShadows = new Array('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
-var ClockShadows = new Array('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FAF2BC','FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
-var ClockOpacity = new Array(     0.4,     0.5,     0.6,     0.8,     0.9,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1);
-var ClockUpdDur = Math.floor(1000/ClockShadows.length);
-var ForecastColor = '#EEEEEE';  // Forecast text color.
+// Quick B&W: ('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
+// Simple rainbow: ('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
+// Pastel tones: ('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
+var ClockMode = 1;  // 0 = rainbow, 1 = pulsing
+var ClockRainbowShadows = new Array('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');
+var ClockRainbowOpacity = new Array(     0.4,     0.5,     0.6,     0.8,     0.9,       1,        1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1);
+var ClockUpdDur = ( (ClockMode==0) ? Math.floor(1000/ClockRainbowShadows.length) : 100 );
+var ForecastColor = '#FFFFFF';  // Forecast text color.
 var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
 var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
 var RadarURLsrc = "https://radar.weather.gov/ridge/lite/N0R/LOT_loop.gif";  // XXX_loop: LOT=Chicago(down since 2017.03), ILX=Springfield
@@ -56,6 +58,7 @@ var WeatherCurrentHgt = 0.13;
 var WeatherForecastHgt = 0.08;
 var FloodDur = 250; // Cycle time between flood color changes.
 var TwisterDur = 10000;  // Time between Twister spins.
+var KeysPressed = '';
 
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [T]itle [W]eather [V]ocal
@@ -294,8 +297,8 @@ var BGframe = 0;
 
 var SunRise = '';  var SunSet = '';  var SunTimeSizing = 0.04;
 var ClockColor = ClockColorDay;  var ClockColorPrev = '';  var ClockColorOpp = ClockColorNight;
-var ClockUpdTimer = 0;  var AnalogClockUpdDur = 500;
-var ClockShadow = "";  var ClockShadowSeq = 0;  var ClockShade = "";
+var ClockUpdTimer = 0;  var AnalogClockUpdDur = 250;
+var ClockShadow = "";  var ClockRainbowShadowSeq = 0;  var ClockShade = "";  var ClockOpacity = "";  
 var ClockCanvas, ClockContext;
 var ClockCanvasBG, ClockContextBG;
 var HourPrev = -1;  var HourCurr = -1;
@@ -422,12 +425,8 @@ function SetupVisibilities () {
   if ( (BGshowCurr.indexOf('A')<0) && (BGshowCurr.indexOf('C')<0) && (BGshowCurr.indexOf('D')<0) ) {
     document.getElementById('DivBG').addEventListener("click", NextBG, false);
   }
-  if (StopwatchStarted > 0) {
-    document.getElementById('DivStopwatch').style.visibility='visible';
-  }
-  if (DaysSinceStarted > 0) {
-    document.getElementById('DivDaysSince').style.visibility='visible';
-  }
+  document.getElementById('DivStopwatch').style.visibility = ( (StopwatchStarted > 0) ? 'visible' : 'hidden' );
+  document.getElementById('DivDaysSince').style.visibility = ( ( (StopwatchStarted < 1) && (BGshowCurr.indexOf('C')>-1) && (DaysSinceStarted > 0) ) ? 'visible' : 'hidden' );
 }
 
 // Initialize and arrange all screen elements based on options. Happens on slideshow change.
@@ -601,8 +600,8 @@ function ShowMoon () {
       SunMoonOut += 'color:#FFFFFF; text-shadow:-2px 2px 0px #000000;" alt="Days UNTIL full moon.';
     }
     SunMoonOut += '">'+Math.abs(MoonDaysToFull).toString()+'&nbsp;&nbsp;</span><br>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<br></span>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'</span></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">A</span><br></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">P</span></span></span>';
     document.getElementById('DivSunTimes').innerHTML = SunMoonOut;
   }
 }
@@ -612,17 +611,23 @@ function SetupSun () {
   var SunTimes = SunCalc.getTimes(new Date(DTadj()), InfoLat, InfoLon);
   var SunAdjMS = SunTimes.sunrise.getTime() + (InfoZone*60*60*1000);
   var SunAdjDT = new Date(SunAdjMS);
-  if (SunAdjDT.getHours()<1) { SunRise = '12'; }
-  if (SunAdjDT.getHours()>12) { SunRise = ''+(SunAdjDT.getHours()-12); } else { SunRise = ''+SunAdjDT.getHours(); }
+  if (SunAdjDT.getHours()<1) {
+    SunRise = '12';
+  } else {
+    if (SunAdjDT.getHours()>12) { SunRise = ''+(SunAdjDT.getHours()-12); } else { SunRise = ''+SunAdjDT.getHours(); }
+  }
   if (SunAdjDT.getMinutes()<10) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunAdjDT.getMinutes(); } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunAdjDT.getMinutes(); }
   // if (SunAdjDT.getHours()>11) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</span>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
   SunUp = Math.floor(SunAdjDT.getHours());
   SunAdjMS = SunTimes.sunset.getTime() + (InfoZone*60*60*1000);
   SunAdjDT = new Date(SunAdjMS);
-  if (SunAdjDT.getHours()<1) { SunSet = '12'; }
-  if (SunAdjDT.getHours()>12) { SunSet = ''+(SunAdjDT.getHours()-12); } else { SunSet = ''+SunAdjDT.getHours(); }
+  if (SunAdjDT.getHours()<1) {
+    SunSet = '12';
+  } else {
+    if (SunAdjDT.getHours()>12) { SunSet = ''+(SunAdjDT.getHours()-12); } else { SunSet = ''+SunAdjDT.getHours(); }
+  }
   if (SunAdjDT.getMinutes()<10) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunAdjDT.getMinutes(); } else { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunAdjDT.getMinutes(); }
-  // if (SunAdjDT.getHours()>11) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</font>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
+  // if (SunAdjDT.getHours()>11) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</font>'; } else { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
   SunDown = Math.floor(SunAdjDT.getHours());
   var SSdt=new Date(DTadj()); SSh=SSdt.getHours();
   if ( (SSh >= SunUp) && (SSh < SunDown) ) { ClockColor = ClockColorDay; ClockColorOpp = ClockColorNight; } else { ClockColor = ClockColorNight; ClockColorOpp = ClockColorDay; }
@@ -1106,23 +1111,39 @@ function DrawAnalogBG () {
 // Display the time (includes both digitial and analog versions).
 function ShowTime () {
   var ColonElev = 0;
+  var DigitSize = 0;
+  var ClockHTML = "";
   var STdt=new Date(DTadj());
   STap="A";
-  STh=STdt.getHours();
+  var STh=STdt.getHours();
   HourCurr = STh;
-  STm=STdt.getMinutes();
+  var STm=STdt.getMinutes();
   MinuteCurr = STm;
-  STs=STdt.getSeconds();
+  var STs=STdt.getSeconds();
+  var STms = STdt.getTime() % 1000;
   if (STh>11) { STap = "P"; }
   if (STh>12) { STh = STh-12; }
   if (STh==0) { STh = 12; }
   if (STm<10) { STm = "0" + STm; }
-  ClockShadowSeq = (ClockShadowSeq+1)%ClockShadows.length;
-  ClockShadow = "#"+ClockShadows[ClockShadowSeq];
-  ClockShade = "#"+ClockShadows[(ClockShadowSeq+Math.floor(ClockShadows.length/2))%ClockShadows.length];
+  if (ClockMode==0) {
+    ClockRainbowShadowSeq = (ClockRainbowShadowSeq+1)%ClockRainbowShadows.length;
+    ClockShadow = "#"+ClockRainbowShadows[ClockRainbowShadowSeq];
+    ClockShade = "#"+ClockRainbowShadows[(ClockRainbowShadowSeq+Math.floor(ClockRainbowShadows.length/2))%ClockRainbowShadows.length];
+    ClockOpacity = ClockRainbowOpacity[ClockRainbowShadowSeq];
+  } else {
+    ClockShadow = ClockColorDay;
+    ClockShade = ClockColorNight;
+    ClockOpacity = 1.0;
+  }
   if (BGshowCurr.indexOf('C')>=0) {
     ColonElev = Math.floor((STs/59)*80)+10;
-    document.getElementById('SpanTime').innerHTML = '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity[ClockShadowSeq].toString()+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span><span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(WinMin*0.05)+'px; font-size:'+Math.floor(WinMin*0.2)+'px; color:'+ClockShadow+'; text-shadow:none;">:</span><span style="color:'+ClockShade+'; opacity:'+ClockOpacity[ClockShadowSeq].toString()+'; font-size:'+Math.floor(WinMin*0.5)+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span><span style="font-size:'+Math.floor(WinMin*0.09)+'px; font-family:Arial; color:'+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';
+    if (STms > 500) { STms = 1000 - STms; }
+    DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.5 + (0.2*(STms/500)))) );
+    ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span>'; // hour
+    ClockHTML += '<span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(DigitSize*0.1)+'px; font-size:'+Math.floor(DigitSize*0.4)+'px; color:'+ClockShade+'; text-shadow:-6px 6px 0px '+ClockShadow+';">:</span>'; // colon
+    ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span>'; // minute
+    ClockHTML += '<span style="font-size:'+Math.floor(DigitSize*0.24)+'px; font-family:Arial; color:'+ClockShade+'; text-shadow:-6px 6px 0px '+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';  // A|P
+    document.getElementById('SpanTime').innerHTML = ClockHTML;
   }
   if (BGshowCurr.indexOf('A')>=0) {
     Math.TAU = 2 * Math.PI;
@@ -1211,26 +1232,33 @@ function ShowStopwatch () {
   document.getElementById('DivStopwatch').style.visibility='visible';
 }
 function ShowDaysSince () {
-  if (DaysSinceStarted > 0) {
+  if ( (DaysSinceStarted > 0) && (StopwatchStarted < 1) && (BGshowCurr.indexOf('C')>-1) ) {
     DaysSinceDT = new Date();
     var DaysSinceCurMS = Math.floor(DaysSinceDT.getTime() / 1000);
     var DaysSinceStartedMS = Math.floor(DaysSinceStarted.getTime() / 1000);
-    var DaysSinceHours = Math.round((DaysSinceCurMS-DaysSinceStartedMS)/3600)+2;
-    var DaysSinceDays = Math.round(DaysSinceHours/24);
-    var DaysSinceWeeks = Math.floor(DaysSinceDays/7).toString()+'<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px">'+Math.floor(DaysSinceDays%7).toString()+'</span>';
+    var DaysSinceHours = Math.round((DaysSinceCurMS-DaysSinceStartedMS)/3600)-12;
+    var DaysSinceDays = '';
+    if (Math.floor(DaysSinceHours/24)>99) { DaysSinceDays += '<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px; vertical-align:15%;">'+Math.floor(Math.floor(DaysSinceHours/24)/100).toString()+'</span>' }
+    if (Math.floor(Math.floor(DaysSinceHours/24) % 100)<10) { DaysSinceDays += '0'; }
+    DaysSinceDays += Math.floor(Math.floor(DaysSinceHours/24) % 100).toString();
+    var DaysSinceWeeks = '<i>'+Math.floor(Math.floor(DaysSinceHours/24)/7).toString()+'<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px">'+Math.floor(Math.floor(DaysSinceHours/24)%7).toString()+'</span></i>';
     DaysSinceTimer = DaysSinceDur;
     if (DaysSinceSeq==0) document.getElementById('DivDaysSince').style.visibility='hidden';
     if (DaysSinceSeq==1) {
       document.getElementById('SpanDaysSince').innerHTML = DaysSinceWeeks;
+      document.getElementById('DivDaysSince').style.color='#D89E00';
       document.getElementById('DivDaysSince').style.visibility='visible';
       DaysSinceTimer = DaysSinceDur*2;
     }
     if (DaysSinceSeq==2) {
-      document.getElementById('SpanDaysSince').innerHTML = DaysSinceDays.toString();
+      document.getElementById('SpanDaysSince').innerHTML = DaysSinceDays;
+      document.getElementById('DivDaysSince').style.color='#FF3535';
       document.getElementById('DivDaysSince').style.visibility='visible';
       DaysSinceTimer = DaysSinceDur*3;
     }
     DaysSinceSeq = (DaysSinceSeq+1)%3;
+  } else {
+    document.getElementById('DivDaysSince').style.visibility='hidden';
   }
 }
 
@@ -1263,7 +1291,7 @@ function DoUpd () {
     }
     if (MinuteCurr != MinutePrev) {
       MinutePrev = MinuteCurr;
-      ClockShadowSeq = 0;
+      ClockRainbowShadowSeq = 0;
     }
     if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
       ShowMoon();
@@ -1357,9 +1385,9 @@ function DoSetup () {
   document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
   document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
   document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
-  document.getElementById('DivTime').style.left = (OfsX+48)+'px';
-  document.getElementById('DivTime').style.top = Math.floor(OfsY+(WinHgt*0.1)).toString()+'px';
-  document.getElementById('DivTime').style.width = (WinWid-OfsX-48)+'px';
+  document.getElementById('DivTime').style.left = (OfsX)+'px';
+  document.getElementById('DivTime').style.top = Math.floor(OfsY+((ClockMode==0) ? 52 : 0)).toString()+'px';
+  document.getElementById('DivTime').style.width = (WinWid-OfsX)+'px';
   document.getElementById('DivTime').style.textAlign = 'center';
   document.getElementById('DivAnalog').style.left = (OfsX)+'px';
   document.getElementById('DivAnalog').style.top = (OfsY)+'px';
@@ -1400,11 +1428,11 @@ function DoSetup () {
   document.getElementById('DivStopwatch').style.height = (WinHgt-OfsY)+'px';
   document.getElementById('DivStopwatch').style.width = (WinWid-OfsX)+'px';
   document.getElementById('SpanStopwatch').style.fontSize = (Math.round(WinHgt*.5))+'px';
-  document.getElementById('DivDaysSince').style.top = (OfsY+6)+'px';
+  document.getElementById('DivDaysSince').style.top = (OfsY-20)+'px';
   document.getElementById('DivDaysSince').style.left = (OfsX)+'px';
-  document.getElementById('DivDaysSince').style.height = (WinHgt-OfsY)+'px';
+  document.getElementById('DivDaysSince').style.fontSize = (Math.round(WinHgt*.5))+'px';
+  document.getElementById('DivDaysSince').style.height = (Math.round(WinHgt*.5))+'px';
   document.getElementById('DivDaysSince').style.width = (WinWid-OfsX)+'px';
-  document.getElementById('SpanDaysSince').style.fontSize = (Math.round(WinHgt*.6))+'px';
 }
 
 // Blank screen.
@@ -1489,30 +1517,30 @@ function ParseMargins (PMin) {
   var MarginPartStr = '';  var MarginPartVal = [];   var MarginMatches = [];
   MarginMatches = PMin.match(MarginPatt);
   if (MarginMatches) {
-  if (MarginMatches.length==5) {
-    if (! isNaN(MarginMatches[1])) {
-      MarginPartVal[0] = parseInt(MarginMatches[1],10);
-      if ( (MarginPartVal[0]>=0) && (MarginPartVal[0]<999) ) {
-        if (! isNaN(MarginMatches[2])) {
-          MarginPartVal[1] = parseInt(MarginMatches[2],10);
-          if ( (MarginPartVal[1]>=0) && (MarginPartVal[1]<999) ) {
-            if (! isNaN(MarginMatches[3])) {
-              MarginPartVal[2] = parseInt(MarginMatches[3],10);
-              if ( (MarginPartVal[2]>=0) && (MarginPartVal[2]<999) ) {
-                if (! isNaN(MarginMatches[4])) {
-                  MarginPartVal[3] = parseInt(MarginMatches[4],10);
-                  if ( (MarginPartVal[3]>=0) && (MarginPartVal[3]<999) ) {
-                     MarginTop = MarginPartVal[0];  MarginLeft = MarginPartVal[1];
-                     MarginBottom = MarginPartVal[2];  MarginRight = MarginPartVal[3];
+    if (MarginMatches.length==5) {
+      if (! isNaN(MarginMatches[1])) {
+        MarginPartVal[0] = parseInt(MarginMatches[1],10);
+        if ( (MarginPartVal[0]>=0) && (MarginPartVal[0]<999) ) {
+          if (! isNaN(MarginMatches[2])) {
+            MarginPartVal[1] = parseInt(MarginMatches[2],10);
+            if ( (MarginPartVal[1]>=0) && (MarginPartVal[1]<999) ) {
+              if (! isNaN(MarginMatches[3])) {
+                MarginPartVal[2] = parseInt(MarginMatches[3],10);
+                if ( (MarginPartVal[2]>=0) && (MarginPartVal[2]<999) ) {
+                  if (! isNaN(MarginMatches[4])) {
+                    MarginPartVal[3] = parseInt(MarginMatches[4],10);
+                    if ( (MarginPartVal[3]>=0) && (MarginPartVal[3]<999) ) {
+                       MarginTop = MarginPartVal[0];  MarginLeft = MarginPartVal[1];
+                       MarginBottom = MarginPartVal[2];  MarginRight = MarginPartVal[3];
+                    }
                   }
                 }
               }
-           }
+            }
           }
         }
       }
     }
-  }
   }
 }
 // Process a margin change (from keyboard controls).
@@ -1541,6 +1569,12 @@ function CheckKeypress (e) {
   if (KeyPressedCode==38) { KeyPressedCode=8+48; }
   if (KeyPressedCode==33) { KeyPressedCode=9+48; }
   if (KeyPressedCode==46) { KeyPressedCode=110; }
+  if (KeyPressedCode==96) { KeyPressedCode=48; }
+  if ( (KeyPressedCode>26) && (KeyPressedCode<128) ) {  // Special handling of multi key sequences.
+    while (KeysPressed.length>5) { KeysPressed = KeysPressed.substring(1); }
+    KeysPressed = KeysPressed+String.fromCharCode(KeyPressedCode).toUpperCase();
+    if (KeysPressed == "000000") { location.reload(); } // Force reload on six zeroesm for tech support purposes.
+  }
   if (KeyPressedCode == 32) {  // Space = next BG
     ClearTimers();
     if (MasterTimer!=null) { clearTimeout(MasterTimer); }
@@ -1552,7 +1586,7 @@ function CheckKeypress (e) {
       AllDivsOff();
       DoDiags();
     } else {
-      if ( (KeyPressedCode == 48) || (KeyPressedCode == 96) ) {  // '0' = Display Off
+      if (KeyPressedCode == 48) {  // '0' = Display Off
         if (BGprev<0) {
           BGprev = BGcurr;
           ClearTimers();
@@ -1897,7 +1931,7 @@ function DoRefresh () {
 
 <div id="DivBG" style="z-index:2; position:absolute; left:0px; top:0px; overflow:hidden;"></div>
 
-<div id="DivDaysSince" style="z-index:3; position:absolute; left:0px; top:0px; visibility:hidden; text-align:left;"><span id="SpanDaysSince" style="font-family:Arial; text-decoration:bold; font-stretch:condensed; text-shadow:-4px 4px 0px #FFFFFF; -webkit-font-smoothing:antialiased; color:#FF3535; line-height:81%; font-size:36px;"></span></div>
+<div id="DivDaysSince" style="z-index:3; position:absolute; left:0px; top:0px; visibility:hidden; text-align:left;"><span id="SpanDaysSince" style="font-family:Arial; text-decoration:bold; font-stretch:condensed; text-shadow:-4px 4px 0px #FFFFFF; -webkit-font-smoothing:antialiased;"></span></div>
 
 <div id="DivAnalogBG" style="z-index:4; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClockBG" onClick="NextSlide();"> </canvas>
 <div id="DivAnalog" style="z-index:5; position:absolute; left:0px; top:0px; visibility:hidden;"><canvas id="AnalogClock" onClick="NextSlide();"> </canvas></div>
@@ -1907,11 +1941,11 @@ function DoRefresh () {
 <div id="DivMoonImg" style="z-index:7; position:absolute; left:0px; top:-34px;"></div>
 <div id="DivSunTimes" style="z-index:8; position:absolute; left:0px; top:0px; text-align:right;"></div>
 
-<div id="DivWeatherForecast" style="z-index:9; position:absolute; left:0px; top:0px;"></div>
+<div id="DivBGdesc" style="z-index:9; position:absolute; left:0px; top:0px;"></div>
 
-<div id="DivBGdesc" style="z-index:10; position:absolute; left:0px; top:0px;"></div>
+<div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextSlide();'></span></div>
 
-<div id="DivTime" style="z-index:11; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextSlide();'></span></div>
+<div id="DivWeatherForecast" style="z-index:11; position:absolute; left:0px; top:0px;"></div>
 
 <div id="DivWeatherCurrent" style="z-index:12; position:absolute; left:0px; top:0px; text-align:center; opacity:1.0;"></div>
 
