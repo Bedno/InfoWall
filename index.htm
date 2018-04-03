@@ -19,7 +19,7 @@ var About = 'InfoWall : At-a-glance time, date, weather, webcams, more.<br><br>'
             '<a href="https://Bedno.com/infowall/about" target="About">More info...</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
             '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
             '<span onClick="TechReadout();" title="Click for technical details." style="font-size:8pt; color:#C0C0C0;">&#128295;</span>';  // Wrench icon.
-// Demonstrates a number of advanced Javascript techniques:
+// Demonstrates many advanced Javascript techniques:
 //    Responsive auto-formatting.  Text to speech.  Canvas element and drawing.  Analog clock.
 //    Weather API use (Wunderground.com).  JSON fetch and parse.
 //    Querystring checking.  Read/write localstorage.
@@ -28,7 +28,7 @@ var About = 'InfoWall : At-a-glance time, date, weather, webcams, more.<br><br>'
 //    Sun/Moon calculations.  No dependencies.
 // Incorporates SunCalc.js by Vladimir Agafonkin https://github.com/mourner/suncalc
 
-// CONFIGURABLES:
+// === CONFIGURABLES ===
 
 // Configure Wunderground.com (Weather Underground) aspects below.  See https://www.wunderground.com/weather/api/
 var InfoZip = '60657';  // Zipcode of this installation.  60657=Chicago
@@ -36,15 +36,15 @@ var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this ins
 var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezoneOffset()/60 but reads wrong on most browsers?!?
 var WeatherURL = 'https://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
 // Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
-var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA60.json  Was KILCHICA173, then KILCHICA173
-var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA60.json
+var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
+var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
 var ClockColorDay = '#000000';  // Daytime color of some time/date parts.
 var ClockColorNight = '#FFFFFF';  // Nighttime color of some mtime/date parts.
 // Quick B&W: ('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
 // Simple rainbow: ('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
 // Pastel tones: ('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
-var ClockMode = 1;  // 0 = rainbow, 1 = pulsing
+var ClockMode = 1;  // 0 = rainbow, 1 = pulsing/throbbing/breathing
 var ClockRainbowShadows = new Array('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');
 var ClockRainbowOpacity = new Array(     0.4,     0.5,     0.6,     0.8,     0.9,       1,        1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1);
 var ClockUpdDur = ( (ClockMode==0) ? Math.floor(1000/ClockRainbowShadows.length) : 100 );
@@ -80,8 +80,9 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGdesc:"NOAA Skyline", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi1.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"NOAA Navy Pier", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi2.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"NOAA Harbor", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi3.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
-    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"IIT", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/IIT_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
+    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
     { BGdesc:"1200 W Harrison", BGsrc:"http://131.193.91.50:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/241329/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"" },
@@ -275,8 +276,7 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
   { BGcode:"loops", BGshow:"", BGslides: [
     { BGsrc:"http://bedno.com/g/infowall/loops/rings_of_water.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Rings of Water", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
     { BGsrc:"http://bedno.com/g/infowall/loops/hypercube.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Hypercube", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
-    { BGsrc:"http://bedno.com/g/infowall/loops/icositetrachoric.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Icositetrachoric", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" },
-    { BGsrc:"http://bedno.com/g/infowall/loops/reminders.gif?{unqsec}", BGlink:"http://icloud.com", BGdesc:"Tasks", BGdur:90000, BGzoom:1, BGsub:-1, BGauth:"dev" } ] }
+    { BGsrc:"http://bedno.com/g/infowall/loops/icositetrachoric.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Icositetrachoric", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"" } ] }
   ];
 
 // GLOBALS
@@ -303,13 +303,18 @@ var ClockCanvas, ClockContext;
 var ClockCanvasBG, ClockContextBG;
 var HourPrev = -1;  var HourCurr = -1;
 var MinutePrev = -1;  var MinuteCurr = -1;
+var SecondPrev = -1;  var SecondCurr = -1;
 var AbrvMon = new Array('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
 var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
+var FullMon = new Array('January','February','March','April','May','June','July','August','September','October','November','December');
+var FullDoW = new Array('Sunday', 'Monday','Tuesday','Wednesday','Thursday','Friday', 'Saturday');
+var FullDoM = new Array('zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth', 'twenty first', 'twenty second', 'twenty third', 'twenty fourth', 'twenty fifth', 'twenty sixth', 'twenty seventh', 'twenty eighth', 'twenty ninth', 'thirtieth', 'thirty first', 'thirty second');
 var WeatherCurrent = '';
 var WeatherCurrentIcon = '';
 var WeatherCurrentSpoken = "";
 var WeatherForecast = '';
 var WeatherForecastSpoken = [];
+WeatherForecastSpoken[0] = "";
 var WeatherForecastTimer = 0;
 var WeatherCurrentTimer = 0;
 var WeatherURLeff = "";
@@ -319,13 +324,16 @@ var IntroDur = 10000;  var IntroTimer = IntroDur+1;
 var BootedCurr = "";  var BootedFirst = "";
 var ResizeTimer = null;
 var DaysSinceStarted = 0;  var DaysSinceDT;  var DaysSinceSeq = 0;
-if (location.href.toLowerCase().indexOf('dev')>-1) { DaysSinceStarted = new Date("10-31-2017 5:00 PM"); }
 var DaysSinceDur = 1500;  var DaysSinceTimer = DaysSinceDur;
+var DaysSinceWeeks = 0;  var DaysSinceDays = 0;
+var DaysSinceWeeksHTML = 0;  var DaysSinceDaysHTML = '';
+
 var StopwatchStarted = 0;  var StopwatchLaps = "";  var StopwatchDT;
 var StopwatchDur = 1000;  var StopwatchTimer = StopwatchDur;
-var SpeechVoices = null;
+var SpeechVoices = null;  var IsSpeaking = false;
+var AlarmsTimer = null;
 
-// Utils.
+// === UTILS ===
 function IsIOS () { return((navigator.userAgent.toLowerCase().indexOf('iphone')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipod')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipad')>-1) || (navigator.userAgent.toLowerCase().indexOf('ios')>-1) ); }
 function IsAndroid () { return((navigator.userAgent.toLowerCase().indexOf('droid')>-1)); }
 
@@ -346,6 +354,68 @@ function UnqDec () {
   var UFrac = Math.floor(Udt.getMinutes()/6);
   return(''+Udt.getYear().toString()+''+Udt.getMonth().toString()+''+Udt.getDate().toString()+''+Udt.getHours().toString()+''+UFrac.toString()+'');
 }
+
+function SpeechDone () {
+  IsSpeaking = false;
+  if (CfgKeysCnt > 0) {
+    if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
+    if (CfgKeysCnt > 0) { AlarmsTimer = setTimeout('CheckAlarms()',4000); }
+  }
+}
+
+function SpeechDo (SDin) {
+  if ('speechSynthesis' in window) {
+    if (IsSpeaking) {
+      window.speechSynthesis.cancel();  // Cancel any existing speaking
+      IsSpeaking = false;
+    }
+    var SpeechHandle = new SpeechSynthesisUtterance();
+    IsSpeaking = true;
+    SpeechHandle.voice = SpeechVoices[10];
+    SpeechHandle.voiceURI = 'native';
+    SpeechHandle.volume = 1.0; // 0 to 1
+    SpeechHandle.rate = 1.0; // 0.1 to 10
+    SpeechHandle.pitch = 1.0; // 0 to 2
+    SpeechHandle.lang = 'en-US';
+    SpeechHandle.text = SDin;
+    SpeechHandle.onend = SpeechDone;
+    window.speechSynthesis.speak(SpeechHandle);
+  }
+}
+
+// Load current and total runtimes only on boot.
+function FetchUptimes () {
+  var UTdt = new Date(DTadj());
+  var UTh = UTdt.getHours();
+  var UTm = UTdt.getMinutes();
+  var UTs = UTdt.getSeconds();
+  BootedCurr = (UTdt.getYear()+1900).toString()+'.';
+  if (UTdt.getMonth()<9) { BootedCurr += '0'; }
+  BootedCurr += (UTdt.getMonth()+1).toString()+'.';
+  if (UTdt.getDate()<10) { BootedCurr += '0'; }
+  BootedCurr += UTdt.getDate().toString()+' ';
+  if (UTdt.getHours()<10) { BootedCurr += '0'; }
+  BootedCurr += UTdt.getHours().toString()+':';
+  if (UTdt.getMinutes()<10) { BootedCurr += '0'; }
+  BootedCurr += UTdt.getMinutes().toString()+':';
+  if (UTdt.getSeconds()<10) { BootedCurr += '0'; }
+  BootedCurr += UTdt.getSeconds().toString();
+  if (haslocalstorage()) {
+    try {
+      BootedFirst = localStorage.getItem('Booted');
+    } catch (err) { }
+  }
+  if ( (! BootedFirst) || (BootedFirst.length<8) || (BootedFirst.length>21) ) {
+    BootedFirst = BootedCurr;
+    if (haslocalstorage()) {
+      try {
+        localStorage.setItem('Booted', BootedFirst);
+      } catch (err) { }
+    }
+  }
+}
+
+// === RENDERING ===
 
 // Check if current slideshow contains any movie slides.
 function HasFrames () {
@@ -467,21 +537,6 @@ function NextBG () {
   DoRefresh();
 }
 
-function DoSpeech (DSin) {
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    var SFmsg = new SpeechSynthesisUtterance();
-    SFmsg.voice = SpeechVoices[10];
-    SFmsg.voiceURI = 'native';
-    SFmsg.volume = 1.0; // 0 to 1
-    SFmsg.rate = 1.0; // 0.1 to 10
-    SFmsg.pitch = 1.0; // 0 to 2
-    SFmsg.lang = 'en-US';
-    SFmsg.text = DSin;
-    window.speechSynthesis.speak(SFmsg);
-  }
-}
-
 // Background update handler.  Sequences through slides.
 function UpdBG () {
   var ImgSrc = '';
@@ -555,7 +610,7 @@ function UpdBG () {
         document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</span>';
       }
       // Speak the current image description (used by Twister mode)
-      if (BGshowCurr.indexOf('V')>=0) { DoSpeech(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
+      if (BGshowCurr.indexOf('V')>=0) { SpeechDo(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
     }
     if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if slide is same radar
       if (ImgSrc.toUpperCase().indexOf(RadarURLsrc.toUpperCase())>=0) {
@@ -649,13 +704,17 @@ function SetupRadar () {
   }
 }
 
+// === WEATHER ===
+
 // Speak the weather forecast on capable browsers (including Chrome and Safari)
 function SpeakForecast(WFSnum) {
   var SFstr = "";
   if ('speechSynthesis' in window) {
     var SpkDT=new Date(DTadj());
     var SpkHr = 0;
+    var SpkAP="A";
     SpkHr = SpkDT.getHours();
+    if (SpkHr>11) { SpkAP = "P"; }
     if (SpkHr>12) SpkHr = SpkHr-12;  if (SpkHr==0) SpkHr = 12;
     var SpkMn = "";
     if (SpkDT.getMinutes()>0) {
@@ -665,10 +724,11 @@ function SpeakForecast(WFSnum) {
     if (typeof WeatherForecastSpoken[0] !== 'undefined') {
       if (WFSnum==0) {
         if (WeatherCurrentSpoken.length>4) {
+          SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
           if (WeatherForecastSpoken[0].length>4) {
-            SFstr = "At "+SpkHr.toString()+"  "+SpkMn+" its "+WeatherCurrentSpoken.toUpperCase()+" "+WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING ');
+            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+"M its "+WeatherCurrentSpoken.toUpperCase()+" "+WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING ');
           } else {
-            SFstr = "At "+SpkHr.toString()+"  "+SpkMn+" its "+WeatherCurrentSpoken.toUpperCase();
+            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+"M its "+WeatherCurrentSpoken.toUpperCase();
           }
         } else {
           if (WeatherForecastSpoken[0].length>4) {
@@ -678,7 +738,8 @@ function SpeakForecast(WFSnum) {
       } else {
         SFstr = WeatherForecastSpoken[WFSnum];
       }
-      DoSpeech(SFstr);
+      if (AlarmsDay.length) { SFstr += "\n\n"+AlarmsDay; }
+      SpeechDo(SFstr);
     }
   }
 }
@@ -823,8 +884,10 @@ function WeatherCurrentReceive () {
     var FWCread = WeatherCurrentHandle.responseText;
     try {
       var FWCrec = JSON.parse(FWCread);
-      WeatherCurrent = '';
-      WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 height='+(Math.floor(WinHgt*WeatherCurrentHgt*.6))+'>';
+      WeatherCurrent = '';  WeatherCurrentIcon = "";
+      if (FWCrec['current_observation']['icon_url'].indexOf('/.gif')<1) {
+        WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 height='+(Math.floor(WinHgt*WeatherCurrentHgt*.6))+'>';
+      }
       WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;">'+FmtMinus(FWCrec['current_observation']['temp_f'])+'</span>&deg;</nobr> ';
       WeatherCurrentSpokenTmp += SpokenMinus(FWCrec['current_observation']['temp_f'])+", ";
       if (FWCrec['current_observation']['weather'].length>1) {
@@ -988,6 +1051,202 @@ function SetupWeather () {
   WeatherCurrentTimer = 0;
 }
 
+// === REMOTE CONFIGURABLES ===
+// Fetch a URL specified config file for alarms.
+
+var CfgText = '';
+var CfgHandle = null;
+var CfgName = "";  var CfgVal = "";
+var CfgLines = '';  var CfgLine = '';  var CfgLp = 0;
+var CfgVals = new Array();
+var CfgKeys = new Array();
+var CfgKeysCnt = 0;
+var AlarmsCurr = "";  var AlarmsDay = "";
+var CfgSrc = "";
+
+function AlarmMsg (ADin) {
+  if (document.getElementById('DivAlarm')) {
+    if (document.getElementById('DivAlarm').style.visibility=='visible') {
+      if (document.getElementById('DivAlarm').innerText.length>800) {
+        document.getElementById('DivAlarm').innerText = document.getElementById('DivAlarm').innerText.substr(120,document.getElementById('DivAlarm').innerText.length-120);
+      }
+      document.getElementById('DivAlarm').innerText += ADin+"\n";
+    }
+  }
+}
+
+function CfgParse () {
+  var CfgErrCnt = 0;
+  var CfgMaxErrs = 12;
+  if ( (CfgHandle.readyState==4) && (CfgHandle.status==200) ) {
+    CfgText = CfgHandle.responseText;
+    CfgName = "";  CfgVal = "";
+    if (CfgText.length>100) {
+      CfgLines = CfgText.split("\n");
+      CfgVals = Array();
+      CfgKeys = Array();
+      CfgKeysCnt = 0;
+      for (CfgLp=0; CfgLp<CfgLines.length; CfgLp++) {
+        if (CfgErrCnt<CfgMaxErrs) {
+          CfgLine = CfgLines[CfgLp];
+          CfgLine = CfgLine.replace(/^\s+/,'');
+          CfgLine = CfgLine.replace(/\s+$/,'');
+          if (CfgLine.length>3) {
+            if ( (CfgLine.substr(0,1)!='#') && (CfgLine.substr(0,1)!=';') ) {
+              if (CfgLine.indexOf('=')>=0) {
+                CfgName = CfgLine.replace(/\=.*/gi,'').toLowerCase();
+                CfgName = CfgName.replace(/^\s+/gi,'').replace(/\s+$/gi,'')
+                CfgVal = CfgLine.replace(/[^\=]+\=/gi,'');
+                CfgVal = CfgVal.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
+                if ( (CfgName.length>0) && (CfgVal.length>0) ) {
+                  CfgKeys[CfgKeysCnt++] = CfgName;
+                  CfgVals[CfgName] = CfgVal;
+                  AlarmMsg(CfgName+'="'+CfgVal+'"');
+                } else {
+                  CfgErrCnt++;
+                }
+              } else {
+                CfgErrCnt++;
+              }
+            }
+          }
+        } else {
+          if (CfgErrCnt==CfgMaxErrs) { alert('Too many errors loading config file:'+"\n"+CfgSrc); }
+          CfgErrCnt++;
+        }
+      }
+      if (CfgKeysCnt>0) {
+        if (CfgVals['dayssince']) {
+          DaysSinceStarted = new Date(CfgVals['dayssince']);
+        }
+      }
+    }
+    SpeechDone();
+  }
+}
+
+function CfgRequest () {
+  var CfgURLcode = "";
+  CfgURLcode = location.href;
+  if (CfgURLcode.indexOf('#')>=0) {
+    CfgURLcode = CfgURLcode.replace(/^[^#]+#/,'').toLowerCase();
+    CfgURLcode = CfgURLcode.replace(/^\s+/,'').replace(/\s+$/,'');
+    CfgURLcode = CfgURLcode.replace(/[^a-z0-9]/,'');
+    if ( (CfgURLcode.length>0) && (CfgURLcode.length<20) ) {
+      CfgSrc = 'https://bedno.com/d/'+CfgURLcode+'.cfg';
+    }
+  }
+  if (CfgSrc.length>0) {
+    CfgHandle = null;
+    CfgText = "";
+    try {
+      CfgHandle = new XMLHttpRequest();
+    } catch (trymicrosoft) {
+      try {
+        CfgHandle = new ActiveXObject('Msxml2.XMLHTTP');
+      } catch (othermicrosoft) {
+        try {
+          CfgHandle = new ActiveXObject('Microsoft.XMLHTTP');
+        } catch (failed) { }
+      }
+    }
+    if (CfgHandle) {
+      try {
+        CfgSrc += '?z='+(Math.floor(Math.random()*9999999).toString());
+        CfgHandle.open('GET', CfgSrc, true);
+        CfgHandle.timeout = 11000;
+        CfgHandle.onreadystatechange = function(){CfgParse();};
+        CfgHandle.send(null);
+      } catch (err) { }
+    }
+    AlarmMsg('Src="'+CfgSrc+'"');
+  }
+}
+
+// Substitutions in alarm messages.
+function CfgSubs (CSval) {
+  var CfgDT = new Date(DTadj());
+  CSval = CSval.replace('{YYYY}',(CfgDT.getYear()+1900).toString());
+  CSval = CSval.replace('{MM}',(CfgDT.getMonth()+1).toString());
+  CSval = CSval.replace('{DD}',CfgDT.getDate().toString());
+  CSval = CSval.replace('{HH}',CfgDT.getHours().toString());
+  CSval = CSval.replace('{mm}',CfgDT.getMinutes().toString());
+  CSval = CSval.replace('{MO}',FullMon[CfgDT.getMonth()]);
+  CSval = CSval.replace('{DA}',FullDoW[CfgDT.getDay()]);
+  CSval = CSval.replace('{DM}',FullDoM[CfgDT.getDate()]);
+  if (WeatherCurrentSpoken.length>4) { CSval = CSval.replace('{WEATHER}',WeatherCurrentSpoken); }
+  if (WeatherForecastSpoken[0].length>4) { CSval = CSval.replace('{FORECAST}',WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'')); }
+  if (DaysSinceDays>0) { CSval = CSval.replace('{DS}',DaysSinceDays.toString()); }
+  if (DaysSinceWeeks>0) { CSval = CSval.replace('{DW}',DaysSinceWeeks.toString()); }
+  var CSap="A";
+  var CSh=CfgDT.getHours();
+  var CSm=CfgDT.getMinutes();
+  var CSt="";
+  if (CSh>11) { CSap = "P"; }
+  if (CSh>12) { CSh = CSh-12; }
+  if (CSh==0) { CSh = 12; }
+  if ( (CSh == 12) && (CSap == 'A') && (CSm==0) ) {
+    CSt = 'Midnight';
+  } else {
+    if ( (CSh == 12) && (CSap == 'P') && (CSm==0) ) {
+      CSt = 'Noon';
+    } else {
+      CSt = CSh.toString();
+      if (CSm > 0) {
+        CSt += ' ';
+        if (CSm < 10) { CSt += '0 '; }
+        CSt += CSm.toString();
+      }
+      CSap += 'M';
+      CSt += ' '+CSap;
+    }
+  }
+  CSval = CSval.replace('{TIME}',CSt);
+  CSval = CSval.replace('{hh}',CSh.toString());
+  CSval = CSval.replace('{AP}',CSap);
+  return(CSval);
+}
+
+// On each minute, scan for matches against special alarms config file.
+function CheckAlarms () {
+  var AlmDT = new Date(DTadj());
+  var AlmStr = ' ';
+  AlarmsCurr = "";  AlarmsDay = "";
+  if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
+  if (CfgKeysCnt > 0) {
+    AlmStr += FullMon[AlmDT.getMonth()].toLowerCase()+' ';
+    AlmStr += FullDoW[AlmDT.getDay()].toLowerCase()+' ';
+    AlmStr += (AlmDT.getYear()+1900).toString()+'.';
+    if (AlmDT.getMonth() < 9) { AlmStr += '0'; }
+    AlmStr += (AlmDT.getMonth()+1).toString()+'.';
+    if (AlmDT.getDate() < 10) { AlmStr += '0'; }
+    AlmStr += AlmDT.getDate().toString()+' ';
+    if (AlmDT.getHours() < 10) { AlmStr += '0'; }
+    AlmStr += AlmDT.getHours().toString()+':';
+    if (AlmDT.getMinutes() < 10) { AlmStr += '0'; }
+    AlmStr += AlmDT.getMinutes().toString()+':';
+    if (AlmDT.getSeconds() < 10) { AlmStr += '0'; }
+    AlmStr += AlmDT.getSeconds().toString();
+    for (var AlmLp = 0; AlmLp < CfgKeysCnt; AlmLp++) {
+      if (AlmStr.indexOf(CfgKeys[AlmLp])>=0) {
+        if ( (CfgKeys[AlmLp].indexOf('.')>=0) && (CfgKeys[AlmLp].indexOf(':')<0) ) {
+          AlarmsDay += CfgSubs(CfgVals[CfgKeys[AlmLp]])+"\n\n";
+        } else {
+          AlarmsCurr += CfgSubs(CfgVals[CfgKeys[AlmLp]])+"\n\n";
+        }
+      }
+    }
+    AlarmMsg('Time: "'+ AlmStr + '"');
+    if (AlarmsCurr.length>0) {
+      if (AlarmsDay.length) { AlarmsCurr += "\n\n"+AlarmsDay; }
+      SpeechDo(AlarmsCurr);
+      AlarmMsg(AlarmsCurr);
+    }
+  }
+}
+
+// === DISPLAY ===
+
 // Display the date.
 function ShowDate () {
   var SDdt = new Date(DTadj());
@@ -1005,38 +1264,6 @@ function ShowDate () {
     document.getElementById('DivDate').style.width = (WinWid-OfsX-48)+'px';
     document.getElementById('DivDate').style.opacity = 1.0;
     document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+ClockColorOpp+'; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinHgt*0.18)+'px;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
-  }
-}
-
-// Load current and total runtimes only on boot.
-function FetchUptimes () {
-  var UTdt = new Date(DTadj());
-  var UTh = UTdt.getHours();
-  var UTm = UTdt.getMinutes();
-  var UTs = UTdt.getSeconds();
-  BootedCurr = (UTdt.getYear()+1900).toString()+'.';
-  if ((UTdt.getMonth()+1)<10) { BootedCurr += '0'; }
-  BootedCurr += (UTdt.getMonth()+1).toString()+'.';
-  if (UTdt.getDate()<10) { BootedCurr += '0'; }
-  BootedCurr += UTdt.getDate().toString()+' ';
-  if (UTdt.getHours()<10) { BootedCurr += '0'; }
-  BootedCurr += UTdt.getHours().toString()+':';
-  if (UTdt.getMinutes()<10) { BootedCurr += '0'; }
-  BootedCurr += UTdt.getMinutes().toString()+':';
-  if (UTdt.getSeconds()<10) { BootedCurr += '0'; }
-  BootedCurr += UTdt.getSeconds().toString();
-  if (haslocalstorage()) {
-    try {
-      BootedFirst = localStorage.getItem('Booted');
-    } catch (err) { }
-  }
-  if ( (! BootedFirst) || (BootedFirst.length<8) || (BootedFirst.length>21) ) {
-    BootedFirst = BootedCurr;
-    if (haslocalstorage()) {
-      try {
-        localStorage.setItem('Booted', BootedFirst);
-      } catch (err) { }
-    }
   }
 }
 
@@ -1119,8 +1346,11 @@ function ShowTime () {
   HourCurr = STh;
   var STm=STdt.getMinutes();
   MinuteCurr = STm;
-  var STs=STdt.getSeconds();
-  var STms = STdt.getTime() % 1000;
+  var STs = STdt.getSeconds();
+  SecondCurr = STs;
+  var STmspc = 4400;
+  var STms = STdt.getTime() % STmspc;
+  var STsz = 0;  var STman = 0;
   if (STh>11) { STap = "P"; }
   if (STh>12) { STh = STh-12; }
   if (STh==0) { STh = 12; }
@@ -1137,8 +1367,11 @@ function ShowTime () {
   }
   if (BGshowCurr.indexOf('C')>=0) {
     ColonElev = Math.floor((STs/59)*80)+10;
-    if (STms > 500) { STms = 1000 - STms; }
-    DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.5 + (0.2*(STms/500)))) );
+    // Clock digit sizing effects (throbbing) happens here. Recently slowed from a quick pulse to a slow breathing.  Replaces pastel rainbow animation to reduce burn-in.
+    // if (STms > 500) { STsz = 1000 - STms; } else { STsz = STms; }
+    // DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.5 + (0.2*(STsz/500)))) );
+    if (STms > (STmspc/2)) { STsz = (STmspc/2) - (STms - (STmspc/2)); } else { STsz = STms; }
+    DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.48 + (0.1*(STsz/(STmspc/2))))) );
     ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span>'; // hour
     ClockHTML += '<span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(DigitSize*0.1)+'px; font-size:'+Math.floor(DigitSize*0.4)+'px; color:'+ClockShade+'; text-shadow:-6px 6px 0px '+ClockShadow+';">:</span>'; // colon
     ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span>'; // minute
@@ -1237,21 +1470,20 @@ function ShowDaysSince () {
     var DaysSinceCurMS = Math.floor(DaysSinceDT.getTime() / 1000);
     var DaysSinceStartedMS = Math.floor(DaysSinceStarted.getTime() / 1000);
     var DaysSinceHours = Math.round((DaysSinceCurMS-DaysSinceStartedMS)/3600)-12;
-    var DaysSinceDays = '';
-    if (Math.floor(DaysSinceHours/24)>99) { DaysSinceDays += '<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px; vertical-align:15%;">'+Math.floor(Math.floor(DaysSinceHours/24)/100).toString()+'</span>' }
-    if (Math.floor(Math.floor(DaysSinceHours/24) % 100)<10) { DaysSinceDays += '0'; }
-    DaysSinceDays += Math.floor(Math.floor(DaysSinceHours/24) % 100).toString();
-    var DaysSinceWeeks = '<i>'+Math.floor(Math.floor(DaysSinceHours/24)/7).toString()+'<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px">'+Math.floor(Math.floor(DaysSinceHours/24)%7).toString()+'</span></i>';
+    DaysSinceDays = Math.floor(DaysSinceHours/24);
+    DaysSinceDaysHTML = DaysSinceDays.toString();
+    DaysSinceWeeks = Math.floor(Math.floor(DaysSinceHours/24)/7);
+    DaysSinceWeeksHTML = '<i>'+DaysSinceWeeks.toString()+'<span style="font-size:'+Math.round(WinHgt*.4).toString()+'px">'+Math.floor(Math.floor(DaysSinceHours/24)%7).toString()+'</span></i>';
     DaysSinceTimer = DaysSinceDur;
     if (DaysSinceSeq==0) document.getElementById('DivDaysSince').style.visibility='hidden';
     if (DaysSinceSeq==1) {
-      document.getElementById('SpanDaysSince').innerHTML = DaysSinceWeeks;
+      document.getElementById('SpanDaysSince').innerHTML = DaysSinceWeeksHTML;
       document.getElementById('DivDaysSince').style.color='#D89E00';
       document.getElementById('DivDaysSince').style.visibility='visible';
       DaysSinceTimer = DaysSinceDur*2;
     }
     if (DaysSinceSeq==2) {
-      document.getElementById('SpanDaysSince').innerHTML = DaysSinceDays;
+      document.getElementById('SpanDaysSince').innerHTML = DaysSinceDaysHTML;
       document.getElementById('DivDaysSince').style.color='#FF3535';
       document.getElementById('DivDaysSince').style.visibility='visible';
       DaysSinceTimer = DaysSinceDur*3;
@@ -1260,69 +1492,6 @@ function ShowDaysSince () {
   } else {
     document.getElementById('DivDaysSince').style.visibility='hidden';
   }
-}
-
-// Master update handler.  Uses a single timer.
-function DoUpd () {
-  if (StopwatchStarted > 0) {
-    StopwatchTimer -= MasterDur;
-    if (StopwatchTimer<1) {
-      ShowStopwatch();
-      StopwatchTimer = StopwatchDur;
-    }
-  }
-  if (DaysSinceStarted > 0) {
-    DaysSinceTimer -= MasterDur;
-    if (DaysSinceTimer<1) ShowDaysSince();
-  }
-  ClockUpdTimer -= MasterDur;
-  if (ClockUpdTimer<1) {
-    ShowTime();
-    if (BGshowCurr.indexOf('A')>=0) {
-      ClockUpdTimer = AnalogClockUpdDur;
-    } else {
-      ClockUpdTimer = ClockUpdDur;
-    }
-    if (HourCurr != HourPrev) {  // Hourly change.
-      SetupOfs();
-      HourPrev = HourCurr;
-      ShowMoon();
-      ShowDate();
-    }
-    if (MinuteCurr != MinutePrev) {
-      MinutePrev = MinuteCurr;
-      ClockRainbowShadowSeq = 0;
-    }
-    if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
-      ShowMoon();
-      ShowDate();
-      if (ClockColorPrev!='') DoRefresh();  // Force reload on sunrise/sunset to reposition elements to reduce screen burn-in.
-      ClockColorPrev = ClockColor;
-    }
-  }
-  WeatherForecastTimer -= MasterDur;
-  if (WeatherForecastTimer<1) {
-    WeatherForecastRequest();
-  }
-  WeatherCurrentTimer -= MasterDur;
-  if (WeatherCurrentTimer<1) {
-    WeatherCurrentRequest();
-  }
-  if (IntroTimer <= IntroDur) {
-    IntroTimer -= MasterDur;
-    if (IntroTimer < MasterDur) {
-      document.getElementById('DivIntro').style.visibility = 'hidden';
-      IntroTimer = IntroDur+1;
-    } else {
-      document.getElementById('DivIntro').style.visibility = 'visible';
-    }
-  }
-  UpdBG();
-  if (MasterTimer!=null) {
-    clearTimeout(MasterTimer);
-    MasterTimer = null;
-  }
-  MasterTimer = setTimeout('DoUpd()',MasterDur);
 }
 
 // Special color testing diagnostic mode on C keypress.
@@ -1371,68 +1540,6 @@ function SetupOfs () {
 // Resizing handler, calls full screen update.
 function DoResize () {
   HourPrev = -1; DoReBoot();
-}
-
-// Main setup, refreshes all screen elements. Happens on slideshow change and other major screen events.
-function DoSetup () {
-  SetupOfs();
-  SetupSun();
-  SetupRadar();
-  SetupScreen();
-  SetupWeather();
-  document.getElementById('DivAbout').style.top = (OfsY+Math.round(WinHgt*.9))+'px';
-  document.getElementById('DivAbout').style.left = (OfsX+Math.round(WinWid*.96))+'px';
-  document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
-  document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
-  document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
-  document.getElementById('DivTime').style.left = (OfsX)+'px';
-  document.getElementById('DivTime').style.top = Math.floor(OfsY+((ClockMode==0) ? 52 : 0)).toString()+'px';
-  document.getElementById('DivTime').style.width = (WinWid-OfsX)+'px';
-  document.getElementById('DivTime').style.textAlign = 'center';
-  document.getElementById('DivAnalog').style.left = (OfsX)+'px';
-  document.getElementById('DivAnalog').style.top = (OfsY)+'px';
-  document.getElementById('DivAnalogBG').style.left = (OfsX)+'px';
-  document.getElementById('DivAnalogBG').style.top = (OfsY)+'px';
-  document.getElementById('DivBGdesc').style.left = '0px';
-  document.getElementById('DivBGdesc').style.top = '0px';
-  document.getElementById('DivIntro').innerHTML = About;
-  document.getElementById("DivCanvas").style.top = '0px';
-  document.getElementById("DivCanvas").style.left = '0px';
-  document.getElementById("DivCanvas").style.width = (WinWid-(Math.abs(OfsX)*2))+'px';
-  document.getElementById("DivCanvas").style.height = (WinHgt-(Math.abs(OfsY)*2))+'px';
-  window.onresize = function(event) {
-    if (ResizeTimer) { clearTimeout(ResizeTimer); }
-    ResizeTimer = setTimeout('DoResize()',1200);
-  }
-  DoUpd();
-  if (ShowIntro > 0) {
-    var IntroDT = new Date(DTadj());
-    var IntroHr = IntroDT.getHours();
-    var IntroPrev = '';
-    if (haslocalstorage()) {
-      try {
-        IntroPrev = localStorage.getItem('IntroPrev');
-      } catch (err) { }
-    }
-    if (IntroPrev!=IntroHr) {
-      IntroTimer=IntroDur;
-      if (haslocalstorage()) {
-        try {
-          localStorage.setItem('IntroPrev', IntroHr);
-        } catch (err) { }
-      }
-    }
-  }
-  document.getElementById('DivStopwatch').style.top = (OfsY+14)+'px';
-  document.getElementById('DivStopwatch').style.left = (OfsX)+'px';
-  document.getElementById('DivStopwatch').style.height = (WinHgt-OfsY)+'px';
-  document.getElementById('DivStopwatch').style.width = (WinWid-OfsX)+'px';
-  document.getElementById('SpanStopwatch').style.fontSize = (Math.round(WinHgt*.5))+'px';
-  document.getElementById('DivDaysSince').style.top = (OfsY-20)+'px';
-  document.getElementById('DivDaysSince').style.left = (OfsX)+'px';
-  document.getElementById('DivDaysSince').style.fontSize = (Math.round(WinHgt*.5))+'px';
-  document.getElementById('DivDaysSince').style.height = (Math.round(WinHgt*.5))+'px';
-  document.getElementById('DivDaysSince').style.width = (WinWid-OfsX)+'px';
 }
 
 // Blank screen.
@@ -1553,6 +1660,195 @@ function UpdateMargins () {
   DoReBoot();
 }
 
+// Diagnostic info pop-up.  Called from Q key.
+function TechReadout () {
+  var TRout = "";
+  try { TRout = "Display: "+WinWidPhys.toString()+'x'+WinHgtPhys.toString()+"\n";
+  } catch (err) { }
+  try { TRout = TRout + "Margins: "+MarginTop.toString()+','+MarginLeft.toString()+','+MarginBottom.toString()+','+MarginRight.toString()+"\n";
+  } catch (err) { }
+  try { TRout = TRout +"Loaded: "+BootedCurr+"\n"+"Installed: "+BootedFirst+"\n";
+  } catch (err) { }
+  try { TRout = TRout +"Client: "+navigator.userAgent;
+  } catch (err) { }
+  alert(TRout);
+}
+
+// Finish screen setup for aspects that require a startup delay.
+function FinishScreen () {
+  if (IsIOS() || IsAndroid()) {
+    window.scrollTo(0, 1);
+  }
+}
+
+// Setup screen properties, dimensions, divs.
+function SetupWindow () {
+  if ( (MarginTop>0) || (MarginLeft>0) || (MarginBottom>0) || (MarginRight>0) ) {
+    WinWid = WinWidPhys - MarginLeft - MarginRight;
+    WinHgt = WinHgtPhys - MarginTop - MarginBottom;
+  } else {
+    WinWid = WinWidPhys;  WinHgt = WinHgtPhys;
+    WeatherURLeff = WeatherURL;
+    RadarURLeff = WeatherURL;
+  }
+  LimitMargins();
+  // 'kiosk' mode disables offsite links.
+  if (location.href.toLowerCase().indexOf('kiosk')>=0) {
+    WeatherURLeff = "";
+    RadarURLeff = "";
+    ShowIntro = 0;
+  }
+  document.getElementById('DivWhole').style.top = MarginTop.toString()+'px';
+  document.getElementById('DivWhole').style.left = MarginLeft.toString()+'px';
+  document.getElementById('DivWhole').style.width = WinWid.toString()+'px';
+  document.getElementById('DivWhole').style.height = WinHgt.toString()+'px';
+  WinMin = Math.min(WinWid,WinHgt);
+  WinMax = Math.max(WinWid,WinHgt);
+  RadarWid = Math.floor(WinWid*0.3);
+  RadarHgt = Math.floor(WinHgt*0.5);
+  AnalogSetup();
+  setTimeout('FinishScreen()',3000);
+}
+
+// ===== MAIN DISPATCH =====
+
+// Main setup, refreshes all screen elements. Happens on slideshow change and other major screen events.
+function DoSetup () {
+  SetupOfs();
+  SetupSun();
+  SetupRadar();
+  SetupScreen();
+  SetupWeather();
+  document.getElementById('DivAbout').style.top = (OfsY+Math.round(WinHgt*.9))+'px';
+  document.getElementById('DivAbout').style.left = (OfsX+Math.round(WinWid*.96))+'px';
+  document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
+  document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
+  document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
+  document.getElementById('DivAlarm').style.top = (OfsY+Math.round(WinHgt*.3))+'px';
+  document.getElementById('DivAlarm').style.left = (OfsX+Math.round(WinWid*.15))+'px';
+  document.getElementById('DivTime').style.left = (OfsX)+'px';
+  document.getElementById('DivTime').style.top = Math.floor(OfsY+((ClockMode==0) ? 52 : 32)).toString()+'px';
+  document.getElementById('DivTime').style.width = (WinWid-OfsX)+'px';
+  document.getElementById('DivTime').style.textAlign = 'center';
+  document.getElementById('DivAnalog').style.left = (OfsX)+'px';
+  document.getElementById('DivAnalog').style.top = (OfsY)+'px';
+  document.getElementById('DivAnalogBG').style.left = (OfsX)+'px';
+  document.getElementById('DivAnalogBG').style.top = (OfsY)+'px';
+  document.getElementById('DivBGdesc').style.left = '0px';
+  document.getElementById('DivBGdesc').style.top = '0px';
+  document.getElementById('DivIntro').innerHTML = About;
+  document.getElementById("DivCanvas").style.top = '0px';
+  document.getElementById("DivCanvas").style.left = '0px';
+  document.getElementById("DivCanvas").style.width = (WinWid-(Math.abs(OfsX)*2))+'px';
+  document.getElementById("DivCanvas").style.height = (WinHgt-(Math.abs(OfsY)*2))+'px';
+  window.onresize = function(event) {
+    if (ResizeTimer) { clearTimeout(ResizeTimer); }
+    ResizeTimer = setTimeout('DoResize()',1200);
+  }
+  DoUpd();
+  if (ShowIntro > 0) {
+    var IntroDT = new Date(DTadj());
+    var IntroHr = IntroDT.getHours();
+    var IntroPrev = '';
+    if (haslocalstorage()) {
+      try {
+        IntroPrev = localStorage.getItem('IntroPrev');
+      } catch (err) { }
+    }
+    if (IntroPrev!=IntroHr) {
+      IntroTimer=IntroDur;
+      if (haslocalstorage()) {
+        try {
+          localStorage.setItem('IntroPrev', IntroHr);
+        } catch (err) { }
+      }
+    }
+  }
+  document.getElementById('DivStopwatch').style.top = (OfsY+14)+'px';
+  document.getElementById('DivStopwatch').style.left = (OfsX)+'px';
+  document.getElementById('DivStopwatch').style.height = (WinHgt-OfsY)+'px';
+  document.getElementById('DivStopwatch').style.width = (WinWid-OfsX)+'px';
+  document.getElementById('SpanStopwatch').style.fontSize = (Math.round(WinHgt*.5))+'px';
+  document.getElementById('DivDaysSince').style.top = (OfsY-20)+'px';
+  document.getElementById('DivDaysSince').style.left = (OfsX)+'px';
+  document.getElementById('DivDaysSince').style.fontSize = (Math.round(WinHgt*.5))+'px';
+  document.getElementById('DivDaysSince').style.height = (Math.round(WinHgt*.5))+'px';
+  document.getElementById('DivDaysSince').style.width = (WinWid-OfsX)+'px';
+}
+
+// Master update handler.  Uses a single timer.
+function DoUpd () {
+  if (StopwatchStarted > 0) {
+    StopwatchTimer -= MasterDur;
+    if (StopwatchTimer<1) {
+      ShowStopwatch();
+      StopwatchTimer = StopwatchDur;
+    }
+  }
+  if (DaysSinceStarted > 0) {
+    DaysSinceTimer -= MasterDur;
+    if (DaysSinceTimer<1) ShowDaysSince();
+  }
+  ClockUpdTimer -= MasterDur;
+  if (ClockUpdTimer<1) {
+    ShowTime();
+    if (BGshowCurr.indexOf('A')>=0) {
+      ClockUpdTimer = AnalogClockUpdDur;
+    } else {
+      ClockUpdTimer = ClockUpdDur;
+    }
+    if (HourCurr != HourPrev) {  // Hourly change.
+      SetupOfs();
+      ShowMoon();
+      ShowDate();
+      setTimeout('CfgRequest()',135000);
+    }
+    if (MinuteCurr != MinutePrev) {
+      ClockRainbowShadowSeq = 0;
+      if ( (CfgKeysCnt > 0) && (AlarmsTimer==null) ) { AlarmsTimer = setTimeout('CheckAlarms()',400); }
+    }
+    if (SecondCurr != SecondPrev) {
+      if (MinuteCurr == MinutePrev) {
+        if (! IsSpeaking) {
+          if ( (CfgKeysCnt > 0) && (AlarmsTimer==null) ) { AlarmsTimer = setTimeout('CheckAlarms()',200); }
+        }
+      }
+    }
+    HourPrev = HourCurr;
+    MinutePrev = MinuteCurr;
+    SecondPrev = SecondCurr;
+    if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
+      ShowMoon();
+      ShowDate();
+      if (ClockColorPrev!='') DoRefresh();  // Force reload on sunrise/sunset to reposition elements to reduce screen burn-in.
+      ClockColorPrev = ClockColor;
+    }
+  }
+  WeatherForecastTimer -= MasterDur;
+  if (WeatherForecastTimer<1) {
+    WeatherForecastRequest();
+  }
+  WeatherCurrentTimer -= MasterDur;
+  if (WeatherCurrentTimer<1) {
+    WeatherCurrentRequest();
+  }
+  if (IntroTimer <= IntroDur) {
+    IntroTimer -= MasterDur;
+    if (IntroTimer < MasterDur) {
+      document.getElementById('DivIntro').style.visibility = 'hidden';
+      IntroTimer = IntroDur+1;
+    } else {
+      document.getElementById('DivIntro').style.visibility = 'visible';
+    }
+  }
+  UpdBG();
+  if (MasterTimer!=null) {
+    clearTimeout(MasterTimer);
+    MasterTimer = null;
+  }
+  MasterTimer = setTimeout('DoUpd()',MasterDur);
+}
+
 // Handle user keypress.  Used in body tag to catch all.
 function CheckKeypress (e) {
   var KeyPressedCode = e.keyCode;
@@ -1588,6 +1884,7 @@ function CheckKeypress (e) {
     } else {
       if (KeyPressedCode == 48) {  // '0' = Display Off
         if (BGprev<0) {
+          if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
           BGprev = BGcurr;
           ClearTimers();
           AllDivsOff();
@@ -1765,56 +2062,6 @@ function CheckKeypress (e) {
   }
 }
 
-// Diagnostic info pop-up.  Called from Q key.
-function TechReadout () {
-  var TRout = "";
-  try { TRout = "Display: "+WinWidPhys.toString()+'x'+WinHgtPhys.toString()+"\n";
-  } catch (err) { }
-  try { TRout = TRout + "Margins: "+MarginTop.toString()+','+MarginLeft.toString()+','+MarginBottom.toString()+','+MarginRight.toString()+"\n";
-  } catch (err) { }
-  try { TRout = TRout +"Loaded: "+BootedCurr+"\n"+"Installed: "+BootedFirst+"\n";
-  } catch (err) { }
-  try { TRout = TRout +"Client: "+navigator.userAgent;
-  } catch (err) { }
-  alert(TRout);
-}
-
-// Finish screen setup for aspects that require a startup delay.
-function FinishScreen () {
-  if (IsIOS() || IsAndroid()) {
-    window.scrollTo(0, 1);
-  }
-}
-
-// Setup screen properties, dimensions, divs.
-function SetupWindow () {
-  if ( (MarginTop>0) || (MarginLeft>0) || (MarginBottom>0) || (MarginRight>0) ) {
-    WinWid = WinWidPhys - MarginLeft - MarginRight;
-    WinHgt = WinHgtPhys - MarginTop - MarginBottom;
-  } else {
-    WinWid = WinWidPhys;  WinHgt = WinHgtPhys;
-    WeatherURLeff = WeatherURL;
-    RadarURLeff = WeatherURL;
-  }
-  LimitMargins();
-  // 'kiosk' mode disables offsite links.
-  if (location.href.toLowerCase().indexOf('kiosk')>=0) {
-    WeatherURLeff = "";
-    RadarURLeff = "";
-    ShowIntro = 0;
-  }
-  document.getElementById('DivWhole').style.top = MarginTop.toString()+'px';
-  document.getElementById('DivWhole').style.left = MarginLeft.toString()+'px';
-  document.getElementById('DivWhole').style.width = WinWid.toString()+'px';
-  document.getElementById('DivWhole').style.height = WinHgt.toString()+'px';
-  WinMin = Math.min(WinWid,WinHgt);
-  WinMax = Math.max(WinWid,WinHgt);
-  RadarWid = Math.floor(WinWid*0.3);
-  RadarHgt = Math.floor(WinHgt*0.5);
-  AnalogSetup();
-  setTimeout('FinishScreen()',3000);
-}
-
 // Do (most) boot functions (almost) as if page was reloaded but including screen size re-evaluations.
 function DoReBoot () {
   WinWidPhys = window.innerWidth && document.documentElement.clientWidth ? Math.min(window.innerWidth, document.documentElement.clientWidth) : window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth;
@@ -1826,6 +2073,7 @@ function DoReBoot () {
 
 // Boot happens only once, after page load.
 function DoBoot () {
+  CfgRequest();
   FetchUptimes();
   // Remove secured images if not at authorized installation.
   var ArgLp = 0;  var SubLp = 0;  var BGslideMax = 0;
@@ -1957,9 +2205,12 @@ function DoRefresh () {
 
 <div id="DivIntro" style="z-index:16; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
 
+<div id="DivAlarm" style="z-index:17; position:absolute; left:0px; top:0px; width:400px; height:400px; visibility:hidden; background-color:#FFFFFF; padding:16px 16px 16px 16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:4px; border-color:#FF0000; display:inline-block; border-radius:25px;"></div>
+
 </div>
 
 <script>
+// ===== SUN and MOON =====
 // SunCalc.js - (c) 2011-2014, Vladimir Agafonkin * JavaScript library for calculating sun/mooon position and phases. * https://github.com/mourner/suncalc
 (function () { 'use strict';
 // shortcuts for easier to read formulas
