@@ -330,7 +330,8 @@ var DaysSinceWeeksHTML = 0;  var DaysSinceDaysHTML = '';
 
 var StopwatchStarted = 0;  var StopwatchLaps = "";  var StopwatchDT;
 var StopwatchDur = 1000;  var StopwatchTimer = StopwatchDur;
-var SpeechVoices = null;  var IsSpeaking = false;
+var SpeechVoices = null;  var SpeechNext = "";
+var VoiceLp = 0;  var VoiceIdx = -1;  var VoiceScore = -1;  var VoiceTmp = -1;  var IsSpeaking = false;
 var AlarmsTimer = null;
 
 // === UTILS ===
@@ -355,12 +356,47 @@ function UnqDec () {
   return(''+Udt.getYear().toString()+''+Udt.getMonth().toString()+''+Udt.getDate().toString()+''+Udt.getHours().toString()+''+UFrac.toString()+'');
 }
 
+function SpeechVoicesLoad () {
+  var VoiceName = "";
+  if ('speechSynthesis' in window) {
+    if ( (SpeechVoices==null) || (SpeechVoices.length<1) ) {
+      SpeechVoices = window.speechSynthesis.getVoices();
+      setTimeout('SpeechVoicesLoad()',1000);  // auto-retry
+    } else {
+      VoiceIdx = -1;  VoiceScore = -1;
+      for (VoiceLp = 0; VoiceLp<SpeechVoices.length; VoiceLp++) {
+        VoiceTmp = -1;
+        VoiceName = " "+SpeechVoices[VoiceLp].name.toLowerCase().replace(/[^a-zA-Z0-9]/,' ')+" ";
+        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('en-')>=0) { VoiceTmp += 20000; }
+        if (VoiceName.indexOf(' english male ')>=0) { VoiceTmp += 5000; }
+        if (VoiceName.indexOf(' david ')>=0) { VoiceTmp += 4000; }
+        if (VoiceName.indexOf(' daniel ')>=0) { VoiceTmp += 4000; }
+        if (VoiceName.indexOf(' male ')>=0) { VoiceTmp += 1000; }
+        if (VoiceName.indexOf(' google us ')>=0) { VoiceTmp += 500; }
+        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('-us')>=0) { VoiceTmp += 100; }
+        if (SpeechVoices[VoiceLp].lang.indexOf('-gb')>=0) { VoiceTmp += 70; }
+        if (SpeechVoices[VoiceLp].lang.indexOf('-au')>=0) { VoiceTmp += 50; }
+        if (SpeechVoices[VoiceLp].default) { VoiceTmp += 50; }
+        if (VoiceTmp > VoiceScore) {
+          VoiceIdx = VoiceLp;  VoiceScore = VoiceTmp;
+        }
+      }
+    }
+  }
+}
+
+function SpeechNextDo () {
+  SpeechDo(SpeechNext);
+  SpeechNext = "";
+}
+
 function SpeechDone () {
   IsSpeaking = false;
   if (CfgKeysCnt > 0) {
     if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
     if (CfgKeysCnt > 0) { AlarmsTimer = setTimeout('CheckAlarms()',4000); }
   }
+  if (SpeechNext.length > 1) { setTimeout('SpeechNextDo()',1000); }
 }
 
 function SpeechDo (SDin) {
@@ -371,12 +407,12 @@ function SpeechDo (SDin) {
     }
     var SpeechHandle = new SpeechSynthesisUtterance();
     IsSpeaking = true;
-    SpeechHandle.voice = SpeechVoices[10];
+    if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; }
     SpeechHandle.voiceURI = 'native';
     SpeechHandle.volume = 1.0; // 0 to 1
     SpeechHandle.rate = 1.0; // 0.1 to 10
     SpeechHandle.pitch = 1.0; // 0 to 2
-    SpeechHandle.lang = 'en-US';
+    // SpeechHandle.lang = 'en-US';
     SpeechHandle.text = SDin;
     SpeechHandle.onend = SpeechDone;
     window.speechSynthesis.speak(SpeechHandle);
@@ -726,9 +762,10 @@ function SpeakForecast(WFSnum) {
         if (WeatherCurrentSpoken.length>4) {
           SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
           if (WeatherForecastSpoken[0].length>4) {
-            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+"M its "+WeatherCurrentSpoken.toUpperCase()+" "+WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING ');
+            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
+            SpeechNext  = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING ');  // Prevents speech buffer truncation.
           } else {
-            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+"M its "+WeatherCurrentSpoken.toUpperCase();
+            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
           }
         } else {
           if (WeatherForecastSpoken[0].length>4) {
@@ -1197,7 +1234,7 @@ function CfgSubs (CSval) {
         if (CSm < 10) { CSt += '0 '; }
         CSt += CSm.toString();
       }
-      CSap += 'M';
+      CSap += ' M';
       CSt += ' '+CSap;
     }
   }
@@ -1663,14 +1700,27 @@ function UpdateMargins () {
 // Diagnostic info pop-up.  Called from Q key.
 function TechReadout () {
   var TRout = "";
-  try { TRout = "Display: "+WinWidPhys.toString()+'x'+WinHgtPhys.toString()+"\n";
-  } catch (err) { }
-  try { TRout = TRout + "Margins: "+MarginTop.toString()+','+MarginLeft.toString()+','+MarginBottom.toString()+','+MarginRight.toString()+"\n";
-  } catch (err) { }
-  try { TRout = TRout +"Loaded: "+BootedCurr+"\n"+"Installed: "+BootedFirst+"\n";
-  } catch (err) { }
-  try { TRout = TRout +"Client: "+navigator.userAgent;
-  } catch (err) { }
+  try { TRout = "Display: "+WinWidPhys.toString()+'x'+WinHgtPhys.toString()+"\n"; } catch (err) { }
+  try { TRout = TRout + "Margins: "+MarginTop.toString()+','+MarginLeft.toString()+','+MarginBottom.toString()+','+MarginRight.toString()+"\n"; } catch (err) { }
+  try { TRout = TRout +"Loaded: "+BootedCurr+"\n"+"Installed: "+BootedFirst+"\n"; } catch (err) { }
+  // try { TRout = TRout +"Client: "+navigator.userAgent; } catch (err) { }
+  if ('speechSynthesis' in window) {
+    if (SpeechVoices!=null) {
+      TRout += 'Voices: '+SpeechVoices.length.toString()+"\n";
+      for (VoiceLp = 0; VoiceLp < SpeechVoices.length; VoiceLp++) {
+        if (SpeechVoices[VoiceLp].lang.indexOf('en')>=0) {
+          TRout += SpeechVoices[VoiceLp].name + ' (' + SpeechVoices[VoiceLp].lang + ')';
+          if (SpeechVoices[VoiceLp].default) { TRout += ' *'; }
+          if (VoiceLp == VoiceIdx) { TRout += ' !!!'; }
+          TRout += "\n";
+        }
+      }
+    } else {
+      TRout += "No voices loaded.\n";
+    }
+  } else {
+    TRout += "No speech synthesizer.\n";
+  }
   alert(TRout);
 }
 
@@ -2048,6 +2098,7 @@ function CheckKeypress (e) {
                             break;
                           default:
                            // Unhandled keys do nothing.
+                           // alert(KeyPressedCode);
                         }
                       }
                     }
@@ -2144,7 +2195,7 @@ function DoBoot () {
       catch (err) { }
     }
   }
-  if ('speechSynthesis' in window) { SpeechVoices = window.speechSynthesis.getVoices(); }
+  SpeechVoicesLoad();
   DoReBoot();
 }
 
