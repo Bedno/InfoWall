@@ -39,8 +39,9 @@ var WeatherURL = 'https://www.wunderground.com/cgi-bin/findweather/getForecast?q
 var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
 var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
-var ClockColorDay = '#000000';  // Daytime color of some time/date parts.
-var ClockColorNight = '#FFFFFF';  // Nighttime color of some mtime/date parts.
+var ClockColor = '#FFFFFF';  var ClockShadow = '#000000';  // Digital time colors.
+var DateColorDay = '#C0C000';  var DateColorNight = '#0000C0';   // Day/Night color of some date parts.
+var DateColor = DateColorDay;  var DateShadow = DateColorNight;  var DateColorPrev = -1;
 // Quick B&W: ('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
 // Simple rainbow: ('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
 // Pastel tones: ('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
@@ -54,8 +55,12 @@ var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minim
 var RadarURLsrc = "https://radar.weather.gov/ridge/lite/N0R/LOT_loop.gif";  // XXX_loop: LOT=Chicago(down since 2017.03), ILX=Springfield
 var WeatherShadow = " text-shadow:-2px 2px 0px #000000;"
 var MoonDiam = 1/6;  // Relative size of the displayed moon.
-var WeatherCurrentHgt = 0.13;
-var WeatherForecastHgt = 0.08;
+const DateHgtDefault = 0.18;
+var DateHgt = DateHgtDefault;
+const WeatherCurrentHgtDefault = 0.13;
+const WeatherForecastHgtDefault = 0.08;
+var WeatherCurrentHgt = WeatherCurrentHgtDefault;
+var WeatherForecastHgt = WeatherForecastHgtDefault;
 var FloodDur = 250; // Cycle time between flood color changes.
 var TwisterDur = 10000;  // Time between Twister spins.
 var KeysPressed = '';
@@ -282,7 +287,7 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
 // GLOBALS
 var MasterDur = 100;  // Master update frequency.  All timers and durations are in milliseconds.  500=half second.
 var MasterTimer = null;
-var WinWidPhys, WinHgtPhys, WinWid, WinHgt, WinMin, WinMax;
+var WinWidPhys, WinHgtPhys, WinWid, WinHgt, WinMin, WinMax;  var WinPortrait = true;
 var MarginTop = 0;  var MarginLeft = 0;  var MarginBottom = 0;  var MarginRight = 0;
 var OfsX = 0;  var OfsY = 0;  // Randomized slight offsets to reduce screen burn-in.
 var BGcurr = 0;  var BGcurrChk = 0;  var BGflooded = 0;
@@ -292,13 +297,11 @@ var BGshowArr = new Array('','CI', 'CDI', 'CDIW', 'CDFIMRW', 'AI','ADI','ADWI');
 var ShowIntro = 1;
 var BGslide = 0;  var BGslidePrev = BGslide;  var BGslidePrevs = new Array(-1,-1,-1);
 var BGslideInc = 1;  var BGtimer = -1;  var BGslideIncPrev = BGslideInc;
-var BGdescBG = "";
 var BGframe = 0;
 
 var SunRise = '';  var SunSet = '';  var SunTimeSizing = 0.04;
-var ClockColor = ClockColorDay;  var ClockColorPrev = '';  var ClockColorOpp = ClockColorNight;
 var ClockUpdTimer = 0;  var AnalogClockUpdDur = 250;
-var ClockShadow = "";  var ClockRainbowShadowSeq = 0;  var ClockShade = "";  var ClockOpacity = "";  
+var ClockRainbowShadowSeq = 0;  var ClockOpacity = "";  
 var ClockCanvas, ClockContext;
 var ClockCanvasBG, ClockContextBG;
 var HourPrev = -1;  var HourCurr = -1;
@@ -330,9 +333,19 @@ var DaysSinceWeeksHTML = 0;  var DaysSinceDaysHTML = '';
 
 var StopwatchStarted = 0;  var StopwatchLaps = "";  var StopwatchDT;
 var StopwatchDur = 1000;  var StopwatchTimer = StopwatchDur;
-var SpeechVoices = null;  var SpeechNext = "";
+
+var SpeechHandle = null;  var SpeechVoices = null;  var SpeechAudio = null;
+var SpeechQueue = new Array();  var SpeechPend = "";  var SpeechCode = "";  var SpeechCnt = 0;
 var VoiceLp = 0;  var VoiceIdx = -1;  var VoiceScore = -1;  var VoiceTmp = -1;  var IsSpeaking = false;
-var AlarmsTimer = null;
+var AlarmsCurr = "";  var AlarmsDay = "";
+var AlarmsFirst = "";  var AlarmsBooted = 0;
+var CfgSrc = "";  var CfgText = '';
+var CfgHandle = null;
+var CfgName = "";  var CfgVal = "";
+var CfgLines = '';  var CfgLine = '';  var CfgLp = 0;
+var CfgVals = new Array();
+var CfgKeys = new Array();
+var CfgKeysCnt = 0;
 
 // === UTILS ===
 function IsIOS () { return((navigator.userAgent.toLowerCase().indexOf('iphone')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipod')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipad')>-1) || (navigator.userAgent.toLowerCase().indexOf('ios')>-1) ); }
@@ -354,69 +367,6 @@ function UnqDec () {
   var Udt=new Date(DTadj());
   var UFrac = Math.floor(Udt.getMinutes()/6);
   return(''+Udt.getYear().toString()+''+Udt.getMonth().toString()+''+Udt.getDate().toString()+''+Udt.getHours().toString()+''+UFrac.toString()+'');
-}
-
-function SpeechVoicesLoad () {
-  var VoiceName = "";
-  if ('speechSynthesis' in window) {
-    if ( (SpeechVoices==null) || (SpeechVoices.length<1) ) {
-      SpeechVoices = window.speechSynthesis.getVoices();
-      setTimeout('SpeechVoicesLoad()',1000);  // auto-retry
-    } else {
-      VoiceIdx = -1;  VoiceScore = -1;
-      for (VoiceLp = 0; VoiceLp<SpeechVoices.length; VoiceLp++) {
-        VoiceTmp = -1;
-        VoiceName = " "+SpeechVoices[VoiceLp].name.toLowerCase().replace(/[^a-zA-Z0-9]/,' ')+" ";
-        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('en-')>=0) { VoiceTmp += 20000; }
-        if (VoiceName.indexOf(' english male ')>=0) { VoiceTmp += 5000; }
-        if (VoiceName.indexOf(' david ')>=0) { VoiceTmp += 4000; }
-        if (VoiceName.indexOf(' daniel ')>=0) { VoiceTmp += 4000; }
-        if (VoiceName.indexOf(' male ')>=0) { VoiceTmp += 1000; }
-        if (VoiceName.indexOf(' google us ')>=0) { VoiceTmp += 500; }
-        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('-us')>=0) { VoiceTmp += 100; }
-        if (SpeechVoices[VoiceLp].lang.indexOf('-gb')>=0) { VoiceTmp += 70; }
-        if (SpeechVoices[VoiceLp].lang.indexOf('-au')>=0) { VoiceTmp += 50; }
-        if (SpeechVoices[VoiceLp].default) { VoiceTmp += 50; }
-        if (VoiceTmp > VoiceScore) {
-          VoiceIdx = VoiceLp;  VoiceScore = VoiceTmp;
-        }
-      }
-    }
-  }
-}
-
-function SpeechNextDo () {
-  SpeechDo(SpeechNext);
-  SpeechNext = "";
-}
-
-function SpeechDone () {
-  IsSpeaking = false;
-  if (CfgKeysCnt > 0) {
-    if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
-    if (CfgKeysCnt > 0) { AlarmsTimer = setTimeout('CheckAlarms()',4000); }
-  }
-  if (SpeechNext.length > 1) { setTimeout('SpeechNextDo()',1000); }
-}
-
-function SpeechDo (SDin) {
-  if ('speechSynthesis' in window) {
-    if (IsSpeaking) {
-      window.speechSynthesis.cancel();  // Cancel any existing speaking
-      IsSpeaking = false;
-    }
-    var SpeechHandle = new SpeechSynthesisUtterance();
-    IsSpeaking = true;
-    if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; }
-    SpeechHandle.voiceURI = 'native';
-    SpeechHandle.volume = 1.0; // 0 to 1
-    SpeechHandle.rate = 1.0; // 0.1 to 10
-    SpeechHandle.pitch = 1.0; // 0 to 2
-    // SpeechHandle.lang = 'en-US';
-    SpeechHandle.text = SDin;
-    SpeechHandle.onend = SpeechDone;
-    window.speechSynthesis.speak(SpeechHandle);
-  }
 }
 
 // Load current and total runtimes only on boot.
@@ -448,6 +398,136 @@ function FetchUptimes () {
         localStorage.setItem('Booted', BootedFirst);
       } catch (err) { }
     }
+  }
+}
+
+function IsChrome () {
+  return(/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor));
+}
+
+// === SPEECH ===
+
+function SpeechVoicesLoad () {
+  var VoiceName = "";
+  if ('speechSynthesis' in window) {
+    if ( (SpeechVoices==null) || (SpeechVoices.length<1) ) {
+      SpeechVoices = window.speechSynthesis.getVoices();
+      setTimeout('SpeechVoicesLoad()',1000);  // auto-retry
+    } else {
+      VoiceIdx = -1;  VoiceScore = -1;
+      for (VoiceLp = 0; VoiceLp<SpeechVoices.length; VoiceLp++) {
+        VoiceTmp = -1;
+        VoiceName = " "+SpeechVoices[VoiceLp].name.toLowerCase().replace(/[^a-zA-Z0-9]/,' ')+" ";
+        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('en-')>=0) { VoiceTmp += 20000; }
+        if (VoiceName.indexOf(' english male ')>=0) { VoiceTmp += 5000; }
+        if (VoiceName.indexOf(' david ')>=0) { VoiceTmp += 4000; }
+        if (VoiceName.indexOf(' daniel ')>=0) { VoiceTmp += 4000; }
+        if (VoiceName.indexOf(' male ')>=0) { VoiceTmp += 1000; }
+        if (VoiceName.indexOf(' google us ')>=0) { VoiceTmp += 500; }
+        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('-us')>=0) { VoiceTmp += 100; }
+        if (SpeechVoices[VoiceLp].lang.indexOf('-gb')>=0) { VoiceTmp += 70; }
+        if (SpeechVoices[VoiceLp].lang.indexOf('-au')>=0) { VoiceTmp += 50; }
+        if (SpeechVoices[VoiceLp].default) { VoiceTmp += 50; }
+        if (VoiceTmp > VoiceScore) {
+          VoiceIdx = VoiceLp;  VoiceScore = VoiceTmp;
+        }
+      }
+    }
+  }
+}
+function SpeechEffectDone () {
+  try { SpeechAudio.remove(); } catch (err) { }
+  if (SpeechPend.length > 0) {
+    SpeechSpeakActual(SpeechPend);
+    SpeechPend = "";
+  } else {
+    if (SpeechQueue.length<1) IsSpeaking = false;
+  }
+}
+function SoundEffect (SFXstr) {
+  SpeechCode = SFXstr.replace(/\n/gi,' ');
+  SpeechCode = SpeechCode.replace(/^.*{SOUND:/,"");
+  SpeechCode = SpeechCode.replace(/\}.+$/,"");
+  SpeechPend = SFXstr.replace(/\{SOUND:[^}]+\}/,"");
+  SpeechPend = SpeechPend.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
+  if (IsChrome()) { // Currently OGG audio files only play in Chrome?!?
+    if (SpeechCode.length>0) {
+      try {
+        IsSpeaking = true;
+        SpeechAudio = new Audio('https://bedno.com/g/infowall/'+SpeechCode+'.ogg');
+        SpeechAudio.onended = SpeechEffectDone;
+        SpeechAudio.play();
+      } catch (err) { IsSpeaking = false; SpeechEffectDone(); }
+    }
+  } else {
+    if (SpeechPend.length > 0) {
+      SpeechSpeakActual(SpeechPend);
+      SpeechPend = "";
+    } else {
+      if (SpeechQueue.length<1) IsSpeaking = false;
+    }
+  }
+}
+function SpeechQueueDo () {
+  if (SpeechQueue.length>0) {
+    IsSpeaking = true;
+    SpeechSpeak(SpeechQueue[0]);  SpeechQueue.shift();
+  }
+}
+function SpeechQueueAdd (SQAin) {
+  var SpeechQueueParts;  var SpeechQueuePartsLp = 0;  var SpeechQueuePartsLp = "";
+  SQAin = SQAin.replace(/\s+\./gi,'.');
+  SQAin = SQAin.replace(/\.+\./gi,'.');
+  SQAin = SQAin.replace(/^\.+/gi,'').replace(/\.+$/gi,'');
+  if (SQAin.indexOf('.')>=0) {
+    SpeechQueueParts = SQAin.split('.');
+    for (SpeechQueuePartsLp=0; SpeechQueuePartsLp<SpeechQueueParts.length; SpeechQueuePartsLp++) {
+      SpeechQueuePart = SpeechQueueParts[SpeechQueuePartsLp].replace(/^\s+/gi,'').replace(/\s+$/gi,'');
+      if (SpeechQueuePart.length>0) { SpeechQueue.push(SpeechQueuePart); AlarmMsg('Queued part "'+SpeechQueuePart+'"'); }
+    }
+  } else {
+    SpeechQueue.push(SQAin);  AlarmMsg('Queued whole "'+SQAin+'"');
+  }
+  if (! IsSpeaking) { SpeechQueueDo(); }
+}
+function SpeechDone () {
+  if (SpeechQueue.length>0) {
+    setTimeout('SpeechQueueDo()',50); // Slight pause between utterances.
+  } else {
+    IsSpeaking = false;
+    if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
+  }
+}
+function SpeechSpeakActual (SSAin) {
+  SSAin = SSAin.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
+  if (SSAin.length>1) {
+    if ('speechSynthesis' in window) {
+      if (IsSpeaking) {
+        window.speechSynthesis.cancel();  // Cancel any existing speaking
+      }
+      IsSpeaking = true;
+      if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = '#C0C000'; }
+      try {
+        SpeechHandle = new SpeechSynthesisUtterance();
+        if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; }
+        SpeechHandle.voiceURI = 'native';
+        SpeechHandle.volume = 1.0; // 0 to 1
+        SpeechHandle.rate = 1.0; // 0.1 to 10
+        SpeechHandle.pitch = 1.0; // 0 to 2
+        // SpeechHandle.lang = 'en-US';
+        SpeechHandle.text = SSAin;
+        SpeechHandle.onend = SpeechDone;
+        SpeechCnt++;
+        window.speechSynthesis.speak(SpeechHandle);
+      } catch (err) { IsSpeaking = false; }
+    }
+  }
+}
+function SpeechSpeak (SSin) {  // Wraps the Actual to prevent remote chance of recursion or parse error.
+  if (SSin.indexOf('{SOUND:')>=0) {
+    SoundEffect(SSin);
+  } else {
+    SpeechSpeakActual(SSin);
   }
 }
 
@@ -641,12 +721,12 @@ function UpdBG () {
     if (IsIOS()) { DescSize = 8; } else { DescSize = 12; }
     if (BGdata[BGcurr].BGslides[BGslide].BGdesc) {
       if (BGlinkEff!="") {
-        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; '+BGdescBG+' text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</a>';
+        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</a>';
       } else {
         document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</span>';
       }
       // Speak the current image description (used by Twister mode)
-      if (BGshowCurr.indexOf('V')>=0) { SpeechDo(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
+      if (BGshowCurr.indexOf('V')>=0) { SpeechQueueAdd(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
     }
     if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if slide is same radar
       if (ImgSrc.toUpperCase().indexOf(RadarURLsrc.toUpperCase())>=0) {
@@ -721,7 +801,7 @@ function SetupSun () {
   // if (SunAdjDT.getHours()>11) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</font>'; } else { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
   SunDown = Math.floor(SunAdjDT.getHours());
   var SSdt=new Date(DTadj()); SSh=SSdt.getHours();
-  if ( (SSh >= SunUp) && (SSh < SunDown) ) { ClockColor = ClockColorDay; ClockColorOpp = ClockColorNight; } else { ClockColor = ClockColorNight; ClockColorOpp = ClockColorDay; }
+  if ( (SSh >= SunUp) && (SSh < SunDown) ) { DateColor = DateColorDay; DateShadow = '#000000'; } else { DateColor = DateColorNight; DateShadow = '#FFFFFF'; }
 }
 
 // Configure location and visibility of radar inset.
@@ -763,20 +843,26 @@ function SpeakForecast(WFSnum) {
           SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
           if (WeatherForecastSpoken[0].length>4) {
             SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
-            SpeechNext  = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING ');  // Prevents speech buffer truncation.
+            SpeechQueueAdd(SFstr);
+            SpeechQueueAdd(WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING '));
+            if (AlarmsDay.length>0) { SpeechQueueAdd(AlarmsDay); }
           } else {
             SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
+            SpeechQueueAdd(SFstr);
+            if (AlarmsDay.length>0) { SpeechQueueAdd(AlarmsDay); }
           }
         } else {
           if (WeatherForecastSpoken[0].length>4) {
             SFstr = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'Forecasting ');
+            SpeechQueueAdd(SFstr);
+            if (AlarmsDay.length>0) { SpeechQueueAdd(AlarmsDay); }
           }
         }
       } else {
         SFstr = WeatherForecastSpoken[WFSnum];
+        SpeechQueueAdd(SFstr);
+        if (AlarmsDay.length>0) { SpeechQueueAdd(AlarmsDay); }
       }
-      if (AlarmsDay.length) { SFstr += "\n\n"+AlarmsDay; }
-      SpeechDo(SFstr);
     }
   }
 }
@@ -825,7 +911,7 @@ function WeatherForecastReceive () {
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])PRECIP([^A-Z0-9])/gi,"$1PRECIPITATION$2");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
         WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/WIND/gi,"WEND");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z])\./gi,"$1; \n");
+        // WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z])\./gi,"$1; "); // Attempts to improve spoken pauses.
       }
       for (var FWFlp=0; FWFlp<2; FWFlp++) {
         if (WeatherForecast.length > 10) { WeatherForecast += "\n &nbsp; "; }
@@ -838,8 +924,8 @@ function WeatherForecastReceive () {
         }
         WeatherForecast += '<span style="font-family:Arial; font-size:'+(Math.floor(WinHgt*WeatherForecastHgt))+'px; line-height:84%; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;'+WeatherShadow+'">';
         WeatherForecast += '<nobr>';
-	if (FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url'].indexOf('nt_.gif')<1) {
-	  WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor(WinHgt*WeatherForecastHgt*.6))+'; margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px;" border=0>';
+        if (FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url'].indexOf('nt_.gif')<1) {
+          WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor(WinHgt*WeatherForecastHgt*.6))+'; margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px;" border=0>';
         }
         WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+":&nbsp;";
         if (FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'] != FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']) {
@@ -926,14 +1012,14 @@ function WeatherCurrentReceive () {
         WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 height='+(Math.floor(WinHgt*WeatherCurrentHgt*.6))+'>';
       }
       WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;">'+FmtMinus(FWCrec['current_observation']['temp_f'])+'</span>&deg;</nobr> ';
-      WeatherCurrentSpokenTmp += SpokenMinus(FWCrec['current_observation']['temp_f'])+", ";
+      WeatherCurrentSpokenTmp += SpokenMinus(FWCrec['current_observation']['temp_f'])+" . . . . "; // Markup forces a slight speech pause
       if (FWCrec['current_observation']['weather'].length>1) {
-        WeatherCurrentSpokenTmp += FWCrec['current_observation']['weather']+", "
+        WeatherCurrentSpokenTmp += FWCrec['current_observation']['weather']+". "; // Markup forces a whole pause
       }
       FWCrec['current_observation']['wind_mph'] = Math.floor(FWCrec['current_observation']['wind_mph']);
       FWCrec['current_observation']['wind_gust_mph'] = Math.floor(FWCrec['current_observation']['wind_gust_mph']);
       if ( (FWCrec['current_observation']['wind_mph']>2) || (FWCrec['current_observation']['wind_gust_mph']>2) ) {
-        WeatherCurrentSpokenTmp += ", ";
+        WeatherCurrentSpokenTmp += "wends ";  // attempts to fix mispronounciation of "wind"(s)
         if (FWCrec['current_observation']['wind_dir'].length<1) {
           WeatherCurrentSpokenTmp += "variable ";
         } else {
@@ -960,6 +1046,8 @@ function WeatherCurrentReceive () {
           }
         }
       }
+      var FWhum = FWCrec['current_observation']['relative_humidity'].replace('%','');
+      if ( (FWhum>1) && (FWhum<120) ) { WeatherCurrentSpokenTmp += ", humidity "+FWhum.toString()+" percent"; }
       if ( (FWCrec['current_observation']['windchill_f']!="") && (FWCrec['current_observation']['windchill_f']!="NA") && (FWCrec['current_observation']['windchill_f']!="N/A") && (FWCrec['current_observation']['windchill_f']!="null") && (FWCrec['current_observation']['windchill_f']!="undefined") &&
            (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['windchill_f'])>4) ) {
         WeatherCurrentSpokenTmp += ", feels like "+SpokenMinus(FWCrec['current_observation']['windchill_f']);
@@ -969,9 +1057,7 @@ function WeatherCurrentReceive () {
           WeatherCurrentSpokenTmp += ", feels like "+SpokenMinus(FWCrec['current_observation']['heat_index_f']);
         }
       }
-      var FWhum = FWCrec['current_observation']['relative_humidity'].replace('%','');
-      if ( (FWhum>1) && (FWhum<120) ) { WeatherCurrentSpokenTmp += ", humidity "+FWhum.toString()+" percent"; }
-      WeatherCurrentSpokenTmp += ".";
+      WeatherCurrentSpokenTmp += ". ";
       WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/\.[0-9]+/g,'');
       var WindText = '';
       var WindDir = FWCrec['current_observation']['wind_dir'];
@@ -1091,16 +1177,6 @@ function SetupWeather () {
 // === REMOTE CONFIGURABLES ===
 // Fetch a URL specified config file for alarms.
 
-var CfgText = '';
-var CfgHandle = null;
-var CfgName = "";  var CfgVal = "";
-var CfgLines = '';  var CfgLine = '';  var CfgLp = 0;
-var CfgVals = new Array();
-var CfgKeys = new Array();
-var CfgKeysCnt = 0;
-var AlarmsCurr = "";  var AlarmsDay = "";
-var CfgSrc = "";
-
 function AlarmMsg (ADin) {
   if (document.getElementById('DivAlarm')) {
     if (document.getElementById('DivAlarm').style.visibility=='visible') {
@@ -1172,6 +1248,8 @@ function CfgRequest () {
     if ( (CfgURLcode.length>0) && (CfgURLcode.length<20) ) {
       CfgSrc = 'https://bedno.com/d/'+CfgURLcode+'.cfg';
     }
+  } else {
+    CfgSrc = 'https://bedno.com/d/infowall.cfg';
   }
   if (CfgSrc.length>0) {
     CfgHandle = null;
@@ -1203,18 +1281,18 @@ function CfgRequest () {
 // Substitutions in alarm messages.
 function CfgSubs (CSval) {
   var CfgDT = new Date(DTadj());
-  CSval = CSval.replace('{YYYY}',(CfgDT.getYear()+1900).toString());
-  CSval = CSval.replace('{MM}',(CfgDT.getMonth()+1).toString());
-  CSval = CSval.replace('{DD}',CfgDT.getDate().toString());
-  CSval = CSval.replace('{HH}',CfgDT.getHours().toString());
-  CSval = CSval.replace('{mm}',CfgDT.getMinutes().toString());
-  CSval = CSval.replace('{MO}',FullMon[CfgDT.getMonth()]);
-  CSval = CSval.replace('{DA}',FullDoW[CfgDT.getDay()]);
-  CSval = CSval.replace('{DM}',FullDoM[CfgDT.getDate()]);
-  if (WeatherCurrentSpoken.length>4) { CSval = CSval.replace('{WEATHER}',WeatherCurrentSpoken); }
-  if (WeatherForecastSpoken[0].length>4) { CSval = CSval.replace('{FORECAST}',WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'')); }
-  if (DaysSinceDays>0) { CSval = CSval.replace('{DS}',DaysSinceDays.toString()); }
-  if (DaysSinceWeeks>0) { CSval = CSval.replace('{DW}',DaysSinceWeeks.toString()); }
+  CSval = CSval.replace(/{YYYY}/gi,(CfgDT.getYear()+1900).toString());
+  CSval = CSval.replace(/{MM}/,(CfgDT.getMonth()+1).toString());
+  CSval = CSval.replace(/{DD}/,CfgDT.getDate().toString());
+  CSval = CSval.replace(/{HH}/,CfgDT.getHours().toString());
+  CSval = CSval.replace(/{mm}/,CfgDT.getMinutes().toString());
+  CSval = CSval.replace(/{MO}/,FullMon[CfgDT.getMonth()]);
+  CSval = CSval.replace(/{DA}/,FullDoW[CfgDT.getDay()]);
+  CSval = CSval.replace(/{DM}/,FullDoM[CfgDT.getDate()]);
+  if (WeatherCurrentSpoken.length>4) { CSval = CSval.replace(/{WEATHER}/,WeatherCurrentSpoken); }
+  if (WeatherForecastSpoken[0].length>4) { CSval = CSval.replace(/{FORECAST}/,WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'')); }
+  if (DaysSinceDays>0) { CSval = CSval.replace(/{DS}/,DaysSinceDays.toString()); }
+  if (DaysSinceWeeks>0) { CSval = CSval.replace(/{DW}/,DaysSinceWeeks.toString()); }
   var CSap="A";
   var CSh=CfgDT.getHours();
   var CSm=CfgDT.getMinutes();
@@ -1231,16 +1309,16 @@ function CfgSubs (CSval) {
       CSt = CSh.toString();
       if (CSm > 0) {
         CSt += ' ';
-        if (CSm < 10) { CSt += '0 '; }
+        if (CSm < 10) { CSt += ' oh '; }
         CSt += CSm.toString();
       }
       CSap += ' M';
       CSt += ' '+CSap;
     }
   }
-  CSval = CSval.replace('{TIME}',CSt);
-  CSval = CSval.replace('{hh}',CSh.toString());
-  CSval = CSval.replace('{AP}',CSap);
+  CSval = CSval.replace(/{TIME}/,CSt);
+  CSval = CSval.replace(/{hh}/,CSh.toString());
+  CSval = CSval.replace(/{AP}/,CSap);
   return(CSval);
 }
 
@@ -1248,36 +1326,56 @@ function CfgSubs (CSval) {
 function CheckAlarms () {
   var AlmDT = new Date(DTadj());
   var AlmStr = ' ';
-  AlarmsCurr = "";  AlarmsDay = "";
-  if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
-  if (CfgKeysCnt > 0) {
-    AlmStr += FullMon[AlmDT.getMonth()].toLowerCase()+' ';
-    AlmStr += FullDoW[AlmDT.getDay()].toLowerCase()+' ';
-    AlmStr += (AlmDT.getYear()+1900).toString()+'.';
-    if (AlmDT.getMonth() < 9) { AlmStr += '0'; }
-    AlmStr += (AlmDT.getMonth()+1).toString()+'.';
-    if (AlmDT.getDate() < 10) { AlmStr += '0'; }
-    AlmStr += AlmDT.getDate().toString()+' ';
-    if (AlmDT.getHours() < 10) { AlmStr += '0'; }
-    AlmStr += AlmDT.getHours().toString()+':';
-    if (AlmDT.getMinutes() < 10) { AlmStr += '0'; }
-    AlmStr += AlmDT.getMinutes().toString()+':';
-    if (AlmDT.getSeconds() < 10) { AlmStr += '0'; }
-    AlmStr += AlmDT.getSeconds().toString();
-    for (var AlmLp = 0; AlmLp < CfgKeysCnt; AlmLp++) {
-      if (AlmStr.indexOf(CfgKeys[AlmLp])>=0) {
-        if ( (CfgKeys[AlmLp].indexOf('.')>=0) && (CfgKeys[AlmLp].indexOf(':')<0) ) {
-          AlarmsDay += CfgSubs(CfgVals[CfgKeys[AlmLp]])+"\n\n";
+  AlarmsCurr = "";  AlarmsDay = "";  AlarmsFirst = "";
+  if (! IsSpeaking) {
+    if (CfgKeysCnt > 0) {
+      AlmStr += FullMon[AlmDT.getMonth()].toLowerCase()+' ';
+      AlmStr += FullDoW[AlmDT.getDay()].toLowerCase()+' ';
+      AlmStr += (AlmDT.getYear()+1900).toString()+'.';
+      if (AlmDT.getMonth() < 9) { AlmStr += '0'; }
+      AlmStr += (AlmDT.getMonth()+1).toString()+'.';
+      if (AlmDT.getDate() < 10) { AlmStr += '0'; }
+      AlmStr += AlmDT.getDate().toString()+' ';
+      if (AlmDT.getHours() < 10) { AlmStr += '0'; }
+      AlmStr += AlmDT.getHours().toString()+':';
+      if (AlmDT.getMinutes() < 10) { AlmStr += '0'; }
+      AlmStr += AlmDT.getMinutes().toString()+':';
+      if (AlmDT.getSeconds() < 10) { AlmStr += '0'; }
+      AlmStr += AlmDT.getSeconds().toString();
+      for (var AlmLp = 0; AlmLp < CfgKeysCnt; AlmLp++) {
+        if (CfgKeys[AlmLp] == '*') {
+          if (AlarmsBooted<1) {
+            if ( (VoiceIdx>=0) && (WeatherCurrentSpoken.length>0) ) {
+              if (AlarmsFirst.length>0) { AlarmsFirst += '. '; }
+              AlarmsFirst = CfgSubs(CfgVals[CfgKeys[AlmLp]]);
+              AlarmsBooted = 1;
+            }
+          }
         } else {
-          AlarmsCurr += CfgSubs(CfgVals[CfgKeys[AlmLp]])+"\n\n";
+          if (AlmStr.indexOf(CfgKeys[AlmLp])>=0) {
+            if ( (CfgKeys[AlmLp].indexOf('.')>=0) && (CfgKeys[AlmLp].indexOf(':')<0) ) {
+              if (AlarmsDay.length>0) { AlarmsDay += '. '; }
+              AlarmsDay += CfgSubs(CfgVals[CfgKeys[AlmLp]]);
+            } else {
+              if (AlarmsCurr.length>0) { AlarmsCurr += '. '; }
+              AlarmsCurr += CfgSubs(CfgVals[CfgKeys[AlmLp]]);
+            }
+          }
         }
       }
-    }
-    AlarmMsg('Time: "'+ AlmStr + '"');
-    if (AlarmsCurr.length>0) {
-      if (AlarmsDay.length) { AlarmsCurr += "\n\n"+AlarmsDay; }
-      SpeechDo(AlarmsCurr);
-      AlarmMsg(AlarmsCurr);
+      AlarmMsg('Time: "'+ AlmStr + '"');
+      if (AlarmsFirst.length>0) {
+        SpeechQueueAdd(AlarmsFirst);
+        AlarmMsg(AlarmsFirst);
+      }
+      if (AlarmsCurr.length>0) {
+        SpeechQueueAdd(AlarmsCurr);
+        AlarmMsg(AlarmsCurr);
+      }
+      if ( (AlarmsDay.length>0) && ( (AlarmsFirst.length>0) || (AlarmsCurr.length>0) ) ) {
+        SpeechQueueAdd(AlarmsDay);
+        AlarmMsg(AlarmsDay);
+      }
     }
   }
 }
@@ -1300,7 +1398,7 @@ function ShowDate () {
     document.getElementById('DivDate').style.left = (OfsX+48)+'px';
     document.getElementById('DivDate').style.width = (WinWid-OfsX-48)+'px';
     document.getElementById('DivDate').style.opacity = 1.0;
-    document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+ClockColorOpp+'; -webkit-font-smoothing:antialiased; color:'+ClockColor+'; font-size:'+Math.floor(WinHgt*0.18)+'px;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
+    document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+DateShadow+'; -webkit-font-smoothing:antialiased; color:'+DateColor+'; font-size:'+Math.floor(WinHgt*DateHgt)+'px;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
   }
 }
 
@@ -1395,11 +1493,9 @@ function ShowTime () {
   if (ClockMode==0) {
     ClockRainbowShadowSeq = (ClockRainbowShadowSeq+1)%ClockRainbowShadows.length;
     ClockShadow = "#"+ClockRainbowShadows[ClockRainbowShadowSeq];
-    ClockShade = "#"+ClockRainbowShadows[(ClockRainbowShadowSeq+Math.floor(ClockRainbowShadows.length/2))%ClockRainbowShadows.length];
+    ClockColor = "#"+ClockRainbowShadows[(ClockRainbowShadowSeq+Math.floor(ClockRainbowShadows.length/2))%ClockRainbowShadows.length];
     ClockOpacity = ClockRainbowOpacity[ClockRainbowShadowSeq];
   } else {
-    ClockShadow = ClockColorDay;
-    ClockShade = ClockColorNight;
     ClockOpacity = 1.0;
   }
   if (BGshowCurr.indexOf('C')>=0) {
@@ -1409,10 +1505,10 @@ function ShowTime () {
     // DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.5 + (0.2*(STsz/500)))) );
     if (STms > (STmspc/2)) { STsz = (STmspc/2) - (STms - (STmspc/2)); } else { STsz = STms; }
     DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.48 + (0.1*(STsz/(STmspc/2))))) );
-    ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span>'; // hour
-    ClockHTML += '<span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(DigitSize*0.1)+'px; font-size:'+Math.floor(DigitSize*0.4)+'px; color:'+ClockShade+'; text-shadow:-6px 6px 0px '+ClockShadow+';">:</span>'; // colon
-    ClockHTML += '<span style="color:'+ClockShade+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span>'; // minute
-    ClockHTML += '<span style="font-size:'+Math.floor(DigitSize*0.24)+'px; font-family:Arial; color:'+ClockShade+'; text-shadow:-6px 6px 0px '+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';  // A|P
+    ClockHTML += '<span style="color:'+ClockColor+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STh + '</span>'; // hour
+    ClockHTML += '<span style="vertical-align:'+ColonElev.toString()+'%; margin-left:-'+Math.floor(DigitSize*0.1)+'px; font-size:'+Math.floor(DigitSize*0.4)+'px; color:'+ClockColor+'; text-shadow:-6px 6px 0px '+ClockShadow+';">:</span>'; // colon
+    ClockHTML += '<span style="color:'+ClockColor+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadow+';">' + STm + '</span>'; // minute
+    ClockHTML += '<span style="font-size:'+Math.floor(DigitSize*0.24)+'px; font-family:Arial; color:'+ClockColor+'; text-shadow:-6px 6px 0px '+ClockShadow+'; margin-left:-4px; vertical-align:150%;">'+STap+'</span>';  // A|P
     document.getElementById('SpanTime').innerHTML = ClockHTML;
   }
   if (BGshowCurr.indexOf('A')>=0) {
@@ -1610,8 +1706,8 @@ function AllDivsOff () {
 
 // Stop everything.
 function ClearTimers () {
-  if (STtimer!=null) { clearTimeout(STtimer); }
-  if (MasterTimer!=null) { clearTimeout(MasterTimer); }
+  if (STtimer!=null) { clearTimeout(STtimer); STtimer=null; }
+  if (MasterTimer!=null) { clearTimeout(MasterTimer); MasterTimer=null; }
 }
 
 // Manually advance slide in current slideshow.
@@ -1707,20 +1803,17 @@ function TechReadout () {
   if ('speechSynthesis' in window) {
     if (SpeechVoices!=null) {
       TRout += 'Voices: '+SpeechVoices.length.toString()+"\n";
-      for (VoiceLp = 0; VoiceLp < SpeechVoices.length; VoiceLp++) {
-        if (SpeechVoices[VoiceLp].lang.indexOf('en')>=0) {
-          TRout += SpeechVoices[VoiceLp].name + ' (' + SpeechVoices[VoiceLp].lang + ')';
-          if (SpeechVoices[VoiceLp].default) { TRout += ' *'; }
-          if (VoiceLp == VoiceIdx) { TRout += ' !!!'; }
-          TRout += "\n";
-        }
-      }
+      TRout += 'Using '+SpeechVoices[VoiceIdx].name + ' (' + SpeechVoices[VoiceIdx].lang + ")\n";
     } else {
       TRout += "No voices loaded.\n";
     }
   } else {
     TRout += "No speech synthesizer.\n";
   }
+  if (CfgKeysCnt > 0) { TRout += CfgKeysCnt.toString()+" alarms loaded"; if (AlarmsBooted>0) { TRout += " and booted"; } TRout += ".\n"; }
+  if (WeatherCurrentSpoken.length > 10) { TRout += "Weather report ready.\n"; }
+  if (SpeechCnt > 0) { TRout += SpeechCnt.toString()+" uterrances spoken.\n"; }
+  if (IsChrome()) { TRout += 'Browser is Chrome ("'+navigator.userAgent+'")'+"\n"; }
   alert(TRout);
 }
 
@@ -1754,8 +1847,15 @@ function SetupWindow () {
   document.getElementById('DivWhole').style.height = WinHgt.toString()+'px';
   WinMin = Math.min(WinWid,WinHgt);
   WinMax = Math.max(WinWid,WinHgt);
+  WinPortrait = (WinHgt > WinWid);
   RadarWid = Math.floor(WinWid*0.3);
   RadarHgt = Math.floor(WinHgt*0.5);
+  WeatherCurrentHgt = WeatherCurrentHgtDefault;
+  WeatherForecastHgt = WeatherForecastHgtDefault;
+  DateHgt = DateHgtDefault;
+  if (WinPortrait) { WeatherCurrentHgt = WeatherCurrentHgt * 0.4; }
+  if (WinPortrait) { WeatherForecastHgt = WeatherForecastHgt * 0.4; }
+  if (WinPortrait) { DateHgt = DateHgt * 0.5; }
   AnalogSetup();
   setTimeout('FinishScreen()',3000);
 }
@@ -1855,23 +1955,18 @@ function DoUpd () {
     }
     if (MinuteCurr != MinutePrev) {
       ClockRainbowShadowSeq = 0;
-      if ( (CfgKeysCnt > 0) && (AlarmsTimer==null) ) { AlarmsTimer = setTimeout('CheckAlarms()',400); }
     }
     if (SecondCurr != SecondPrev) {
-      if (MinuteCurr == MinutePrev) {
-        if (! IsSpeaking) {
-          if ( (CfgKeysCnt > 0) && (AlarmsTimer==null) ) { AlarmsTimer = setTimeout('CheckAlarms()',200); }
-        }
-      }
+      if (! IsSpeaking) CheckAlarms();
     }
     HourPrev = HourCurr;
     MinutePrev = MinuteCurr;
     SecondPrev = SecondCurr;
-    if (ClockColor != ClockColorPrev) {  // Sunset/Sunrise change.
+    if (DateColor != DateColorPrev) {  // Sunset/Sunrise change.
       ShowMoon();
       ShowDate();
-      if (ClockColorPrev!='') DoRefresh();  // Force reload on sunrise/sunset to reposition elements to reduce screen burn-in.
-      ClockColorPrev = ClockColor;
+      if (DateColorPrev>=0) DoRefresh();  // Fully refresh screen on sunrise/sunset to reposition elements to reduce screen burn-in.
+      DateColorPrev = DateColor;
     }
   }
   WeatherForecastTimer -= MasterDur;
@@ -1919,7 +2014,8 @@ function CheckKeypress (e) {
   if ( (KeyPressedCode>26) && (KeyPressedCode<128) ) {  // Special handling of multi key sequences.
     while (KeysPressed.length>5) { KeysPressed = KeysPressed.substring(1); }
     KeysPressed = KeysPressed+String.fromCharCode(KeyPressedCode).toUpperCase();
-    if (KeysPressed == "000000") { location.reload(); } // Force reload on six zeroesm for tech support purposes.
+    if (KeysPressed == "000000") { location.reload(); } // Force reload on six zeroes for tech support purposes.
+    if (KeysPressed == "999999") { location.href = 'https://bedno.com/ispacewar?u='+encodeURIComponent(location.href).replace('#','%23'); } // Hidden exit to iSpacewar! video game.
   }
   if (KeyPressedCode == 32) {  // Space = next BG
     ClearTimers();
@@ -1934,7 +2030,6 @@ function CheckKeypress (e) {
     } else {
       if (KeyPressedCode == 48) {  // '0' = Display Off
         if (BGprev<0) {
-          if (AlarmsTimer!=null) { clearTimeout(AlarmsTimer); AlarmsTimer=null; }
           BGprev = BGcurr;
           ClearTimers();
           AllDivsOff();
@@ -1959,11 +2054,9 @@ function CheckKeypress (e) {
               if (BGslideInc>0) { BGslideInc = 0; } else { BGslideInc = 1; }
               if (BGslideInc>0) {
                 NextSlide();
-                BGdescBG = '';
                 if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
               } else {
                 ClearTimers();
-                BGdescBG = ' background-color:#020066; ';
                 if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = '#020066'; }
               }
               MasterTimer = setTimeout('DoUpd()',MasterDur);
@@ -2205,7 +2298,6 @@ function DoInit () {
   if (MasterTimer!=null) { clearTimeout(MasterTimer); }
   MasterTimer = null;
   BGslide = 0;  BGslidePrev = BGslide;  BGslideInc = 1;  BGtimer = -1;  BGdurMult = 0;
-  ClockColor = ClockColorDay;  ClockColorPrev = '';  ClockColorOpp = ClockColorNight;
   ClockUpdTimer = 0;
   HourPrev = -1;  HourCurr = -1;  MinutePrev = -1;  MinuteCurr = -1;
   BGframe = -1;
@@ -2465,3 +2557,4 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
+
