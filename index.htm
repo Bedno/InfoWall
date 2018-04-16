@@ -40,7 +40,7 @@ var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // 
 var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
 
 var ClockColor = '#FFFFFF';  var ClockShadow = '#000000';  // Digital time colors.
-var DateColorDay = '#C0C000';  var DateColorNight = '#0000C0';   // Day/Night color of some date parts.
+var DateColorDay = '#ECDE00';  var DateColorNight = '#0000C0';   // Day/Night color of some date parts.
 var DateColor = DateColorDay;  var DateShadow = DateColorNight;  var DateColorPrev = -1;
 // Quick B&W: ('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
 // Simple rainbow: ('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
@@ -407,6 +407,7 @@ function IsChrome () {
 
 // === SPEECH ===
 
+// Load voices and find a British male.  Works best in Chrome.
 function SpeechVoicesLoad () {
   var VoiceName = "";
   if ('speechSynthesis' in window) {
@@ -435,6 +436,7 @@ function SpeechVoicesLoad () {
     }
   }
 }
+// Handle playing sound effects (ogg files).
 function SpeechEffectDone () {
   try { SpeechAudio.remove(); } catch (err) { }
   if (SpeechPend.length > 0) {
@@ -468,14 +470,25 @@ function SoundEffect (SFXstr) {
     }
   }
 }
+// Continue processing speech queue.
 function SpeechQueueDo () {
   if (SpeechQueue.length>0) {
     IsSpeaking = true;
     SpeechSpeak(SpeechQueue[0]);  SpeechQueue.shift();
   }
 }
+// Dupe check to abate occassional problem of redundant alarm triggers on same event.
+function SpeechQueueDupe (SQDin) {
+  var SpeechQueueChkLp = "";  var SpeechQueueChkFound = -1;
+  SpeechQueueChkFound = -1;
+  for (SpeechQueueChkLp=0; SpeechQueueChkLp<SpeechQueue.length; SpeechQueueChkLp++) {
+    if (SpeechQueue[SpeechQueueChkLp].toLowerCase() == SQDin.toLowerCase()) { SpeechQueueChkFound = SpeechQueueChkLp; }
+  }
+  return(SpeechQueueChkFound>=0);
+}
+// Add an utterance to the speech queue.  Fixes problem of speech failing on long utterances.
 function SpeechQueueAdd (SQAin) {
-  var SpeechQueueParts;  var SpeechQueuePartsLp = 0;  var SpeechQueuePartsLp = "";
+  var SpeechQueueParts;  var SpeechQueuePartsLp = 0;
   SQAin = SQAin.replace(/\s+\./gi,'.');
   SQAin = SQAin.replace(/\.+\./gi,'.');
   SQAin = SQAin.replace(/^\.+/gi,'').replace(/\.+$/gi,'');
@@ -483,13 +496,23 @@ function SpeechQueueAdd (SQAin) {
     SpeechQueueParts = SQAin.split('.');
     for (SpeechQueuePartsLp=0; SpeechQueuePartsLp<SpeechQueueParts.length; SpeechQueuePartsLp++) {
       SpeechQueuePart = SpeechQueueParts[SpeechQueuePartsLp].replace(/^\s+/gi,'').replace(/\s+$/gi,'');
-      if (SpeechQueuePart.length>0) { SpeechQueue.push(SpeechQueuePart); AlarmMsg('Queued part "'+SpeechQueuePart+'"'); }
+      if (SpeechQueueDupe(SpeechQueuePart)) {
+        DebugMsg('Dupe part suppressed "'+SpeechQueuePart+'"');
+      } else {
+        SpeechQueue.push(SpeechQueuePart);
+        DebugMsg('Queued part "'+SpeechQueuePart+'"');
+      }
     }
   } else {
-    SpeechQueue.push(SQAin);  AlarmMsg('Queued whole "'+SQAin+'"');
+    if (SpeechQueueDupe(SQAin)) {
+      DebugMsg('Dupe whole suppressed "'+SQAin+'"');
+    } else {
+      SpeechQueue.push(SQAin);  DebugMsg('Queued whole "'+SQAin+'"');
+    }
   }
   if (! IsSpeaking) { SpeechQueueDo(); }
 }
+// Handle end of utterance, start next one.
 function SpeechDone () {
   if (SpeechQueue.length>0) {
     setTimeout('SpeechQueueDo()',50); // Slight pause between utterances.
@@ -498,6 +521,7 @@ function SpeechDone () {
     if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
   }
 }
+// Lowest level speech function.
 function SpeechSpeakActual (SSAin) {
   SSAin = SSAin.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
   if (SSAin.length>1) {
@@ -523,7 +547,8 @@ function SpeechSpeakActual (SSAin) {
     }
   }
 }
-function SpeechSpeak (SSin) {  // Wraps the Actual to prevent remote chance of recursion or parse error.
+// Wraps the Actual speech function to prevent remote chance of recursion or parse error on sound effects.
+function SpeechSpeak (SSin) {
   if (SSin.indexOf('{SOUND:')>=0) {
     SoundEffect(SSin);
   } else {
@@ -1177,17 +1202,19 @@ function SetupWeather () {
 // === REMOTE CONFIGURABLES ===
 // Fetch a URL specified config file for alarms.
 
-function AlarmMsg (ADin) {
-  if (document.getElementById('DivAlarm')) {
-    if (document.getElementById('DivAlarm').style.visibility=='visible') {
-      if (document.getElementById('DivAlarm').innerText.length>800) {
-        document.getElementById('DivAlarm').innerText = document.getElementById('DivAlarm').innerText.substr(120,document.getElementById('DivAlarm').innerText.length-120);
+// Show tyailing log if div is visible.
+function DebugMsg (ADin) {
+  if (document.getElementById('DivDebug')) {
+    if (document.getElementById('DivDebug').style.visibility=='visible') {
+      if (document.getElementById('DivDebug').innerText.length>800) {
+        document.getElementById('DivDebug').innerText = document.getElementById('DivDebug').innerText.substr(120,document.getElementById('DivDebug').innerText.length-120);
       }
-      document.getElementById('DivAlarm').innerText += ADin+"\n";
+      document.getElementById('DivDebug').innerText += ADin+"\n";
     }
   }
 }
 
+// Parse target=message pairs from alarms config file.
 function CfgParse () {
   var CfgErrCnt = 0;
   var CfgMaxErrs = 12;
@@ -1214,7 +1241,7 @@ function CfgParse () {
                 if ( (CfgName.length>0) && (CfgVal.length>0) ) {
                   CfgKeys[CfgKeysCnt++] = CfgName;
                   CfgVals[CfgName] = CfgVal;
-                  AlarmMsg(CfgName+'="'+CfgVal+'"');
+                  DebugMsg(CfgName+'="'+CfgVal+'"');
                 } else {
                   CfgErrCnt++;
                 }
@@ -1238,6 +1265,7 @@ function CfgParse () {
   }
 }
 
+// Request remote config file by URL.
 function CfgRequest () {
   var CfgURLcode = "";
   CfgURLcode = location.href;
@@ -1274,7 +1302,7 @@ function CfgRequest () {
         CfgHandle.send(null);
       } catch (err) { }
     }
-    AlarmMsg('Src="'+CfgSrc+'"');
+    DebugMsg('Src="'+CfgSrc+'"');
   }
 }
 
@@ -1363,18 +1391,18 @@ function CheckAlarms () {
           }
         }
       }
-      AlarmMsg('Time: "'+ AlmStr + '"');
+      DebugMsg('Time: "'+ AlmStr + '"');
       if (AlarmsFirst.length>0) {
         SpeechQueueAdd(AlarmsFirst);
-        AlarmMsg(AlarmsFirst);
+        DebugMsg(AlarmsFirst);
       }
       if (AlarmsCurr.length>0) {
         SpeechQueueAdd(AlarmsCurr);
-        AlarmMsg(AlarmsCurr);
+        DebugMsg(AlarmsCurr);
       }
       if ( (AlarmsDay.length>0) && ( (AlarmsFirst.length>0) || (AlarmsCurr.length>0) ) ) {
         SpeechQueueAdd(AlarmsDay);
-        AlarmMsg(AlarmsDay);
+        DebugMsg(AlarmsDay);
       }
     }
   }
@@ -1587,6 +1615,7 @@ function FmtSeconds (FSin) {
   return(FSout);
 }
 
+// Neatly format stopwatch time and laps if running.
 function ShowStopwatch () {
   StopwatchDT = new Date();
   var StopwatchCur = Math.floor(StopwatchDT.getTime() / 1000);
@@ -1597,6 +1626,7 @@ function ShowStopwatch () {
   document.getElementById('SpanStopwatch').innerHTML = FmtSeconds(StopwatchCur-StopwatchStarted)+StopwatchLapsFmt;
   document.getElementById('DivStopwatch').style.visibility='visible';
 }
+// Neatly format days/weeks since display if configured.
 function ShowDaysSince () {
   if ( (DaysSinceStarted > 0) && (StopwatchStarted < 1) && (BGshowCurr.indexOf('C')>-1) ) {
     DaysSinceDT = new Date();
@@ -1874,8 +1904,8 @@ function DoSetup () {
   document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
   document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
   document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
-  document.getElementById('DivAlarm').style.top = (OfsY+Math.round(WinHgt*.3))+'px';
-  document.getElementById('DivAlarm').style.left = (OfsX+Math.round(WinWid*.15))+'px';
+  document.getElementById('DivDebug').style.top = (OfsY+Math.round(WinHgt*.3))+'px';
+  document.getElementById('DivDebug').style.left = (OfsX+Math.round(WinWid*.15))+'px';
   document.getElementById('DivTime').style.left = (OfsX)+'px';
   document.getElementById('DivTime').style.top = Math.floor(OfsY+((ClockMode==0) ? 52 : 32)).toString()+'px';
   document.getElementById('DivTime').style.width = (WinWid-OfsX)+'px';
@@ -1994,7 +2024,7 @@ function DoUpd () {
   MasterTimer = setTimeout('DoUpd()',MasterDur);
 }
 
-// Handle user keypress.  Used in body tag to catch all.
+// Handle user keypress.  Used in body tag to catch all keypad events.
 function CheckKeypress (e) {
   var KeyPressedCode = e.keyCode;
   var BaseFrame = -1;
@@ -2210,7 +2240,7 @@ function CheckKeypress (e) {
 function DoReBoot () {
   WinWidPhys = window.innerWidth && document.documentElement.clientWidth ? Math.min(window.innerWidth, document.documentElement.clientWidth) : window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth;
   WinHgtPhys = window.innerHeight && document.documentElement.clientHeight ? Math.min(window.innerHeight, document.documentElement.clientHeight) : window.innerHeight || document.documentElement.clientHeight || document.getElementsByTagName('body')[0].clientHeight;
-//  if (IsIOS()) { WinWidPhys = screen.width; WinHgtPhys = screen.height; }
+  //  if (IsIOS()) { WinWidPhys = screen.width; WinHgtPhys = screen.height; }
   SetupWindow();
   DoRefresh();
 }
@@ -2348,7 +2378,7 @@ function DoRefresh () {
 
 <div id="DivIntro" style="z-index:16; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
 
-<div id="DivAlarm" style="z-index:17; position:absolute; left:0px; top:0px; width:400px; height:400px; visibility:hidden; background-color:#FFFFFF; padding:16px 16px 16px 16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:4px; border-color:#FF0000; display:inline-block; border-radius:25px;"></div>
+<div id="DivDebug" style="z-index:17; position:absolute; left:0px; top:0px; width:400px; height:400px; visibility:hidden; background-color:#FFFFFF; padding:16px 16px 16px 16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:4px; border-color:#FF0000; display:inline-block; border-radius:25px;"></div>
 
 </div>
 
