@@ -337,9 +337,11 @@ var StopwatchDur = 1000;  var StopwatchTimer = StopwatchDur;
 
 var SpeechHandle = null;  var SpeechVoices = null;  var SpeechAudio = null;
 var SpeechQueue = new Array();  var SpeechQueueRec = new Array();  var SpeechPend = "";  var SpeechCode = "";  var SpeechCnt = 0;
-var VoiceLp = 0;  var VoiceIdx = -1;  var VoiceScore = -1;  var VoiceTmp = -1;  var IsSpeaking = false;
+var VoiceLp = 0;  var VoiceIdx = -1;  var VoiceScore = -1;  var VoiceTmp = -1;
+var IsSpeaking = false;  var SpeechDoneTimer = null;
 var AlarmsCurr = "";  var AlarmsDay = "";
 var AlarmsFirst = "";  var AlarmsBooted = 0;
+var AlarmDT = null;  var AlarmStr = ' ';  var AlarmDupeChkKey = "";
 var CfgSrc = "";  var CfgText = '';
 var CfgHandle = null;
 var CfgName = "";  var CfgVal = "";
@@ -437,6 +439,21 @@ function SpeechVoicesLoad () {
     }
   }
 }
+// Added delays for physical queue, basically debouncing for lower speech layers.
+function SpeechDoneActual () {
+  if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = ''; }
+  SpeechDoneTimer = null;
+  IsSpeaking = false;
+}
+function SpeechDoneTimeout () {
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+  SpeechDoneTimer = setTimeout('SpeechDoneActual()',4000);
+}
+function IsSpeakingFlag() {
+  if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = '#000000'; }
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+  IsSpeaking = true;
+}
 // Handle playing sound effects (ogg files).
 function SpeechEffectDone () {
   try { SpeechAudio.remove(); } catch (err) { }
@@ -444,7 +461,7 @@ function SpeechEffectDone () {
     SpeechSpeakActual(SpeechPend);
     SpeechPend = "";
   } else {
-    if (SpeechQueue.length<1) IsSpeaking = false;
+    if (SpeechQueue.length<1) SpeechDoneTimeout();
   }
 }
 function SoundEffect (SFXstr) {
@@ -456,34 +473,38 @@ function SoundEffect (SFXstr) {
   if (IsChrome()) { // Currently OGG audio files only play in Chrome?!?
     if (SpeechCode.length>0) {
       try {
-        IsSpeaking = true;
+        IsSpeakingFlag();
         SpeechAudio = new Audio('https://bedno.com/g/infowall/'+SpeechCode+'.ogg');
         SpeechAudio.onended = SpeechEffectDone;
         SpeechAudio.play();
-      } catch (err) { IsSpeaking = false; SpeechEffectDone(); }
+      } catch (err) { SpeechEffectDone(); SpeechDoneTimeout(); }
     }
   } else {
     if (SpeechPend.length > 0) {
       SpeechSpeakActual(SpeechPend);
       SpeechPend = "";
     } else {
-      if (SpeechQueue.length<1) IsSpeaking = false;
+      if (SpeechQueue.length<1) SpeechDoneTimeout();
     }
   }
 }
 // Continue processing speech queue.
 function SpeechQueueDo () {
   if (SpeechQueue.length>0) {
-    IsSpeaking = true;
+    IsSpeakingFlag();
     SpeechSpeak(SpeechQueue[0][1]);  SpeechQueue.shift();
   }
 }
 // Dupe check to abate occassional problem of redundant alarm triggers on same event.
 function SpeechQueueDupe (SQDin) {
   var SpeechQueueChkLp = 0;  var SpeechQueueChkFound = -1;
+  var SQRkey = '';  var SQRmsg = '';
   SpeechQueueChkFound = -1;
   for (SpeechQueueChkLp=0; SpeechQueueChkLp<SpeechQueue.length; SpeechQueueChkLp++) {
-    if (SpeechQueue[SpeechQueueChkLp][0] == SQDin) { SpeechQueueChkFound = SpeechQueueChkLp; }
+    SpeechQueueRec = SpeechQueue[SpeechQueueChkLp];
+    [SQRkey,SQRmsg] = SpeechQueueRec;
+    DebugMsg('DupeCheck '+SpeechQueueChkLp.toString()+' "'+SQRkey+'" vs "'+SQDin+'"');
+    if (SQRkey == SQDin) { SpeechQueueChkFound = SpeechQueueChkLp; }
   }
   return(SpeechQueueChkFound>=0);
 }
@@ -494,7 +515,7 @@ function SpeechQueueAdd (SQAkey, SQAin) {
   SQAin = SQAin.replace(/\.+\./gi,'.');
   SQAin = SQAin.replace(/^\.+/gi,'').replace(/\.+$/gi,'');
   if (SpeechQueueDupe(SQAkey)) {
-    DebugMsg('Dupe suppressed "'+SQAin+'"');
+    DebugMsg('Dupe suppressed ('+SQAkey+') "'+SQAin+'"');
   } else {
     if (SQAin.indexOf('.')>=0) {
       SpeechQueueParts = SQAin.split('.');
@@ -503,24 +524,23 @@ function SpeechQueueAdd (SQAkey, SQAin) {
         if (SpeechQueuePart.length>0) {
           SpeechQueueRec = [SQAkey,SpeechQueuePart];
           SpeechQueue.push(SpeechQueueRec);
-          DebugMsg('Queued part "'+SpeechQueuePart+'"');
+          DebugMsg('Queued part ('+SQAkey+') "'+SpeechQueuePart+'"');
         }
       }
     } else {
       SpeechQueueRec = [SQAkey,SQAin];
       SpeechQueue.push(SpeechQueueRec);
-      DebugMsg('Queued whole "'+SQAin+'"');
+      DebugMsg('Queued whole ('+SQAkey+') "'+SQAin+'"');
     }
   }
   if (! IsSpeaking) { SpeechQueueDo(); }
 }
-// Handle end of utterance, start next one.
+// Handle end of utterance, start next one if any.
 function SpeechDone () {
   if (SpeechQueue.length>0) {
     setTimeout('SpeechQueueDo()',50); // Slight pause between utterances.
   } else {
-    IsSpeaking = false;
-    if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = ''; }
+    SpeechDoneTimeout();
   }
 }
 // Lowest level speech function.
@@ -531,8 +551,7 @@ function SpeechSpeakActual (SSAin) {
       if (IsSpeaking) {
         window.speechSynthesis.cancel();  // Cancel any existing speaking
       }
-      IsSpeaking = true;
-      if (document.getElementById('SpanBGdesc')) { document.getElementById('SpanBGdesc').style.backgroundColor  = '#C0C000'; }
+      IsSpeakingFlag();
       try {
         SpeechHandle = new SpeechSynthesisUtterance();
         if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; }
@@ -545,7 +564,7 @@ function SpeechSpeakActual (SSAin) {
         SpeechHandle.onend = SpeechDone;
         SpeechCnt++;
         window.speechSynthesis.speak(SpeechHandle);
-      } catch (err) { IsSpeaking = false; }
+      } catch (err) { SpeechDoneTimeout(); }
     }
   }
 }
@@ -798,8 +817,8 @@ function ShowMoon () {
       SunMoonOut += 'color:#FFFFFF; text-shadow:-2px 2px 0px #000000;" alt="Days UNTIL full moon.';
     }
     SunMoonOut += '">'+Math.abs(MoonDaysToFull).toString()+'&nbsp;&nbsp;</span><br>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">A</span><br></span>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">P</span></span></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; text-shadow:-1px 1px 0px #000000; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">A</span><br></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; text-shadow:-1px 1px 0px #000000; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">P</span></span></span>';
     document.getElementById('DivSunTimes').innerHTML = SunMoonOut;
   }
 }
@@ -825,8 +844,9 @@ function SetupSun () {
     if (SunSetAdjDT.getHours()>12) { SunSet = ''+(SunSetAdjDT.getHours()-12); } else { SunSet = ''+SunSetAdjDT.getHours(); }
   }
   if (SunSetAdjDT.getMinutes()<10) { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunSetAdjDT.getMinutes(); } else { SunSet += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunSetAdjDT.getMinutes(); }
-  if ( (SSCurrDT.getHours() >= SunRiseAdjDT.getHours()) && (SSCurrDT.getMinutes() >= SunRiseAdjDT.getMinutes()) &&
-       (SSCurrDT.getHours() <= SunSetAdjDT.getHours()) && (SSCurrDT.getMinutes() <= SunSetAdjDT.getMinutes()) ) {
+  DebugMsg('SSCurrDT.H='+SSCurrDT.getHours().toString()+'; SSCurrDT.M='+SSCurrDT.getMinutes().toString()+'; SunRiseAdjDT.H='+SunRiseAdjDT.getHours().toString()+'; SunRiseAdjDT.M='+SunRiseAdjDT.getMinutes().toString()+'; SunSetAdjDT.H='+SunSetAdjDT.getHours().toString()+'; SunSetAdjDT.M='+SunSetAdjDT.getMinutes().toString());
+  if ( ( (SSCurrDT.getHours() > SunRiseAdjDT.getHours()) || ( (SSCurrDT.getHours() == SunRiseAdjDT.getHours()) && (SSCurrDT.getMinutes() >= SunRiseAdjDT.getMinutes()) ) ) &&
+       ( (SSCurrDT.getHours() < SunSetAdjDT.getHours()) || ( (SSCurrDT.getHours() == SunSetAdjDT.getHours()) && (SSCurrDT.getMinutes() <= SunSetAdjDT.getMinutes()) ) ) ) {
     DateColor = DateColorDay; DateShadow = '#000000';
   } else {
     DateColor = DateColorNight; DateShadow = '#FFFFFF';
@@ -855,42 +875,44 @@ function SetupRadar () {
 function SpeakForecast(WFSnum) {
   var SFstr = "";
   if ('speechSynthesis' in window) {
-    var SpkDT=new Date(DTadj());
-    var SpkHr = 0;
-    var SpkAP="A";
-    SpkHr = SpkDT.getHours();
-    if (SpkHr>11) { SpkAP = "P"; }
-    if (SpkHr>12) SpkHr = SpkHr-12;  if (SpkHr==0) SpkHr = 12;
-    var SpkMn = "";
-    if (SpkDT.getMinutes()>0) {
-      SpkMn = SpkDT.getMinutes().toString();
-      if (SpkMn.length<2) SpkMn = " O "+SpkMn;
-    }
-    if (typeof WeatherForecastSpoken[0] !== 'undefined') {
-      if (WFSnum==0) {
-        if (WeatherCurrentSpoken.length>4) {
-          SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
-          if (WeatherForecastSpoken[0].length>4) {
-            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
-            SpeechQueueAdd('Weather', SFstr);
-            SpeechQueueAdd('Forecast', WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING '));
-            if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
+    if (! IsSpeaking) {
+      var SpkDT=new Date(DTadj());
+      var SpkHr = 0;
+      var SpkAP="A";
+      SpkHr = SpkDT.getHours();
+      if (SpkHr>11) { SpkAP = "P"; }
+      if (SpkHr>12) SpkHr = SpkHr-12;  if (SpkHr==0) SpkHr = 12;
+      var SpkMn = "";
+      if (SpkDT.getMinutes()>0) {
+        SpkMn = SpkDT.getMinutes().toString();
+        if (SpkMn.length<2) SpkMn = " O "+SpkMn;
+      }
+      if (typeof WeatherForecastSpoken[0] !== 'undefined') {
+        if (WFSnum==0) {
+          if (WeatherCurrentSpoken.length>4) {
+            SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
+            if (WeatherForecastSpoken[0].length>4) {
+              SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
+              SpeechQueueAdd('Weather', SFstr);
+              SpeechQueueAdd('Forecast', WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING '));
+              if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
+            } else {
+              SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
+              SpeechQueueAdd('Weather', SFstr);
+              if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
+            }
           } else {
-            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAP+" M its "+WeatherCurrentSpoken.toUpperCase();
-            SpeechQueueAdd('Weather', SFstr);
-            if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
+            if (WeatherForecastSpoken[0].length>4) {
+              SFstr = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'Forecasting ');
+              SpeechQueueAdd('Forecast', SFstr);
+              if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
+            }
           }
         } else {
-          if (WeatherForecastSpoken[0].length>4) {
-            SFstr = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'Forecasting ');
-            SpeechQueueAdd('Forecast', SFstr);
-            if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
-          }
+          SFstr = WeatherForecastSpoken[WFSnum];
+          SpeechQueueAdd('Forecast', SFstr);
+          if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
         }
-      } else {
-        SFstr = WeatherForecastSpoken[WFSnum];
-        SpeechQueueAdd('Forecast', SFstr);
-        if (AlarmsDay.length>0) { SpeechQueueAdd('AlarmsDay', AlarmsDay); }
       }
     }
   }
@@ -1210,7 +1232,7 @@ function SetupWeather () {
 function DebugMsg (ADin) {
   if (document.getElementById('DivDebug')) {
     if (document.getElementById('DivDebug').style.visibility=='visible') {
-      if (document.getElementById('DivDebug').innerText.length>800) {
+      if (document.getElementById('DivDebug').innerText.length>600) {
         document.getElementById('DivDebug').innerText = document.getElementById('DivDebug').innerText.substr(120,document.getElementById('DivDebug').innerText.length-120);
       }
       document.getElementById('DivDebug').innerText += ADin+"\n";
@@ -1356,25 +1378,23 @@ function CfgSubs (CSval) {
 
 // On each minute, scan for matches against special alarms config file.
 function CheckAlarms () {
-  var AlmDT = new Date(DTadj());
-  var AlmStr = ' ';
-  var DupeChkKey = "";
-  AlarmsCurr = "";  AlarmsDay = "";  AlarmsFirst = "";
   if (! IsSpeaking) {
+    AlarmsCurr = "";  AlarmsDay = "";  AlarmsFirst = "";  AlarmStr = ' ';
+    AlarmDT = new Date(DTadj());
     if (CfgKeysCnt > 0) {
-      AlmStr += FullMon[AlmDT.getMonth()].toLowerCase()+' ';
-      AlmStr += FullDoW[AlmDT.getDay()].toLowerCase()+' ';
-      AlmStr += (AlmDT.getYear()+1900).toString()+'.';
-      if (AlmDT.getMonth() < 9) { AlmStr += '0'; }
-      AlmStr += (AlmDT.getMonth()+1).toString()+'.';
-      if (AlmDT.getDate() < 10) { AlmStr += '0'; }
-      AlmStr += AlmDT.getDate().toString()+' ';
-      if (AlmDT.getHours() < 10) { AlmStr += '0'; }
-      AlmStr += AlmDT.getHours().toString()+':';
-      if (AlmDT.getMinutes() < 10) { AlmStr += '0'; }
-      AlmStr += AlmDT.getMinutes().toString()+':';
-      if (AlmDT.getSeconds() < 10) { AlmStr += '0'; }
-      AlmStr += AlmDT.getSeconds().toString();
+      AlarmStr += FullMon[AlarmDT.getMonth()].toLowerCase()+' ';
+      AlarmStr += FullDoW[AlarmDT.getDay()].toLowerCase()+' ';
+      AlarmStr += (AlarmDT.getYear()+1900).toString()+'.';
+      if (AlarmDT.getMonth() < 9) { AlarmStr += '0'; }
+      AlarmStr += (AlarmDT.getMonth()+1).toString()+'.';
+      if (AlarmDT.getDate() < 10) { AlarmStr += '0'; }
+      AlarmStr += AlarmDT.getDate().toString()+' ';
+      if (AlarmDT.getHours() < 10) { AlarmStr += '0'; }
+      AlarmStr += AlarmDT.getHours().toString()+':';
+      if (AlarmDT.getMinutes() < 10) { AlarmStr += '0'; }
+      AlarmStr += AlarmDT.getMinutes().toString()+':';
+      if (AlarmDT.getSeconds() < 10) { AlarmStr += '0'; }
+      AlarmStr += AlarmDT.getSeconds().toString();
       for (var AlmLp = 0; AlmLp < CfgKeysCnt; AlmLp++) {
         if (CfgKeys[AlmLp] == '*') {
           if (AlarmsBooted<1) {
@@ -1383,35 +1403,35 @@ function CheckAlarms () {
                 if (AlarmsFirst.length>0) { AlarmsFirst += '. '; }
                 AlarmsFirst = CfgSubs(CfgVals[CfgKeys[AlmLp]]);
                 AlarmsBooted = 1;
-                DupeChkKey = CfgKeys[AlmLp];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
               }
             }
           }
         } else {
-          if (AlmStr.indexOf(CfgKeys[AlmLp])>=0) {
+          if (AlarmStr.indexOf(CfgKeys[AlmLp])>=0) {
             if ( (CfgKeys[AlmLp].indexOf('.')>=0) && (CfgKeys[AlmLp].indexOf(':')<0) ) {
               if (! SpeechQueueDupe(CfgKeys[AlmLp])) {
                 if (AlarmsDay.length>0) { AlarmsDay += '. '; }
                 AlarmsDay += CfgSubs(CfgVals[CfgKeys[AlmLp]]);
-                DupeChkKey = CfgKeys[AlmLp];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
               }
             } else {
               if (! SpeechQueueDupe(CfgKeys[AlmLp])) {
                 if (AlarmsCurr.length>0) { AlarmsCurr += '. '; }
                 AlarmsCurr += CfgSubs(CfgVals[CfgKeys[AlmLp]]);
-                DupeChkKey = CfgKeys[AlmLp];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
               }
             }
           }
         }
       }
-      DebugMsg('Time: "'+ AlmStr + '"');
+      DebugMsg('Time: "'+ AlarmStr + '"');
       if (AlarmsFirst.length>0) {
         SpeechQueueAdd('*', AlarmsFirst);
         DebugMsg(AlarmsFirst);
       }
       if (AlarmsCurr.length>0) {
-        SpeechQueueAdd(DupeChkKey, AlarmsCurr);
+        SpeechQueueAdd(AlarmDupeChkKey, AlarmsCurr);
         DebugMsg(AlarmsCurr);
       }
       if ( (AlarmsDay.length>0) && ( (AlarmsFirst.length>0) || (AlarmsCurr.length>0) ) ) {
@@ -2392,7 +2412,7 @@ function DoRefresh () {
 
 <div id="DivIntro" style="z-index:16; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
 
-<div id="DivDebug" style="z-index:17; position:absolute; left:0px; top:0px; width:400px; height:400px; visibility:hidden; background-color:#FFFFFF; padding:16px 16px 16px 16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:4px; border-color:#FF0000; display:inline-block; border-radius:25px;"></div>
+<div id="DivDebug" style="visibility:hidden; z-index:17; position:absolute; left:0px; top:0px; width:400px; height:400px; background-color:#FFFFFF; padding:16px 16px 16px 16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:4px; border-color:#FF0000; display:inline-block; border-radius:25px;"></div>
 
 </div>
 
