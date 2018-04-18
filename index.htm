@@ -444,6 +444,7 @@ function SpeechDoneActual () {
   if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = ''; }
   SpeechDoneTimer = null;
   IsSpeaking = false;
+  SpeechPend = "";
 }
 function SpeechDoneTimeout () {
   if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
@@ -2102,8 +2103,7 @@ function CheckKeypress (e) {
           StopwatchStarted = 0;
           StopwatchLaps = "";
           document.getElementById('SpanStopwatch').innerHTML = "";
-          window.speechSynthesis.cancel();
-          SpeechQueue.length = 0;
+          try { window.speechSynthesis.cancel(); while (SpeechQueue.length>0) SpeechQueue.shift(); } catch (err) { }
           SpeechDoneTimeout();
         } else {
           BGcurr = BGpausedAt;  BGpausedAt = -1;
@@ -2626,3 +2626,4 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
+
