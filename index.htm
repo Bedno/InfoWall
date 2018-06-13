@@ -893,9 +893,9 @@ function SpeakForecast(WFSnum) {
       }
       if (typeof WeatherForecastSpoken[0] !== 'undefined') {
         if (WFSnum==0) {
-          if (WeatherCurrentSpoken.length>4) {
+          if (WeatherCurrentSpoken.length>8) {
             SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
-            if (WeatherForecastSpoken[0].length>4) {
+            if (WeatherForecastSpoken[0].length>16) {
               SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+" its "+WeatherCurrentSpoken.toUpperCase();
               SpeechQueueAdd('Weather', SFstr);
               SpeechQueueAdd('Forecast', WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING '));
@@ -906,7 +906,7 @@ function SpeakForecast(WFSnum) {
               if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
             }
           } else {
-            if (WeatherForecastSpoken[0].length>4) {
+            if (WeatherForecastSpoken[0].length>16) {
               SFstr = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'Forecasting ');
               SpeechQueueAdd('Forecast', SFstr);
               if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
@@ -1269,8 +1269,9 @@ function CfgParse () {
                 CfgVal = CfgLine.replace(/[^\=]+\=/gi,'');
                 CfgVal = CfgVal.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
                 if ( (CfgName.length>0) && (CfgVal.length>0) ) {
-                  CfgKeys[CfgKeysCnt++] = CfgName;
+                  CfgKeys[CfgKeysCnt] = CfgName;
                   CfgVals[CfgName] = CfgVal;
+                  CfgKeysCnt++;
                   // DebugMsg(CfgName+'="'+CfgVal+'"');
                 } else {
                   CfgErrCnt++;
@@ -1304,10 +1305,10 @@ function CfgRequest () {
     CfgURLcode = CfgURLcode.replace(/^\s+/,'').replace(/\s+$/,'');
     CfgURLcode = CfgURLcode.replace(/[^a-z0-9]/,'');
     if ( (CfgURLcode.length>0) && (CfgURLcode.length<20) ) {
-      CfgSrc = 'https://bedno.com/d/'+CfgURLcode+'.cfg';
+      CfgSrc = 'https://bedno.com/d/'+CfgURLcode+'.ini';
     }
   } else {
-    CfgSrc = 'https://bedno.com/d/infowall.cfg';
+    CfgSrc = 'https://bedno.com/d/infowall.ini';
   }
   if (CfgSrc.length>0) {
     CfgHandle = null;
@@ -1339,46 +1340,66 @@ function CfgRequest () {
 // Substitutions in alarm messages.
 function AlarmSubs (ASval) {
   var ASDT = new Date(DTadj());
-  ASval = ASval.replace(/{YYYY}/gi,(ASDT.getYear()+1900).toString());
-  ASval = ASval.replace(/{MM}/,(ASDT.getMonth()+1).toString());
-  ASval = ASval.replace(/{DD}/,ASDT.getDate().toString());
-  ASval = ASval.replace(/{HH}/,ASDT.getHours().toString());
-  ASval = ASval.replace(/{mm}/,ASDT.getMinutes().toString());
-  ASval = ASval.replace(/{MO}/,FullMon[ASDT.getMonth()]);
-  ASval = ASval.replace(/{DA}/,FullDoW[ASDT.getDay()]);
-  ASval = ASval.replace(/{DM}/,FullDoM[ASDT.getDate()]);
-  ASval = ASval.replace(/{TODAY}/,AlarmsToday);
-  if (WeatherCurrentSpoken.length>4) { ASval = ASval.replace(/{WEATHER}/,WeatherCurrentSpoken); }
-  if (WeatherForecastSpoken[0].length>4) { ASval = ASval.replace(/{FORECAST}/,WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'')); }
-  if (DaysSinceDays>0) { ASval = ASval.replace(/{DS}/,DaysSinceDays.toString()); }
-  if (DaysSinceWeeks>0) { ASval = ASval.replace(/{DW}/,DaysSinceWeeks.toString()); }
-  var ASap="A";
-  var ASapSpoken = "";
-  var ASh=ASDT.getHours();
-  var ASm=ASDT.getMinutes();
-  var ASt="";
-  if (ASh>11) { ASap = "P"; }
-  if (ASh>12) { ASh = ASh-12; }
-  if (ASh==0) { ASh = 12; }
-  if ( (ASh == 12) && (ASap == 'A') && (ASm==0) ) {
-    ASt = 'Midnight';
-  } else {
-    if ( (ASh == 12) && (ASap == 'P') && (ASm==0) ) {
-      ASt = 'Noon';
+  try {
+    ASval = ASval.replace(/{YYYY}/gi,(ASDT.getYear()+1900).toString());
+    ASval = ASval.replace(/{MM}/,(ASDT.getMonth()+1).toString());
+    ASval = ASval.replace(/{DD}/,ASDT.getDate().toString());
+    ASval = ASval.replace(/{HH}/,ASDT.getHours().toString());
+    ASval = ASval.replace(/{mm}/,ASDT.getMinutes().toString());
+    ASval = ASval.replace(/{MO}/,FullMon[ASDT.getMonth()]);
+    ASval = ASval.replace(/{DA}/,FullDoW[ASDT.getDay()]);
+    ASval = ASval.replace(/{DM}/,FullDoM[ASDT.getDate()]);
+    ASval = ASval.replace(/{TODAY}/,AlarmsToday);
+    if (WeatherCurrentSpoken.length>8) {
+      ASval = ASval.replace(/{WEATHER}/,WeatherCurrentSpoken);
     } else {
-      ASt = ASh.toString();
-      if (ASm > 0) {
-        ASt += ' ';
-        if (ASm < 10) { ASt += ' oh '; }
-        ASt += ASm.toString();
-      }
-      ASapSpoken = ( (ASap=='A') ? "ay emm" : "pee emm" );
-      ASt += ' '+ASapSpoken;
+      ASval = ASval.replace(/{WEATHER}/,'');
     }
+    if (WeatherForecastSpoken[0].length>16) {
+      ASval = ASval.replace(/{FORECAST}/,WeatherForecastSpoken[0].replace(/^[^\s]+\ /,''));
+    } else {
+      ASval = ASval.replace(/{FORECAST}/,'','');
+    }
+    if (DaysSinceDays>0) {
+      ASval = ASval.replace(/{DS}/,DaysSinceDays.toString());
+    } else {
+      ASval = ASval.replace(/{DS}/,'');
+    }
+    if (DaysSinceWeeks>0) {
+      ASval = ASval.replace(/{DW}/,DaysSinceWeeks.toString());
+    } else {
+      ASval = ASval.replace(/{DW}/,'');
+    }
+    var ASap="A";
+    var ASapSpoken = "";
+    var ASh=ASDT.getHours();
+    var ASm=ASDT.getMinutes();
+    var ASt="";
+    if (ASh>11) { ASap = "P"; }
+    if (ASh>12) { ASh = ASh-12; }
+    if (ASh==0) { ASh = 12; }
+    if ( (ASh == 12) && (ASap == 'A') && (ASm==0) ) {
+      ASt = 'Midnight';
+    } else {
+      if ( (ASh == 12) && (ASap == 'P') && (ASm==0) ) {
+        ASt = 'Noon';
+      } else {
+        ASt = ASh.toString();
+        if (ASm > 0) {
+          ASt += ' ';
+          if (ASm < 10) { ASt += ' oh '; }
+          ASt += ASm.toString();
+        }
+        ASapSpoken = ( (ASap=='A') ? "ay emm" : "pee emm" );
+        ASt += ' '+ASapSpoken;
+      }
+    }
+    ASval = ASval.replace(/{TIME}/,ASt);
+    ASval = ASval.replace(/{hh}/,ASh.toString());
+    ASval = ASval.replace(/{AP}/,ASapSpoken);
+  } catch (err) {
+    ASval = ASval.replace(/{[^}]+}/gi,'');
   }
-  ASval = ASval.replace(/{TIME}/,ASt);
-  ASval = ASval.replace(/{hh}/,ASh.toString());
-  ASval = ASval.replace(/{AP}/,ASapSpoken);
   return(ASval);
 }
 
@@ -1406,26 +1427,22 @@ function CheckAlarms () {
           if (CfgKeys[AlmLp] == '*') {
             if (AlarmsBooted<1) {
               if ( (VoiceIdx>=0) && (WeatherCurrentSpoken.length>0) ) {
-                if (! SpeechQueueDupe(CfgKeys[AlmLp],'')) {
-                  if (AlarmsFirst.length>0) { AlarmsFirst += '. '; }
-                  AlarmsFirst = CfgVals[CfgKeys[AlmLp]];
-                  AlarmDupeChkKey = CfgKeys[AlmLp];
-                }
+                if (AlarmsFirst.length>0) { AlarmsFirst += '. '; }
+                AlarmsFirst += CfgVals[CfgKeys[AlmLp]];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
               }
             }
           } else {
             if (AlarmStr.indexOf(CfgKeys[AlmLp])>=0) {
               if ( (CfgKeys[AlmLp].indexOf('.')>=0) && (CfgKeys[AlmLp].indexOf(':')<0) ) {
-                if (! SpeechQueueDupe(CfgKeys[AlmLp],'')) {
-                  AlarmsToday += '. '+CfgVals[CfgKeys[AlmLp]]+'. ';
-                  AlarmDupeChkKey = CfgKeys[AlmLp];
-                }
+                if (AlarmsToday.length>0) { AlarmsToday += '. '; }
+                AlarmsToday += CfgVals[CfgKeys[AlmLp]];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
+                DebugMsg('TODAY ALARM: '+AlarmsToday);
               } else {
-                if (! SpeechQueueDupe(CfgKeys[AlmLp],'')) {
-                  if (AlarmsCurr.length>0) { AlarmsCurr += '. '; }
-                  AlarmsCurr += CfgVals[CfgKeys[AlmLp]];
-                  AlarmDupeChkKey = CfgKeys[AlmLp];
-                }
+                if (AlarmsCurr.length>0) { AlarmsCurr += '. '; }
+                AlarmsCurr += CfgVals[CfgKeys[AlmLp]];
+                AlarmDupeChkKey = CfgKeys[AlmLp];
               }
             }
           }
@@ -1880,7 +1897,10 @@ function TechReadout () {
     TRout += "No speech synthesizer.\n";
   }
   if (CfgKeysCnt > 0) { TRout += CfgKeysCnt.toString()+" alarms loaded"; if (AlarmsBooted>0) { TRout += " and booted"; } TRout += ".\n"; }
-  if (WeatherCurrentSpoken.length > 10) { TRout += "Weather report ready.\n"; }
+  try {
+    if (WeatherCurrentSpoken.length>8) { TRout += "Weather report is ready.\n"; }
+    if (WeatherForecastSpoken[0].length>16)  { TRout += "Weather forecast is ready.\n"; }
+  } catch (err) {}
   if (SpeechCnt > 0) { TRout += SpeechCnt.toString()+" utterances spoken.\n"; }
   if (AlarmDupeCnt > 0) { TRout += AlarmDupeCnt.toString()+" dupes suppressed.\n"; }
   if (IsChrome()) { TRout += 'Browser is Chrome ("'+navigator.userAgent+'")'+"\n"; }
@@ -2083,7 +2103,7 @@ function CheckKeypress (e) {
     while (KeysPressed.length>5) { KeysPressed = KeysPressed.substring(1); }
     KeysPressed = KeysPressed+String.fromCharCode(KeyPressedCode).toUpperCase();
     if (KeysPressed == "000000") { location.reload(); } // Force reload on six zeroes for tech support purposes.
-    if (KeysPressed == "999999") { location.href = 'https://bedno.com/ispacewar?u='+encodeURIComponent(location.href).replace('#','%23'); } // Hidden exit to iSpacewar! video game.
+    if (KeysPressed == "999999") { location.href = 'https://bedno.com/ispacewar?u='+encodeURIComponent(location.href).replace('#','#'); } // Hidden exit to iSpacewar! video game.
   }
   if (KeyPressedCode == 32) {  // Space = next BG
     ClearTimers();
@@ -2629,3 +2649,4 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
+
