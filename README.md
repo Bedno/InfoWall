@@ -1,6 +1,8 @@
 InfoWall : At-a-glance time/date weather/forecast satelite/radar webcams and more. Perfect for always-on projector, SmartTV or tablet use, like a virtual window.
 https://bedno.com/infowall/about
 
+This is version 4 of a project under development since 2015.  This upgrade replaces all weather conditions, forecast and radar data fetches use the National Weather Service API. Also default location has been relocated to Portland Oregon USA. Webcams replaced for new locations. Major improvements to speech. Major improvements to portrait mode.
+
 Provided freely here as a good source for code snippets of several advanced JavaScript uses such as text to speech, asynchronous API use and JSON handling, structured array records, querystring reading, use of localstorage, responsive auto-formatting, keypress handling, celestial calculations, canvas element and drawing, centralized timer updating and more.
 
 INSTALLATION:
