@@ -3,230 +3,195 @@
 <head>
 <title>InfoWall</title>
 <meta charset="UTF-8">
+<meta name="description" content="InfoWall : At-a-glance time, date, weather, webcams, more.">
+<meta name="keywords" content="InfoWall time date weather webcams backgrounds forecast iwall">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta property="og:title" content="InfoWall">
 <meta property="og:description" content="InfoWall : At-a-glance time, date, weather, webcams, more.">
-<meta property="og:image" content="https://bedno.com/g/infowall.jpg">
+<meta property="og:image" content="https://bedno.com/g/infowall/infowall.jpg">
 <meta property="og:url" content="https://bedno.com/infowall">
 <meta property="og:site_name" content="Bedno.com">
 
 <script>
 var About = 'InfoWall : At-a-glance time, date, weather, webcams, more.<br><br>' +
-            'Click Time for next background. Click Date for next slideshow. Click Forecast to speak it.<br>' +
-            '<span style="font-size:10pt;">Works best in Safari and Chrome (F11 for Full Screen).</span><br><br>' +
-            '<a href="https://Bedno.com/infowall/about" target="About">More info...</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
-            '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
-            '<span onClick="TechReadout();" title="Click for technical details." style="font-size:8pt; color:#C0C0C0;">&#128295;</span>';  // Wrench icon.
+            'Works best in landscape orientation.  Click Forecast to speak it.  Click Date for next slideshow.  Click Time for next background.<br>' +
+            '<span style="font-size:10pt;">Works best in Chrome (F11 for Full Screen) and Safari.</span><br><br>' +
+            '<a href="https://Bedno.com/infowall/about" target="About">More info...</a> &nbsp;&nbsp;&nbsp; ' +
+            '<a href="http://AndrewBedno.com" target="AndrewBedno">AndrewBedno.com</a> &nbsp;&nbsp;&nbsp; ' +
+            '<span onClick="TechReadout();" title="Click for technical details." style="font-size:14pt; color:#C0C0C0;">&#128295;</span>';  // Wrench icon.
 // Demonstrates many advanced Javascript techniques:
 //    Responsive auto-formatting.  Text to speech.  Canvas element and drawing.  Analog clock.
-//    Weather API use (Wunderground.com).  JSON fetch and parse.
+//    Nation Weather Service API use, aynschronous fetch and parse.
 //    Querystring checking.  Read/write localstorage.
-//    Catch/try feature detection.    Structured constant array.
-//    Keypress handling.  Master updater using timer.
+//    Catch/try feature detection.    Keypress handling.  Asynchronous and timer based updating.
 //    Sun/Moon calculations.  No dependencies.
-//    Archived at http://GitHub.com/Bedno/infowall
-// Incorporates SunCalc.js by Vladimir Agafonkin https://github.com/mourner/suncalc
+//    Mirrored at http://GitHub.com/Bedno/infowall
 
 // === CONFIGURABLES ===
 
-// Configure Wunderground.com (Weather Underground) aspects below.  See https://www.wunderground.com/weather/api/
-var InfoZip = '60657';  // Zipcode of this installation.  60657=Chicago
-var InfoLat = 41.94637;  var InfoLon = -87.64519;  // Geocoordinates of this installation.  41.94637,-87.64519=Chicago
-var InfoZone = 0;  // Timezone adjustment hours.  Should = <dateobj>.getTimezoneOffset()/60 but reads wrong on most browsers?!?
-var WeatherURL = 'https://www.wunderground.com/cgi-bin/findweather/getForecast?query=zmw:'+InfoZip+'.1.99999&apiref=bf1a242569a63476';  // Detailed local forecast.  Change apiref if you have one.
-// Examples below use periodically cached Chicago mirrors.  For live use substitute api specific as shown:
-var WeatherForecastURL = 'https://bedno.com/bike/d/w/wz-chicago-more.json';  // http://api.wunderground.com/api/<api_key>/forecast/pws/q/pws:KILCHICA173.json
-var WeatherCurrentURL = 'https://bedno.com/bike/d/w/wz-chicago-now.json';  // http://api.wunderground.com/api/<api_key>/conditions/pws/q/pws:KILCHICA173.json
+// CONFIGURE weather conditions and forecast fetch below.
+var InfoLat = 45.49067;  var InfoLon = -122.629134;  // Geocoordinates of this installation.  45.49067,-122.629134=PDX, 41.94637,-87.64519=ORD
 
+// THESE THREE URLS must be periodically reconfirmed as they may periodically change.  Hardcoded here to minimize the required multi-stage API queries.
+// Requires converting Lat/Lon to weather system "grid" and "station" info, giving forecast and observation URLS, which contain json used here.
+// Use accompanyinging nwslookup.php program to generate fresh values.
+var WeatherCurrentURL = 'https://api.weather.gov/stations/KPDX/observations';
+var WeatherForecastURL = 'https://api.weather.gov/gridpoints/PQR/114,102/forecast';
+var WeatherRadarStation = 'KRTX';
+var WeatherURL = 'https://www.weather.gov/pqr';
+// CONFIGURE user agent sent to NWS.  CHANGE THIS TO YOURS (and configure the meta tags in the html header) if developing derivative code.
+var USER_AGENT = "Bedno.com/infowall andrew@bedno.com";
+
+// CONFIGURE base URL of images folder (incl trailing /)
+var ImgURL = 'g/';
+
+// End of key configurables.
+
+// Weather vars.
+var RadarURLsrc = 'https://radar.weather.gov/ridge/standard/'+WeatherRadarStation+'_loop.gif'
+var WeatherCurrent = '';  // Displayed text for current conditions.
+var WeatherCurrentSpoken = "";  // Spoken text for current conditions.
+var WeatherCurrentStat = "";
+var WeatherForecast = '';  // Displayed text for weather forecast.
+var WeatherForecastSpoken = '';  // Spoken text for weather forecast.
+var WeatherForecastStat = "";
+var WeatherForecastTimer = 0;
+var WeatherCurrentTimer = 0;
+var WeatherLink = "";
+var RadarLink = "";
+var RadarWid, RadarHgt;
+
+// Display colors and sizing.
 var ClockColor = '#FFFFFF';  var ClockShadow = '#000000';  // Digital time colors.
 var ClockColorEff = ClockColor;  var ClockShadowEff = ClockShadow;
-var DateColorDay = '#ECDE00';  var DateColorNight = '#0000C0';   // Day/Night color of some date parts.
+var DateColorDay = '#E3E600';  var DateColorNight = '#0000C0';   // Day/Night color of some date parts.
 var DateColor = DateColorDay;  var DateShadow = DateColorNight;  var DateColorPrev = -1;
-// Quick B&W: ('000000', '333333', '555555', '777777', '999999', 'BBBBBB', 'DDDDDD', 'FFFFFF', 'FFFFFF', 'FFFFFF');  // Sequence of hex characters, each later expanded to a #hhhhhh shade.  Formerly 03579BDFFF (shorter 048CF)
-// Simple rainbow: ('9400D3',	'4B0082',	'0000FF',	'00FF00',	'FFFF00',	'FF7F00',	'FF0000');
-// Pastel tones: ('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');  // Pastel tones.
 var ClockMode = 1;  // 0 = rainbow, 1 = pulsing/throbbing/breathing
 var ClockRainbowShadows = new Array('C0F5F9','D2FCEE','E3FEE0','F1FBCF','FBF4C3','FFFFFF', 'FFFFFF', 'FEE5A9','FDD599','F6C28C','EAAF84','DA9E81','C89083','B6868B','A48198','9482A8','8988BA','8293CD','81A2DF','85B4ED');
 var ClockRainbowOpacity = new Array(     0.4,     0.5,     0.6,     0.8,     0.9,       1,        1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1,       1);
 var ClockUpdDur = ( (ClockMode==0) ? Math.floor(1000/ClockRainbowShadows.length) : 100 );
 var ForecastColor = '#FFFFFF';  // Forecast text color.
-var WeatherForecastDur = 19*60*1000;  // Update forecast every 42 minutes to minimize API calls.
-var WeatherCurrentDur = 10*60*1000;  // Update current every 10 minutes to minimize API calls.
-var RadarURLsrc = "https://radar.weather.gov/ridge/lite/N0R/LOT_loop.gif";  // XXX_loop: LOT=Chicago(down since 2017.03), ILX=Springfield
+var WeatherForecastDur = 19*(60*1000);  // Update forecast every N minutes to minimize API calls.
+var WeatherCurrentDur = 10*(60*1000);  // Update current every N minutes to minimize API calls.
 var WeatherShadow = " text-shadow:-2px 2px 0px #000000;"
 var MoonDiam = 1/6;  // Relative size of the displayed moon.
-const DateHgtDefault = 0.2;
+const DateHgtDefault = 0.20;
 var DateHgt = DateHgtDefault;
-const WeatherCurrentHgtDefault = 0.13;
-const WeatherForecastHgtDefault = 0.08;
+const WeatherCurrentHgtDefault = 0.11;
+const WeatherForecastHgtDefault = 0.06;
 var WeatherCurrentHgt = WeatherCurrentHgtDefault;
 var WeatherForecastHgt = WeatherForecastHgtDefault;
 var FloodDur = 250; // Cycle time between flood color changes.
-var TwisterDur = 10000;  // Time between Twister spins.
 var KeysPressed = '';
 
 // BACKGROUNDS and STYLING
 var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]orecast [I]ntro [M]oon [R]adar [S]huffle [T]itle [W]eather [V]ocal
-  { BGcode:"webcams", BGshow:"CDIMTW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.  BGopts=flags: R=swap clock colors for readability
-    // 2015.04.14 { BGdesc:"Loyola, Water Tower", BGsrc:"http://www.luc.edu/webcam/schbus/schbusfull.jpg?{unqsec}", BGlink:"http://www.luc.edu/webcams/", BGdur:4000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2015.11.27 { BGdesc:"Wrigley Field, Clark and Addison", BGsrc:"http://wwc.instacam.com/instacamimg/CUBBY/CUBBY_l.jpg?{unqsec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&enlarge=1&camera_id=CUBBY&lid=CNXCC", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2016.06.30 { BGdesc:"Wrigley, Clark and Addison", BGsrc:"http://images.earthcam.com/ec_metros/ourcams/rosensports.jpg?z={unqsec}", BGlink:"http://www.sportsworldchicago.com/fieldcam/", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2016.09.02 { BGdesc:"Belmont Harbor", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Belmont_cap.jpg?{unqsec}", BGlink:"http://abc7chicago.com/weather/cams/belmont_cap/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.01.13 { BGdesc:"St. Clement, 2524 N Orchard", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHSTC&lid=CNXCC", BGsrc:"http://wwc.instacam.com/instacamimg/CHSTC/CHSTC_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.02.11 { BGdesc:"Grant Park", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/ColumbiaCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.04.30 { BGdesc:"Edgewater Beach", BGsrc:"http://wwc.instacam.com/instacamimg/CHCMB/CHCMB_l.jpg?{unqdec}", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&camera_group=1&camera_zip=60613&enlarge=1&camera_id=CHCMB&lid=CENNXT", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.05.09 { BGdesc:"1 S Wacker", BGsrc:"http://166.241.64.227:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/434502/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.10.13 { BGdesc:"Shedd", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/SheddAquarium.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.10.13 { BGdesc:"Hancock North", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/HancockNorth.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2017.10.20 { BGdesc:"Wrigley", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Cubs_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2018.01.05 { BGdesc:"Daley Plaza", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/DaleyCam.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    // 2018.01.18 { BGdesc:"Satellite", BGlink:"http://www.goes.noaa.gov/nhemi.html", BGsrc:"http://www.ssd.noaa.gov/goes/comp/nhem/ft-animated.gif?{unqdec}", BGdur:6000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },  // Still image: http://www.ssd.noaa.gov/goes/comp/nhem/ft.jpg
-    // 2018.04.19 { BGdesc:"Downtown and the Lake", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Loopscape.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Local Radar", BGlink:WeatherURL, BGsrc:RadarURLsrc+"?{unqsec}", BGdur:4000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"R" },
-    { BGdesc:"NOAA Skyline", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi1.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"NOAA Navy Pier", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi2.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"NOAA Harbor", BGsrc:"https://www.glerl.noaa.gov/metdata/chi/chi3.jpg?{unqdec}", BGlink:"https://www.glerl.noaa.gov/metdata/chi/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"IIT", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/IIT_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Oak Street Beach", BGsrc:"http://205.178.49.123:1212/snapshot.cgi?user=guest&pwd=&{unqdec}", BGlink:"http://www.oakstbeach.com/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Riverwalk", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/Riverwalk.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"State St.", BGsrc:"http://cdn.abclocal.go.com/three/wls/webcam/StateSt_cap.jpg?{unqdec}", BGlink:"http://abc7chicago.com/weather/cams/statest_cap/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"1200 W Harrison", BGsrc:"http://131.193.91.50:80/mjpg/video.mjpg?COUNTER&{unqdec}", BGlink:"http://www.insecam.org/en/view/241329/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Western and Addison", BGlink:"http://web.live.weatherbug.com/LiveCameras/1/LiveCameras.aspx?no_cookie_zip=60618&no_cookie_stat=WGNTV&no_cookie_world_stat=&zcode=z5764&lid=NAV5", BGsrc:"http://wwc.instacam.com/instacamimg/WGNTV/WGNTV_l.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+  { BGcode:"webcams", BGshow:"CDFIMTW", BGslides: [  // BGlink=url for more info.  BGsrc=img src URL, 600-1200px wide, no extended chars.  BGdesc=Displayed name.  BGdur=milliseconds.  BGzoom=magnification (auto-centers).  BGsubdur=timer for autoinc slide.  BGsub=last subframe for autoinc slide.  BGopts=flags: R=swap clock colors for readability
+    { BGdesc:"Sellwood Bridge", BGlink:"https://www.windy.com/-Webcams/United-States/Oregon/Portland/Sellwood-Bridge-Willamette-River/webcams/1489447936?45.476,-135.835,5", BGsrc:"https://images-webcams.windy.com/36/1489447936/current/full/1489447936.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGdesc:"Tilikum Crossing", BGlink:"https://www.see.cam/us/or/portland/portland-1639956971", BGsrc:"https://images-webcams.windy.com/71/1639956971/current/full/1639956971.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGdesc:"East Portland", BGlink:"https://www.see.cam/us/or/portland/portland-east-1640802883", BGsrc:"https://images-webcams.windy.com/83/1640802883/current/full/1640802883.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGdesc:"OSU Corvallis", BGlink:"https://webcam.oregonstate.edu/", BGsrc:"https://webcam.oregonstate.edu/cam/mu/live/live.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    // { BGdesc:"SE Powell at 39th", BGsrc:"https://tripcheck.com/RoadCams/cams/camsLDI/US26%20at%20SE%2039th_pid3257.JPG?rand=?{unqdec}", BGlink:"https://tripcheck.com/", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    // { BGdesc:"Cannon Beach", BGlink:"https://camguide.net/usa/oregon/portland/cannon/", BGsrc:"https://www.cbccmedia.org/BeachFrontCam/image.jpg?{unqdec}", BGdur:5000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
     { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image0.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image1.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image2.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image3.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image4.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image5.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image6.jpg?{unqdec}", BGdur:1000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image1.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image2.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image3.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image4.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image5.jpg?{unqdec}", BGdur:375, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+      { BGdesc:"Satellite", BGlink:"http://www.ssec.wisc.edu/data/us_comp", BGsrc:"http://www.ssec.wisc.edu/data/us_comp/image6.jpg?{unqdec}", BGdur:1000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGdesc:"Radar", BGsrc:RadarURLsrc+"?{unqdec}", BGlink:"https://www.weather.gov/lot/", BGdur:4000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
   { BGcode:"art", BGshow:"ADISTW", BGslides: [
-    { BGlink:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGsrc:"http://bedno.com/g/infowall/art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGdesc:"Botticelli: Allegoria della Primavera (1478)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGsrc:"http://bedno.com/g/infowall/art/Botticelli-Nascita_di_Venere-1485.jpg", BGdesc:"Botticelli: Nascita di Venere (1485)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Babel_Tower-1563.jpg", BGdesc:"Bruegel: Babel Tower (1563)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Bethlem-1566.jpg", BGdesc:"Bruegel: Bethlem (1566)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Dutch_Proverbs-1559.jpg", BGdesc:"Bruegel: Dutch Proverbs (1559)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGdesc:"Bruegel: Massacre of the Innocents (1567)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Procession_to_Calvary-1564.jpg", BGdesc:"Bruegel: Procession to Calvary (1564)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGdesc:"Bruegel: The Battle Between Carnival and Lent (1559)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGsrc:"http://bedno.com/g/infowall/art/Bruegel-Triumph_of_Death-1562.jpg", BGdesc:"Bruegel: Triumph of Death (1562)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGsrc:"http://bedno.com/g/infowall/art/Caravaggio-Davide_Galea-1607.jpg", BGdesc:"Caravaggio: Davide/ Galea (1607)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGsrc:"http://bedno.com/g/infowall/art/Chagall-I_and_the_Village-1911.jpg", BGdesc:"Chagall: I and the Village (1911)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGdesc:"Cranach: Flugelaltar mit dem Jungsten Gericht (1524)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGsrc:"http://bedno.com/g/infowall/art/Cranach-Johan_Friedun-1544.jpg", BGdesc:"Cranach: Johan Friedun (1544)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-LEnigme_du_Desire-1929.jpg", BGdesc:"Dali: L'Enigme du Desire (1929)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGdesc:"Dali: Metamorphose de Narcisse (1937)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Persistence_of_Memory-1931.jpg", BGdesc:"Dali: Persistence of Memory (1931)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGdesc:"Dali: Soft Construction with Boiled Beans (1936)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGdesc:"Ernst: Europe After the Rain II (1942)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGsrc:"http://bedno.com/g/infowall/art/Ernst-La_Ville_Entiere-1936.jpg", BGdesc:"Ernst: La Ville Entiere (1936)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Lacoonte-1610.jpg", BGdesc:"Greco: Lacoonte (1610)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGsrc:"http://bedno.com/g/infowall/art/Greco-Toledo-1599.jpg", BGdesc:"Greco: Toledo (1599)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Ambassadors-1533.jpg", BGdesc:"Holbein: Ambassadors (1533)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Georg_Gisze-1532.jpg", BGdesc:"Holbein: Georg Gisze (1532)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGsrc:"http://bedno.com/g/infowall/art/Holbein-Nikolaus_Kratzer-1528.jpg", BGdesc:"Holbein: Nikolaus Kratzer (1528)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klee-Ad_Marginen-1930.jpg", BGdesc:"Klee: Ad Marginen (1930)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Adele_Blochbauer-1907.jpg", BGdesc:"Klimt: Adele Blochbauer (1907)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGdesc:"Klimt: Avenue Schloss Kaven (1912)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Beethovenfries-1902.jpg", BGdesc:"Klimt: Beethovenfries (1902)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Fritza_Riedler-1906.jpg", BGdesc:"Klimt: Fritza Riedler (1906)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Judith_I-1901.jpg", BGdesc:"Klimt: Judith I (1901)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-Melo-1912.jpg", BGdesc:"Klimt: Melo (1912)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Kiss-1908.jpg", BGdesc:"Klimt: The Kiss (1908)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGsrc:"http://bedno.com/g/infowall/art/Klimt-The_Virgin-1913.jpg", BGdesc:"Klimt: The Virgin (1913)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGdesc:"Leonardo: Gioconda/ Mona Lisa (1505)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGsrc:"http://bedno.com/g/infowall/art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGdesc:"Leonardo: Il Cenacolo/ The Last Supper (1497)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Condition_Humain-1934.jpg", BGdesc:"Magritte: Condition Humain (1934)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGsrc:"http://bedno.com/g/infowall/art/Magritte-Specchio_Falso-1928.jpg", BGdesc:"Magritte: Specchio Falso (1928)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGsrc:"http://bedno.com/g/infowall/art/Millet-Harvesters_Resting-1853.jpg", BGdesc:"Millet: Harvesters Resting (1853)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-Nimphee-1926.jpg", BGdesc:"Monet: Nimphee (1926)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGsrc:"http://bedno.com/g/infowall/art/Monet-The_Grainstack-1896.jpg", BGdesc:"Monet: The Grainstack (1896)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGdesc:"Raffaello: Sposalizio della Vergine (1504)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGsrc:"http://bedno.com/g/infowall/art/Raffaello-Trasfigurazione-1519.jpg", BGdesc:"Raffaello: Trasfigurazione (1519)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGdesc:"Rembrandt: Anatomy Lesson of Dr Nicolaes Tulp (1632)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Belshazzars_Feast-1635.jpg", BGdesc:"Rembrandt: Belshazzar's Feast (1635)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rembrandt-Militia_Company-1642.jpg", BGdesc:"Rembrandt: Militia Company (1642)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGdesc:"Renoir: Bal du Moulin de la Galette (1876)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGsrc:"http://bedno.com/g/infowall/art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGdesc:"Renoir: Le Dejeuner des Canotiers (1881)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Carnival_Evening-1886.jpg", BGdesc:"Rousseau: Carnival Evening (1886)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rousseau-Sleeping_Gypsy-1897.jpg", BGdesc:"Rousseau: Sleeping Gypsy (1897)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGsrc:"http://bedno.com/g/infowall/art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGdesc:"Rubens: Feast of Venus/ Vennsfest (1637)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Death_and_the_Maiden-1915.jpg", BGdesc:"Schiele: Death and the Maiden (1915)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGsrc:"http://bedno.com/g/infowall/art/Schiele-Family-1917.jpg", BGdesc:"Schiele: Family (1917)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Grande_Jatte-1886.jpg", BGdesc:"Seurat: La Grande Jatte (1886)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGsrc:"http://bedno.com/g/infowall/art/Seurat-La_Parade_du_Cirque-1888.jpg", BGdesc:"Seurat: La Parade du Cirque (1888)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Forward_Retreat-1986.jpg", BGdesc:"Tansey: Forward Retreat (1986)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGsrc:"http://bedno.com/g/infowall/art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGdesc:"Tansey: Mont Sainte-Victoire (1987)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGsrc:"http://bedno.com/g/infowall/art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGdesc:"Uccello: Battaglia di San Romano/Part I (1456)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGdesc:"Van Eyck: Giovanni Arnolfini and his Wife (1434)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGdesc:"Van Eyck: The Virgin of Ivers (1435)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Cypresses-1889.jpg", BGdesc:"Van Gogh: Cypresses (1889)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Potato_Eaters-1885.jpg", BGdesc:"Van Gogh: Potato Eaters (1885)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGsrc:"http://bedno.com/g/infowall/art/Van_Gogh-Starry_Night-1889.jpg", BGdesc:"Van Gogh: Starry Night (1889)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGsrc:"http://bedno.com/g/infowall/art/Velasquez-Las_Meninas-1656.jpg", BGdesc:"Velasquez: Las Meninas (1656)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-Malkunst-1666.jpg", BGdesc:"Vermeer: Malkunst (1666)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGsrc:"http://bedno.com/g/infowall/art/Vermeer-The_Astronomer-1668.jpg", BGdesc:"Vermeer: The Astronomer (1668)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGsrc:"http://bedno.com/g/infowall/art/Veronese-Nozze_di_Cana-1563.jpg", BGdesc:"Veronese: Nozze di Cana (1563)", BGdur:15000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
+    { BGlink:"", BGsrc:"{imgurl}art/Altdorfer-The_Battle_of_Alexander_the_Great-1529.jpg", BGdesc:"Altdorfer: The Battle of Alexander the Great (1529)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bosch-The_Last_Judgement-1505.jpg", BGdesc:"Bosch: The Last Judgement (1505)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Botticelli-Allegoria_della_Primavera-1478.jpg", BGdesc:"Botticelli: Allegoria della Primavera (1478)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Botticelli-Nascita_di_Venere-1485.jpg", BGdesc:"Botticelli: Nascita di Venere (1485)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-Babel_Tower-1563.jpg", BGdesc:"Bruegel: Babel Tower (1563)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-Dutch_Proverbs-1559.jpg", BGdesc:"Bruegel: Dutch Proverbs (1559)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-Massacre_of_the_Innocents-1567.jpg", BGdesc:"Bruegel: Massacre of the Innocents (1567)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-Procession_to_Calvary-1564.jpg", BGdesc:"Bruegel: Procession to Calvary (1564)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-The_Battle_Between_Carnival_and_Lent-1559.jpg", BGdesc:"Bruegel: The Battle Between Carnival and Lent (1559)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Bruegel-Triumph_of_Death-1562.jpg", BGdesc:"Bruegel: Triumph of Death (1562)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Caravaggio-Davide_Galea-1607.jpg", BGdesc:"Caravaggio: Davide/ Galea (1607)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Chagall-I_and_the_Village-1911.jpg", BGdesc:"Chagall: I and the Village (1911)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Cranach-Flugelaltar_mit_dem_Jungsten_Gericht-1524.jpg", BGdesc:"Cranach: Flugelaltar mit dem Jungsten Gericht (1524)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Cranach-Johan_Friedun-1544.jpg", BGdesc:"Cranach: Johan Friedun (1544)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Dali-LEnigme_du_Desire-1929.jpg", BGdesc:"Dali: L'Enigme du Desire (1929)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Dali-Metamorphose_de_Narcisse-1937.jpg", BGdesc:"Dali: Metamorphose de Narcisse (1937)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Dali-Persistence_of_Memory-1931.jpg", BGdesc:"Dali: Persistence of Memory (1931)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Dali-Soft_Construction_with_Boiled_Beans-1936.jpg", BGdesc:"Dali: Soft Construction with Boiled Beans (1936)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Ernst-Europe_After_the_Rain_II-1942.jpg", BGdesc:"Ernst: Europe After the Rain II (1942)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Ernst-La_Ville_Entiere-1936.jpg", BGdesc:"Ernst: La Ville Entiere (1936)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Greco-Lacoonte-1610.jpg", BGdesc:"Greco: Lacoonte (1610)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Greco-Toledo-1599.jpg", BGdesc:"Greco: Toledo (1599)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Holbein-Ambassadors-1533.jpg", BGdesc:"Holbein: Ambassadors (1533)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Holbein-Georg_Gisze-1532.jpg", BGdesc:"Holbein: Georg Gisze (1532)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Holbein-Nikolaus_Kratzer-1528.jpg", BGdesc:"Holbein: Nikolaus Kratzer (1528)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klee-Ad_Marginen-1930.jpg", BGdesc:"Klee: Ad Marginen (1930)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Adele_Blochbauer-1907.jpg", BGdesc:"Klimt: Adele Blochbauer (1907)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Avenue_Schloss_Kaven-1912.jpg", BGdesc:"Klimt: Avenue Schloss Kaven (1912)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Beethovenfries-1902.jpg", BGdesc:"Klimt: Beethovenfries (1902)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Fritza_Riedler-1906.jpg", BGdesc:"Klimt: Fritza Riedler (1906)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Judith_I-1901.jpg", BGdesc:"Klimt: Judith I (1901)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-Melo-1912.jpg", BGdesc:"Klimt: Melo (1912)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-The_Kiss-1908.jpg", BGdesc:"Klimt: The Kiss (1908)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Klimt-The_Virgin-1913.jpg", BGdesc:"Klimt: The Virgin (1913)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Leonardo-Gioconda_Mona_Lisa-1505.jpg", BGdesc:"Leonardo: Gioconda/ Mona Lisa (1505)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Leonardo-Il_Cenacolo_The_Last_Supper-1497.jpg", BGdesc:"Leonardo: Il Cenacolo/ The Last Supper (1497)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Magritte-Condition_Humain-1934.jpg", BGdesc:"Magritte: Condition Humain (1934)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Magritte-Specchio_Falso-1928.jpg", BGdesc:"Magritte: Specchio Falso (1928)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Millet-Harvesters_Resting-1853.jpg", BGdesc:"Millet: Harvesters Resting (1853)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Monet-Nimphee-1926.jpg", BGdesc:"Monet: Nimphee (1926)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Monet-The_Grainstack-1896.jpg", BGdesc:"Monet: The Grainstack (1896)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Raffaello-Sposalizio_della_Vergine-1504.jpg", BGdesc:"Raffaello: Sposalizio della Vergine (1504)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Raffaello-Trasfigurazione-1519.jpg", BGdesc:"Raffaello: Trasfigurazione (1519)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rembrandt-Anatomy_Lesson_of_Dr_Nicolaes_Tulp-1632.jpg", BGdesc:"Rembrandt: Anatomy Lesson of Dr Nicolaes Tulp (1632)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rembrandt-Belshazzars_Feast-1635.jpg", BGdesc:"Rembrandt: Belshazzar's Feast (1635)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rembrandt-Militia_Company-1642.jpg", BGdesc:"Rembrandt: Militia Company (1642)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Renoir-Bal_du_Moulin_de_la_Galette-1876.jpg", BGdesc:"Renoir: Bal du Moulin de la Galette (1876)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Renoir-Le_Dejeuner_des_Canotiers-1881.jpg", BGdesc:"Renoir: Le Dejeuner des Canotiers (1881)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rousseau-Carnival_Evening-1886.jpg", BGdesc:"Rousseau: Carnival Evening (1886)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rousseau-Sleeping_Gypsy-1897.jpg", BGdesc:"Rousseau: Sleeping Gypsy (1897)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Rubens-Feast_of_Venus_Vennsfest-1637.jpg", BGdesc:"Rubens: Feast of Venus/ Vennsfest (1637)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Schiele-Death_and_the_Maiden-1915.jpg", BGdesc:"Schiele: Death and the Maiden (1915)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Schiele-Family-1917.jpg", BGdesc:"Schiele: Family (1917)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Seurat-La_Grande_Jatte-1886.jpg", BGdesc:"Seurat: La Grande Jatte (1886)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Seurat-La_Parade_du_Cirque-1888.jpg", BGdesc:"Seurat: La Parade du Cirque (1888)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Tansey-Mont_Sainte_Victoire-1987.jpg", BGdesc:"Tansey: Mont Sainte-Victoire (1987)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Uccello-Battaglia_di_San_Romano_Part_I-1456.jpg", BGdesc:"Uccello: Battaglia di San Romano/Part I (1456)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Van_Eyck-Giovanni_Arnolfini_and_his_Wife-1434.jpg", BGdesc:"Van Eyck: Giovanni Arnolfini and his Wife (1434)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Van_Eyck-The_Virgin_of_Ivers-1435.jpg", BGdesc:"Van Eyck: The Virgin of Ivers (1435)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Van_Gogh-Cypresses-1889.jpg", BGdesc:"Van Gogh: Cypresses (1889)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Van_Gogh-Potato_Eaters-1885.jpg", BGdesc:"Van Gogh: Potato Eaters (1885)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Van_Gogh-Starry_Night-1889.jpg", BGdesc:"Van Gogh: Starry Night (1889)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Velasquez-Las_Meninas-1656.jpg", BGdesc:"Velasquez: Las Meninas (1656)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Vermeer-Malkunst-1666.jpg", BGdesc:"Vermeer: Malkunst (1666)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Vermeer-The_Astronomer-1668.jpg", BGdesc:"Vermeer: The Astronomer (1668)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}art/Veronese-Nozze_di_Cana-1563.jpg", BGdesc:"Veronese: Nozze di Cana (1563)", BGdur:30000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
+  { BGcode:"movie", BGshow:"ADFITW", BGslides: [
+    { BGsrc:"{imgurl}v/beach/beach-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:33, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/candles/candles-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:29, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/clouds/clouds-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:21, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/fire/fire-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:51, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/fish/fish-000.jpg", BGlink:"", BGdesc:"", BGdur:750, BGzoom:1, BGsub:65, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/snow/snow-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:80, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/sun/sun-000.jpg", BGlink:"", BGdesc:"", BGdur:1000, BGzoom:1, BGsub:80, BGauth:"", BGopts:"" },
+    { BGsrc:"{imgurl}v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:37, BGauth:"", BGopts:"" } ] },
   { BGcode:"yoga", BGshow:"IT", BGslides: [
-    { BGlink:"http://bedno.com/g/infowall/yoga/01.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/01.jpg", BGdesc:"Namaste", BGdur:6200, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/02.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/02.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/03.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/03.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/04.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/04.jpg", BGdesc:"Left Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/05.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/05.jpg", BGdesc:"Plank", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/06.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/06.jpg", BGdesc:"8 Point", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/07.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/07.jpg", BGdesc:"Cobra", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/08.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/08.jpg", BGdesc:"Downward Dog", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/09.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/09.jpg", BGdesc:"Right Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/10.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/10.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/11.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/11.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/12.jpg", BGsrc:"http://bedno.com/g/infowall/yoga/12.jpg", BGdesc:"Namaste", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/g/infowall/yoga/workout.png", BGsrc:"http://bedno.com/g/infowall/yoga/workout.png", BGdesc:"Workout", BGdur:6000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
-  { BGcode:"zoom", BGshow:"CDIT", BGslides: [
-    { BGlink:"http://bedno.com/photos/album/zoom/universe", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-00-universe.jpg", BGdesc:"Observable Universe. 1.7E26m", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/quark", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-33-quark.jpg", BGdesc:"Instantons. 1.6E-35m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/atoms", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-32-atoms.jpg", BGdesc:"Molecules. 9E-9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/cells", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-31-cells.jpg", BGdesc:"Cells. 2E-5m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/room", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-23-room.jpg", BGdesc:"Apartment. 1E1m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/block", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-22-block.jpg", BGdesc:"Neighborhood. 5E2m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/city", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-21-city.jpg", BGdesc:"Chicago. 4.5E4m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/nation", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-20-nation.jpg", BGdesc:"North America. 4E6m ", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/earth", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-13-earth.jpg", BGdesc:"Earth. 1.3E7m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/planets", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-12-planets.jpg", BGdesc:"Solar System. 2.5E8m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/sun", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-11-sun.jpg", BGdesc:"Sun. 1.4E9m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/stars", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-10-stars.jpg", BGdesc:"Local Star Clusters. 9.5E17m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/galaxy", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-03-galaxy.jpg", BGdesc:"Galaxy Similar to Ours. 5.2E20m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/cluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-02-cluster.jpg", BGdesc:"Local Galactic Cluster. 9E22m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGlink:"http://bedno.com/photos/album/zoom/supercluster", BGsrc:"http://bedno.com/p/a/zoom/v/zoom-01-supercluster.jpg", BGdesc:"Local Galactic Supercluster. 2.7E24m", BGdur:1500, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
-  { BGcode:"movie", BGshow:"ADITW", BGslides: [
-    { BGsrc:"http://bedno.com/g/infowall/v/beach/beach-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:50, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/candles/candles-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:36, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/clouds/clouds-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:21, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/fire/fire-000.jpg", BGlink:"", BGdesc:"", BGdur:333, BGzoom:1, BGsub:424, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/fish/fish-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:330, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/lava/lava-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:258, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/lcars/lcars-000.jpg", BGlink:"", BGdesc:"", BGdur:250, BGzoom:1, BGsub:627, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/matrix/matrix-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:70, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/snow/snow-000.jpg", BGlink:"", BGdesc:"", BGdur:500, BGzoom:1, BGsub:80, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/space/space-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:595, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/sun/sun-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:543, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/warp/warp-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:211, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/v/waterfall/waterfall-000.jpg", BGlink:"", BGdesc:"", BGdur:375, BGzoom:1, BGsub:37, BGauth:"", BGopts:"" } ] },
+    { BGlink:"", BGsrc:"{imgurl}yoga/01.jpg", BGdesc:"Namaste", BGdur:6200, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/02.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/03.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/04.jpg", BGdesc:"Left Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/05.jpg", BGdesc:"Plank", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/06.jpg", BGdesc:"8 Point", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/07.jpg", BGdesc:"Cobra", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/08.jpg", BGdesc:"Downward Dog", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/09.jpg", BGdesc:"Right Leg Lunge", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/10.jpg", BGdesc:"Forward Fold", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/11.jpg", BGdesc:"Mountain", BGdur:4800, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
+    { BGlink:"", BGsrc:"{imgurl}yoga/12.jpg", BGdesc:"Namaste", BGdur:2000, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
   { BGcode:"colors", BGshow:"", BGslides: [
     { BGsrc:"#303030", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
     { BGsrc:"#505050", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
@@ -255,34 +220,12 @@ var BGdata = [  // BGcode=Matched in URL.  BGshow= [A]nalog [C]lock [D]ate [F]or
     { BGsrc:"#900000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
     { BGsrc:"#B00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
     { BGsrc:"#D00000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"#FF0000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
-  { BGcode:"twister", BGshow:"ISTV", BGslides: [
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/lhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Left Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rfy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Foot Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhb.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Blue", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhg.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Green", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhr.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Red", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/twister/rhy.png", BGlink:"http://bedno.com/twister", BGdesc:"Right Hand Yellow", BGdur:TwisterDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] },
-  { BGcode:"loops", BGshow:"", BGslides: [
-    { BGsrc:"http://bedno.com/g/infowall/loops/rings_of_water.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Rings of Water", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/loops/hypercube.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Hypercube", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"", BGopts:"" },
-    { BGsrc:"http://bedno.com/g/infowall/loops/icositetrachoric.gif", BGlink:"http://bedno.com/infowall/about", BGdesc:"Icositetrachoric", BGdur:9999999, BGzoom:1, BGsub:-1, BGauth:"", BGopts:"" } ] }
-  ];
+    { BGsrc:"#FF0000", BGlink:"", BGdesc:"", BGdur:FloodDur, BGzoom:1, BGsub:0, BGauth:"", BGopts:"" } ] } ];
 
-// GLOBALS
+// Major variables, timing, screen setup.
 var MasterDur = 100;  // Master update frequency.  All timers and durations are in milliseconds.  500=half second.
 var MasterTimer = null;
-var WinWidPhys, WinHgtPhys, WinWid, WinHgt, WinMin, WinMax;  var WinPortrait = true;
+var WinWidPhys, WinHgtPhys, WinWid, WinHgt, WinMin, WinMax;  var WinPortrait = true;  var WinSquare = false;
 var MarginTop = 0;  var MarginLeft = 0;  var MarginBottom = 0;  var MarginRight = 0;
 var OfsX = 0;  var OfsY = 0;  // Randomized slight offsets to reduce screen burn-in.
 var BGcurr = 0;  var BGcurrChk = 0;  var BGflooded = 0;
@@ -295,6 +238,7 @@ var BGslide = 0;  var BGslidePrev = BGslide;  var BGslidePrevs = new Array(-1,-1
 var BGslideInc = 1;  var BGtimer = -1;  var BGslideIncPrev = BGslideInc;
 var BGframe = 0;
 
+// Sun, moon, date related.
 var SunRise = '';  var SunSet = '';  var SunTimeSizing = 0.04;
 var ClockUpdTimer = 0;  var AnalogClockUpdDur = 250;
 var ClockRainbowShadowSeq = 0;  var ClockOpacity = "";  
@@ -308,16 +252,6 @@ var AbrvDoW = new Array('Su', 'Mo','Tu','We','Th','Fr', 'Sa');
 var FullMon = new Array('January','February','March','April','May','June','July','August','September','October','November','December');
 var FullDoW = new Array('Sunday', 'Monday','Tuesday','Wednesday','Thursday','Friday', 'Saturday');
 var FullDoM = new Array('zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth', 'twenty first', 'twenty second', 'twenty third', 'twenty fourth', 'twenty fifth', 'twenty sixth', 'twenty seventh', 'twenty eighth', 'twenty ninth', 'thirtieth', 'thirty first', 'thirty second');
-var WeatherCurrent = '';
-var WeatherCurrentIcon = '';
-var WeatherCurrentSpoken = "";
-var WeatherForecast = '';
-var WeatherForecastSpoken = [];  WeatherForecastSpoken[0] = "";
-var WeatherForecastTimer = 0;
-var WeatherCurrentTimer = 0;
-var WeatherURLeff = "";
-var RadarURLeff = "";
-var RadarWid, RadarHgt;
 var IntroDur = 10000;  var IntroTimer = IntroDur+1;
 var BootedCurr = "";  var BootedFirst = "";
 var ResizeTimer = null;
@@ -325,11 +259,11 @@ var DaysSinceStarted = 0;  var DaysSinceCurrDT;  var DaysSinceSeq = 0;  var Days
 var DaysSinceDur = 1500;  var DaysSinceTimer = DaysSinceDur;
 var DaysSinceDays = 0;  var DaysSinceWeeks = 0;  var DaysSinceMonths = 0;
 var DaysSinceDaysHTML = '';  var DaysSinceWeeksHTML = '';  var DaysSinceMonthsHTML = '';
-
 var StopwatchStarted = 0;  var StopwatchLaps = "";  var StopwatchDT;
 var StopwatchDur = 1000;  var StopwatchTimer = StopwatchDur;
 
-var SpeechHandle = null;  var SpeechVoices = null;  var SpeechAudio = null;
+// Speech and alarms.
+var SpeechHandle = null;  var SpeechVoices = null;  var SpeechAudio = null;  var SpeechReady = false;
 var SpeechQueue = new Array();  var SpeechQueueRec = new Array();  var SpeechCode = "";  var SpeechCnt = 0;
 var VoiceLp = 0;  var VoiceIdx = -1;  var VoiceScore = -1;  var VoiceTmp = -1;
 var IsSpeaking = false;  var SpeechDoneTimer = null;
@@ -343,16 +277,18 @@ var CfgLines = '';  var CfgLine = '';  var CfgLp = 0;
 var CfgVals = new Array();
 var CfgKeys = new Array();
 var CfgKeysCnt = 0;
+var CfgStat = "";
 
 // === UTILS ===
 function IsIOS () { return((navigator.userAgent.toLowerCase().indexOf('iphone')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipod')>-1) || (navigator.userAgent.toLowerCase().indexOf('ipad')>-1) || (navigator.userAgent.toLowerCase().indexOf('ios')>-1) ); }
 function IsAndroid () { return((navigator.userAgent.toLowerCase().indexOf('droid')>-1)); }
+function IsChrome () { return(/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)); }
 
 // Remember some settings.
 function haslocalstorage () { try { return 'localStorage' in window && window['localStorage'] !== null; } catch(e){ return false; } }
 function DTadj () {
   var DTadjTmp = new Date();
-  return(DTadjTmp.getTime() + (InfoZone*60*60*1000));
+  return(DTadjTmp.getTime());
 }
 
 // Used to force non-caching of webcam images.
@@ -398,8 +334,22 @@ function FetchUptimes () {
   }
 }
 
-function IsChrome () {
-  return(/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor));
+// Show tailing log if DivDebug is visible.
+function DebugMsg (ADin) {
+  var DDTstr;
+  var DDT = new Date(DTadj());
+  DDTstr = DDT.getHours().toString().padStart(2, '0')+':';
+  DDTstr += DDT.getMinutes().toString().padStart(2, '0')+':';
+  DDTstr += DDT.getSeconds().toString().padStart(2, '0');
+  if (document.getElementById('DivDebug')) {
+    if (document.getElementById('DivDebug').style.visibility=='visible') {  // Disable this condition to capture retroactive logging.
+      if (document.getElementById('DivDebugText').value.length>900) {
+        document.getElementById('DivDebugText').value = document.getElementById('DivDebugText').value.substr(300,document.getElementById('DivDebugText').value.length-300);
+      }
+      document.getElementById('DivDebugText').value += DDTstr+' '+ADin+"\n";
+      document.getElementById('DivDebugText').scrollTop = document.getElementById('DivDebugText').scrollHeight;
+    }
+  }
 }
 
 // === SPEECH ===
@@ -407,91 +357,102 @@ function IsChrome () {
 // Load voices and find a British male.  Works best in Chrome.
 function SpeechVoicesLoad () {
   var VoiceName = "";
-  if ('speechSynthesis' in window) {
-    if ( (SpeechVoices==null) || (SpeechVoices.length<1) ) {
-      SpeechVoices = window.speechSynthesis.getVoices();
-      setTimeout('SpeechVoicesLoad()',1000);  // auto-retry
-    } else {
-      VoiceIdx = -1;  VoiceScore = -1;
-      for (VoiceLp = 0; VoiceLp<SpeechVoices.length; VoiceLp++) {
-        VoiceTmp = -1;
-        VoiceName = " "+SpeechVoices[VoiceLp].name.toLowerCase().replace(/[^a-zA-Z0-9]/,' ')+" ";
-        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('en-')>=0) { VoiceTmp += 20000; }
-        if (VoiceName.indexOf(' english male ')>=0) { VoiceTmp += 5000; }
-        if (VoiceName.indexOf(' david ')>=0) { VoiceTmp += 4000; }
-        if (VoiceName.indexOf(' daniel ')>=0) { VoiceTmp += 4000; }
-        if (VoiceName.indexOf(' male ')>=0) { VoiceTmp += 1000; }
-        if (VoiceName.indexOf(' google us ')>=0) { VoiceTmp += 500; }
-        if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('-us')>=0) { VoiceTmp += 100; }
-        if (SpeechVoices[VoiceLp].lang.indexOf('-gb')>=0) { VoiceTmp += 70; }
-        if (SpeechVoices[VoiceLp].lang.indexOf('-au')>=0) { VoiceTmp += 50; }
-        if (SpeechVoices[VoiceLp].default) { VoiceTmp += 50; }
-        if (VoiceTmp > VoiceScore) {
-          VoiceIdx = VoiceLp;  VoiceScore = VoiceTmp;
-        }
+  SpeechVoices = window.speechSynthesis.getVoices();
+  if ( (SpeechVoices!=null) && (SpeechVoices.length>0) ) {
+    VoiceIdx = -1;  VoiceScore = -1;
+    for (VoiceLp = 0; VoiceLp<SpeechVoices.length; VoiceLp++) {
+      VoiceTmp = -1;
+      VoiceName = " "+SpeechVoices[VoiceLp].name.toLowerCase().replace(/[^a-zA-Z0-9]/,' ')+" ";
+      if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('en-')>=0) { VoiceTmp += 20000; }
+      if (VoiceName.indexOf(' english male ')>=0) { VoiceTmp += 5000; }
+      if (VoiceName.indexOf(' david ')>=0) { VoiceTmp += 4000; }
+      if (VoiceName.indexOf(' daniel ')>=0) { VoiceTmp += 4000; }
+      if (VoiceName.indexOf(' male ')>=0) { VoiceTmp += 1000; }
+      if (VoiceName.indexOf(' google us ')>=0) { VoiceTmp += 500; }
+      if (SpeechVoices[VoiceLp].lang.toLowerCase().indexOf('-us')>=0) { VoiceTmp += 100; }
+      if (SpeechVoices[VoiceLp].lang.indexOf('-gb')>=0) { VoiceTmp += 70; }
+      if (SpeechVoices[VoiceLp].lang.indexOf('-au')>=0) { VoiceTmp += 50; }
+      if (SpeechVoices[VoiceLp].default) { VoiceTmp += 50; }
+      if (VoiceTmp > VoiceScore) {
+        VoiceIdx = VoiceLp;  VoiceScore = VoiceTmp;
       }
     }
+    DebugMsg('Voices loaded.');
+    if (document.getElementById('DivUnMute')) { document.getElementById('DivUnMute').style.visibility='visible'; }
+    if ( (! IsIOS()) && (! IsAndroid()) ) { CfgRequest(); } else { UnMute(); }  // Load CFG after voices, since they're all spoken alarms.  Doesn't work on mobile, which requires sounds be in response to interactions.
   }
 }
 // Added delays for physical queue, basically debouncing for lower speech layers.
-function SpeechDoneActual () {
+function SpeechDoneFinish () {
   if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = ''; }
-  SpeechDoneTimer = null;
   IsSpeaking = false;
+  DebugMsg('Speech finished.');
+  while (SpeechQueue.length>0) SpeechQueue.shift();  
 }
-function SpeechDoneTimeout () {
+function SpeechDone (SDType) {
   if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
-  SpeechDoneTimer = setTimeout('SpeechDoneActual()',7000);
-}
-function IsSpeakingFlag() {
-  IsSpeaking = true;
-  if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = '#000000'; }
-  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+  if ( (document.getElementById('DivAbout')) && (SpeechReady) ) { document.getElementById('DivAbout').style.backgroundColor  = '#666666'; }
+  SpeechDoneTimer = setTimeout('SpeechDoneFinish()',2200);
+  DebugMsg('Speech '+SDType+' done.');
 }
 // Continue processing speech queue.
 function SpeechQueueNext () {
   if (SpeechQueue.length>0) {
-    IsSpeakingFlag();
     if (SpeechQueue[0][1].indexOf('{SOUND:')>=0) {
       SoundEffect(SpeechQueue[0][1]);
     } else {
       SpeechSpeak(SpeechQueue[0][1]);
+      window.speechSynthesis.resume();
     }
     SpeechQueue.shift();
   }
 }
 // Handle end of utterance, start next one if any.
-function SpeechDone () {
+function SpeechUtteranceDone () {
   if (SpeechQueue.length>0) {
+    if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = '#AAAAAA'; }
     setTimeout('SpeechQueueNext()',50); // Slight pause between utterances.
   } else {
-    SpeechDoneTimeout();
+    SpeechDone("Utterance");
   }
 }
-// Handle playing sound effects (ogg files).
-function SpeechEffectDone () {
+// Handle playing sound effects (ogg files).  Doesn't always work.
+function SoundEffectDone () {
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
   try { SpeechAudio.remove(); } catch (err) { }
-  SpeechDone();
+  DebugMsg('Sound done.');
+  if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = '#AAAAAA'; }
+  setTimeout('SpeechQueueNext()',600); // Slight pause between next word.
+  IsSpeaking = false;
 }
 function SoundEffect (SFXstr) {
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
   SpeechCode = SFXstr.replace(/\n/gi,' ');
   SpeechCode = SpeechCode.replace(/^.*\{SOUND:/,"");
   SpeechCode = SpeechCode.replace(/\}.*$/,"");
   if (BGpausedAt<0) { // Not paused.
-    if (IsChrome()) { // Currently OGG audio files only play in Chrome?!?
       if (SpeechCode.length>0) {
         try {
-          IsSpeakingFlag();
-          SpeechAudio = new Audio('https://bedno.com/g/infowall/'+SpeechCode+'.ogg');
-          SpeechAudio.onended = SpeechEffectDone;
+          if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+          SpeechDoneTimer = setTimeout('SpeechDone("SpeakFailSafe")',10000);  // Failsafe.
+          if (document.getElementById('DivAbout')) { document.getElementById('DivAbout').style.backgroundColor  = '#250ACA'; }
+          IsSpeaking = true;
+		  DebugMsg('Sound:'+ImgURL+'sounds/'+SpeechCode+'.ogg');
+          SpeechAudio = new Audio(ImgURL+'sounds/'+SpeechCode+'.ogg');
+          SpeechAudio.onended = SoundEffectDone;
           SpeechAudio.play();
-        } catch (err) { SpeechEffectDone(); SpeechDoneTimeout(); }
-      } else { SpeechDone(); }
-    } else { SpeechDone(); }
+        } catch (err) { SoundEffectDone(); SpeechDone("FXerr"); }
+      } else { SoundEffectDone(); }
   }
 }
+function SpeechStillTalking () {
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+  SpeechDoneTimer = setTimeout('SpeechDone("StillTalkingFailSafe")',7000);  // Failsafe.
+}
+
 // Dupe check to abate occassional problem of redundant alarm triggers on same event.
 function SpeechQueueDupe (SQDkey, SQDmsg) {
+  return(false);
   var SpeechQueueChkLp = 0;  var SpeechQueueChkFound = -1;
   var SQRkey = '';  var SQRmsg = '';  var SQRlog = "";
   SpeechQueueChkFound = -1;
@@ -507,42 +468,44 @@ function SpeechQueueDupe (SQDkey, SQDmsg) {
     if ( (SQDmsg.length>0) && (SQRmsg.length>0) ) { if (SQRmsg.indexOf(SQDmsg)>=0) { SpeechQueueChkFound = SpeechQueueChkLp; } }
   }
   if (SpeechQueueChkFound>=0) { AlarmDupeCnt++; SQRlog += ' found!'; }
-  DebugMsg('DupeCheck "'+SQDkey+'"("'+SQDmsg+'") vs '+SQRlog);
+  // DebugMsg('DupeCheck "'+SQDkey+'"("'+SQDmsg+'") vs '+SQRlog);
   return(SpeechQueueChkFound>=0);
 }
 // Add an utterance to the speech queue.  Fixes problem of speech failing on long utterances.
 function SpeechQueueAdd (SQAkey, SQAin) {
   var SpeechQueueParts;  var SpeechQueuePartsLp = 0;
-  SQAin = SQAin.replace(/\s+\./gi,'.');
-  SQAin = SQAin.replace(/\.+\./gi,'.');
-  SQAin = SQAin.replace(/^\.+/gi,'').replace(/\.+$/gi,'');
-  SQAin = AlarmSubs(SQAin);
-  if (BGpausedAt<0) { // Not paused.
-    if (SpeechQueueDupe(SQAkey,SQAin)) {
-      DebugMsg('Dupe whole suppressed ('+SQAkey+') "'+SQAin+'"');
-    } else {
-      SQAin = SQAin.replace(/(\{SOUND:[^\}]+\})/,".$1.");  // Always break (using ".") at sounds effects
-      if (SQAin.indexOf('.')>=0) {
-        SpeechQueueParts = SQAin.split('.');
-        for (SpeechQueuePartsLp=0; SpeechQueuePartsLp<SpeechQueueParts.length; SpeechQueuePartsLp++) {
-          SpeechQueuePart = SpeechQueueParts[SpeechQueuePartsLp].replace(/^\s+/gi,'').replace(/\s+$/gi,'');
-          if (SpeechQueuePart.length>0) {
-            if (SpeechQueueDupe('',SpeechQueuePart)) {
-              DebugMsg('Dupe part suppressed ('+SQAkey+') "'+SpeechQueuePart+'"');
-            } else {
-              SpeechQueueRec = [SQAkey,SpeechQueuePart];
-              SpeechQueue.push(SpeechQueueRec);
-              DebugMsg('Queued part ('+SQAkey+') "'+SpeechQueuePart+'"');
+  if (SpeechReady) {
+    SQAin = SQAin.replace(/\s+\./gi,'.');
+    SQAin = SQAin.replace(/\.+\./gi,'.');
+    SQAin = SQAin.replace(/^\.+/gi,'').replace(/\.+$/gi,'');
+    SQAin = AlarmSubs(SQAin);
+    if (BGpausedAt<0) { // Not paused.
+      if (SpeechQueueDupe(SQAkey,SQAin)) {
+        DebugMsg('Dupe whole suppressed ('+SQAkey+') "'+SQAin+'"');
+      } else {
+        SQAin = SQAin.replace(/(\{SOUND:[^\}]+\})/,".$1.");  // Always break (using ".") at sounds effects
+        if (SQAin.indexOf('.')>=0) {
+          SpeechQueueParts = SQAin.split('.');
+          for (SpeechQueuePartsLp=0; SpeechQueuePartsLp<SpeechQueueParts.length; SpeechQueuePartsLp++) {
+            SpeechQueuePart = SpeechQueueParts[SpeechQueuePartsLp].replace(/^\s+/gi,'').replace(/\s+$/gi,'');
+            if (SpeechQueuePart.length>0) {
+              if (SpeechQueueDupe('',SpeechQueuePart)) {
+                DebugMsg('Dupe part suppressed ('+SQAkey+') "'+SpeechQueuePart+'"');
+              } else {
+                SpeechQueueRec = [SQAkey,SpeechQueuePart];
+                SpeechQueue.push(SpeechQueueRec);
+                DebugMsg('Queued part ('+SQAkey+') "'+SpeechQueuePart+'"');
+              }
             }
           }
+        } else {
+          SpeechQueueRec = [SQAkey,SQAin];
+          SpeechQueue.push(SpeechQueueRec);
+          DebugMsg('Queued whole ('+SQAkey+') "'+SQAin+'"');
         }
-      } else {
-        SpeechQueueRec = [SQAkey,SQAin];
-        SpeechQueue.push(SpeechQueueRec);
-        DebugMsg('Queued whole ('+SQAkey+') "'+SQAin+'"');
       }
+      if (! IsSpeaking) { SpeechQueueNext(); }
     }
-    if (! IsSpeaking) { SpeechQueueNext(); }
   }
 }
 // Cancel any current speaking when screen off.
@@ -550,32 +513,40 @@ function SpeechCancel () {
   if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
   while (SpeechQueue.length>0) SpeechQueue.shift();
   try { window.speechSynthesis.cancel(); } catch (err) { }
-  SpeechDoneTimeout();
+  SpeechDone("Cancel");
   document.getElementById('SpanStopwatch').innerHTML = "";
 }
 // Lowest level speech function.
 function SpeechSpeak (SSAin) {
+  if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
   SSAin = SSAin.replace(/^\s+/gi,'').replace(/\s+$/gi,'');
   if (BGpausedAt<0) { // Not paused.
     if (SSAin.length>1) {
-      if ('speechSynthesis' in window) {
+      if (SpeechReady) {
         if (IsSpeaking) {
           window.speechSynthesis.cancel();  // Cancel any existing speaking
+          DebugMsg('Resetting speech.');
         }
-        IsSpeakingFlag();
+        if (SpeechDoneTimer!=null) { clearTimeout(SpeechDoneTimer); SpeechDoneTimer=null; }
+        if ( (document.getElementById('DivAbout')) && (! IsSpeaking) ) { document.getElementById('DivAbout').style.backgroundColor  = '#000000'; }
+        IsSpeaking = true;
         try {
+          SpeechDoneTimer = setTimeout('SpeechUtteranceDone()',7000);  // Failsafe.
+          if (SpeechHandle!=null) { try { SpeechHandle.remove();  SpeechHandle=null; } catch (err) { } }
           SpeechHandle = new SpeechSynthesisUtterance();
-          if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; }
+          if (VoiceIdx >= 0) { SpeechHandle.voice = SpeechVoices[VoiceIdx]; DebugMsg('Voice # '+VoiceIdx.toString()); }
           SpeechHandle.voiceURI = 'native';
           SpeechHandle.volume = 1.0; // 0 to 1
           SpeechHandle.rate = 1.0; // 0.1 to 10
           SpeechHandle.pitch = 1.0; // 0 to 2
           // SpeechHandle.lang = 'en-US';
           SpeechHandle.text = SSAin;
-          SpeechHandle.onend = SpeechDone;
+          SpeechHandle.onend = SpeechUtteranceDone;
+          SpeechHandle.onboundary = SpeechStillTalking;
           SpeechCnt++;
           window.speechSynthesis.speak(SpeechHandle);
-        } catch (err) { SpeechDoneTimeout(); }
+          DebugMsg('Speaking "'+SSAin+'"');
+        } catch (err) { SpeechDone("SpeakErr("+err.message+")"); }
       }
     }
   }
@@ -651,9 +622,9 @@ function SetupVisibilities () {
     document.getElementById('DivMoonImg').style.visibility='visible';
     document.getElementById('DivSunTimes').style.visibility='visible';
   }
-  if (BGshowCurr.indexOf('R')<0) {
+  if ( (RadarURLsrc == "") || (BGshowCurr.indexOf('R')<0) ) {
     document.getElementById('DivRadar').style.visibility='hidden';
-    document.getElementById('RadarImg').style.visibility='hidden';
+    if (document.getElementById('RadarImg')) { document.getElementById('RadarImg').style.visibility='hidden'; }
   } else {
     document.getElementById('DivRadar').style.visibility='visible';
     document.getElementById('RadarImg').style.visibility='visible';
@@ -689,6 +660,7 @@ function SetupScreen () {
     BGslideInc = 1;
   }
   document.getElementById('DivWhole').style.backgroundColor = '#000000';
+  if ( (document.getElementById('DivWeatherCurrent')) && (document.getElementById('DivWeatherCurrent').style.visibility=='visible') && (BGshowCurr.indexOf('W')>=0) ) { WeatherCurrentDisplay(); }
 }
 
 // Increment to next BG on user keypress or click.
@@ -760,6 +732,7 @@ function UpdBG () {
       } else {
         ImgSrc = ImgSrc.replace(/{unqsec}/,UnqSec());
         ImgSrc = ImgSrc.replace(/{unqdec}/,UnqDec());
+        ImgSrc = ImgSrc.replace(/{imgurl}/,ImgURL);
         if (document.getElementById('DivBG').innerHTML.toLowerCase().indexOf('<img')<0) { document.getElementById('DivBG').innerHTML = '<img src="" id="ImgBG" width=0 height=0 style="margin-top:0px; margin-left:0px;" border=0>'; }
         document.getElementById('ImgBG').src = ImgSrc;
         document.getElementById('ImgBG').height = Math.floor(WinHgt*BGdata[BGcurr].BGslides[BGslide].BGzoom);
@@ -768,25 +741,25 @@ function UpdBG () {
       document.getElementById('DivBG').style.visibility='visible';
     }
     BGlinkEff = BGdata[BGcurr].BGslides[BGslide].BGlink;
-    if (BGlinkEff == WeatherURL) { BGlinkEff = WeatherURLeff; }
+    if (BGlinkEff == WeatherURL) { BGlinkEff = WeatherLink; }
     if (IsIOS()) { DescSize = 8; } else { DescSize = 12; }
     if (BGdata[BGcurr].BGslides[BGslide].BGdesc) {
       if (BGlinkEff!="") {
-        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</a>';
+        document.getElementById('DivBGdesc').innerHTML = '<a href="'+BGlinkEff+'" target=_blank style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc" alt="Click for details.">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</a>';
       } else {
         document.getElementById('DivBGdesc').innerHTML = '<span style="font-family:Arial; color:#EEEEEE; text-decoration:none; font-size:'+DescSize.toString()+'pt; text-shadow:-2px 2px 0px #000000;" id="SpanBGdesc">&nbsp;&nbsp;&nbsp;'+BGdata[BGcurr].BGslides[BGslide].BGdesc+BGdurMultStr+'&nbsp;</span>';
       }
-      // Speak the current image description (used by Twister mode)
-      if (BGshowCurr.indexOf('V')>=0) { SpeechQueueAdd(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99),BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
+      // VOCAL mode speaks the current image description.
+      if ( (SpeechReady) && (BGshowCurr.indexOf('V')>=0) ) { SpeechQueueAdd(BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99),BGdata[BGcurr].BGslides[BGslide].BGdesc.substr(0,99)); }
     }
-    if (BGshowCurr.indexOf('R')>=0) {  // Hide embedded radar if slide is same radar
+    if ( (RadarURLsrc != "") && (BGshowCurr.indexOf('R')>=0) ) {  // Hide embedded radar if slide is same radar
       if (ImgSrc.toUpperCase().indexOf(RadarURLsrc.toUpperCase())>=0) {
-        document.getElementById('RadarImg').style.visibility='hidden';
+        if (document.getElementById('RadarImg')) { document.getElementById('RadarImg').style.visibility='hidden'; }
       } else {
         document.getElementById('RadarImg').style.visibility='visible';
       }
     } else {
-      document.getElementById('RadarImg').style.visibility='hidden';
+      if (document.getElementById('RadarImg')) { document.getElementById('RadarImg').style.visibility='hidden'; }
     }
     BGtimer = BGdata[BGcurr].BGslides[BGslide].BGdur*(1+Math.round(.5*BGdurMult*10)/10);
     BGslidePrev = BGslide;
@@ -810,7 +783,7 @@ function ShowMoon () {
   }
   if (BGshowCurr.indexOf('M')>=0) {
     document.getElementById('DivMoonImg').style.left = OfsX+Math.floor(WinWid-(WinMin*MoonDiam)+11)+'px';
-    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="https://bedno.com/g/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0>';
+    document.getElementById('DivMoonImg').innerHTML = '<img align=top src="'+ImgURL+'moon/moon'+(MoonPhase)+'.gif" height='+(WinMin*MoonDiam)+' width='+(WinMin*MoonDiam)+' border=0>';
     document.getElementById('DivSunTimes').style.left = (OfsX)+'px';
     document.getElementById('DivSunTimes').style.top = (OfsY)+'px';
     document.getElementById('DivSunTimes').style.width = (WinWid-4)+'px';
@@ -822,8 +795,8 @@ function ShowMoon () {
       SunMoonOut += 'color:#FFFFFF; text-shadow:-2px 2px 0px #000000;" alt="Days UNTIL full moon.';
     }
     SunMoonOut += '">'+Math.abs(MoonDaysToFull).toString()+'&nbsp;&nbsp;</span><br>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; text-shadow:-1px 1px 0px #000000; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">A</span><br></span>';
-    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; color:#FFFF40; text-shadow:-1px 1px 0px #000000; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">P</span></span></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; background-image:linear-gradient(orange,white); color:transparent; background-clip:text; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunrise time.">'+SunRise+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">A</span><br></span>';
+    SunMoonOut += '<span style="font-family:Arial; text-decoration:bold; background-image:linear-gradient(white,brown); color:transparent; background-clip:text; font-size:'+Math.floor(WinWid*SunTimeSizing)+'px;" alt="Sunset time.">'+SunSet+'<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*0.5)+'px;">P</span></span></span>';
     document.getElementById('DivSunTimes').innerHTML = SunMoonOut;
   }
 }
@@ -832,7 +805,7 @@ function ShowMoon () {
 function SetupSun () {
   var SSCurrDT = new Date(DTadj());
   var SunTimes = SunCalc.getTimes(new Date(DTadj()), InfoLat, InfoLon);
-  var SunRiseAdjMS = SunTimes.sunrise.getTime() + (InfoZone*60*60*1000);
+  var SunRiseAdjMS = SunTimes.sunrise.getTime();
   var SunRiseAdjDT = new Date(SunRiseAdjMS);
   if (SunRiseAdjDT.getHours()<1) {
     SunRise = '12';
@@ -841,7 +814,7 @@ function SetupSun () {
   }
   if (SunRiseAdjDT.getMinutes()<10) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>0'+SunRiseAdjDT.getMinutes(); } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.5)+'">:</span>'+SunRiseAdjDT.getMinutes(); }
   // if (SunRiseAdjDT.getHours()>11) { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">P</span>'; } else { SunRise += '<span style="font-size:'+Math.floor(WinWid*SunTimeSizing*.4)+'">A</font>'; }
-  var SunSetAdjMS = SunTimes.sunset.getTime() + (InfoZone*60*60*1000);
+  var SunSetAdjMS = SunTimes.sunset.getTime();
   var SunSetAdjDT = new Date(SunSetAdjMS);
   if (SunSetAdjDT.getHours()<1) {
     SunSet = '12';
@@ -860,25 +833,31 @@ function SetupSun () {
 // Configure location and visibility of radar inset.
 function SetupRadar () {
   var RadarImgOut = "";
-  document.getElementById('DivRadar').style.top = '-2px';
-  document.getElementById('DivRadar').style.left = (WinWid-RadarWid+2)+'px';
-  document.getElementById('DivRadar').innerHTML = RadarImgOut;
-  if (RadarURLeff != "") { RadarImgOut += '<a href="'+RadarURLeff+'" target="weather">'; }
-  RadarImgOut += '<img src="'+RadarURLsrc+'" id="RadarImg" width='+RadarWid+' height='+RadarHgt+' style="border-radius:25px;" border=0>';
-  if (RadarURLeff != "") { RadarImgOut += '</a>'; }
-  document.getElementById('DivRadar').innerHTML = RadarImgOut;
-  if (BGshowCurr.indexOf('R')<1) {
-    document.getElementById('RadarImg').style.visibility='hidden';
+  if (RadarURLsrc == "") {
+    if (document.getElementById('RadarImg')) { document.getElementById('RadarImg').style.visibility='hidden'; }
     document.getElementById('DivRadar').style.visibility='hidden';
+  } else {
+    document.getElementById('DivRadar').style.top = '-2px';
+    document.getElementById('DivRadar').style.left = (WinWid-RadarWid+2)+'px';
+    if (RadarLink != "") { RadarImgOut += '<a href="'+RadarLink+'" target="weather">'; }
+    RadarImgOut += '<img src="'+RadarURLsrc+'" id="RadarImg" width='+RadarWid+' height='+RadarHgt+' style="border-radius:25px;" border=0>';
+    if (RadarLink != "") { RadarImgOut += '</a>'; }
+    document.getElementById('DivRadar').innerHTML = RadarImgOut;
+    if (BGshowCurr.indexOf('R')<1) {
+      document.getElementById('RadarImg').style.visibility='hidden';
+      document.getElementById('DivRadar').style.visibility='hidden';
+    }
   }
 }
 
 // === WEATHER ===
 
 // Speak the weather forecast on capable browsers (including Chrome and Safari)
-function SpeakForecast(WFSnum) {
+function SpeakWeather() {
   var SFstr = "";
-  if ('speechSynthesis' in window) {
+  var WeatherSpoke = false;
+  if (SpeechReady) {
+    if (IsSpeaking) { SpeechCancel(); }
     if (! IsSpeaking) {
       var SpkDT=new Date(DTadj());
       var SpkHr = 0;
@@ -886,330 +865,287 @@ function SpeakForecast(WFSnum) {
       var SpkAPSpoken = "";
       SpkHr = SpkDT.getHours();
       if (SpkHr>11) { SpkAP = "P"; }
-      SpkAPSpoken = ( (SpkAP=='A') ? "ay emm" : "pee emm" );
+      SpkAPSpoken = ( (SpkAP=='A') ? " A M " : " P M " );
       if (SpkHr>12) SpkHr = SpkHr-12;  if (SpkHr==0) SpkHr = 12;
       var SpkMn = "";
       if (SpkDT.getMinutes()>0) {
         SpkMn = SpkDT.getMinutes().toString();
         if (SpkMn.length<2) SpkMn = " O "+SpkMn;
       }
-      if (typeof WeatherForecastSpoken[0] !== 'undefined') {
-        if (WFSnum==0) {
-          if (WeatherCurrentSpoken.length>8) {
-            SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
-            if (WeatherForecastSpoken[0].length>16) {
-              SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+" its "+WeatherCurrentSpoken.toUpperCase();
-              SpeechQueueAdd('Weather', SFstr);
-              SpeechQueueAdd('Forecast', WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'FORECASTING '));
-              if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
-            } else {
-              SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+" its "+WeatherCurrentSpoken.toUpperCase();
-              SpeechQueueAdd('Weather', SFstr);
-              if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
-            }
-          } else {
-            if (WeatherForecastSpoken[0].length>16) {
-              SFstr = WeatherForecastSpoken[0].replace(/^[^\s]+\ /,'Forecasting ');
-              SpeechQueueAdd('Forecast', SFstr);
-              if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
-            }
-          }
-        } else {
-          SFstr = WeatherForecastSpoken[WFSnum];
-          SpeechQueueAdd('Forecast', SFstr);
-          if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
+      if ( (WeatherCurrentSpoken.length>8) || (WeatherForecastSpoken.length>16) ) {
+        SFstr += 'On '+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()]+', ';
+        if (WeatherCurrentSpoken.length>8) {
+          SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+".  Its "+WeatherCurrentSpoken.toUpperCase()+".  ";
+          SpeechQueueAdd('Weather', SFstr);  WeatherSpoke = true;
         }
+        if (WeatherForecastSpoken.length>8) {
+          if (WeatherCurrentSpoken.length<=8) {
+            SFstr += "at "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+".  Forecasting ";
+          }
+          SpeechQueueAdd('Forecast', WeatherForecastSpoken);  WeatherSpoke = true;
+        }
+      }
+      if (AlarmsToday.length>0) { SpeechQueueAdd('AlarmsToday', AlarmsToday); }
+      if (! WeatherSpoke) {
+        SFstr = "Its "+SpkHr.toString()+" "+SpkMn+" "+SpkAPSpoken+" On "+FullDoW[SpkDT.getDay()]+' '+FullMon[SpkDT.getMonth()]+' '+FullDoM[SpkDT.getDate()];
+        SpeechQueueAdd('TIMEDATE', SFstr);
       }
     }
   }
 }
 
-// Asynchronous receive and parse of JSON response to weather forecast query (on capable browsers).  Current supports only Wunderground.com format.
-var WeatherForecastHandle = 0;
 function FmtMinus (FMin) {
   return(Math.floor(FMin).toString().replace(/-([0-9]+)/gi,"<span style='font-size:80%; vertical-align:40%;'>-</span>$1"));
 }
-function SpokenMinus (FMin) {
-  return(Math.floor(FMin).toString().replace(/-([0-9]+)/gi,"minus $1"));
+function FmtDec(InFlt) {
+  return(InFlt.toFixed(1).replace(/\.0$/, ''));
 }
-function WeatherForecastReceive () {
-  WeatherForecast = '';
-  WeatherForecastSpoken = [];
-  if ( (WeatherForecastHandle.readyState==4) && (WeatherForecastHandle.status==200) ) {
-    var FWFread = WeatherForecastHandle.responseText;
-    try {
-      var FWFrec = JSON.parse(FWFread);
-      function WFspokenPrep(WFSnum) {
-        FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit'] = Math.floor(FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit']);
-        FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit'] = Math.floor(FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit']);
-        WeatherForecastSpoken[WFSnum] = FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['date']['weekday']+" ";
-        WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['low']['fahrenheit']+" to "+FWFrec['forecast']['simpleforecast']['forecastday'][WFSnum]['high']['fahrenheit']+". ";
-        WeatherForecastSpoken[WFSnum] += FWFrec['forecast']['txt_forecast']['forecastday'][WFSnum]['fcttext'];
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].toUpperCase();
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/\.[0-9]+/gi,"");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])s([^A-Z0-9])/gi,"$1's$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([0-9])F/gi,"$1");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])E([^A-Z0-9])/gi,"$1EAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])W([^A-Z0-9])/gi,"$1WEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])N([^A-Z0-9])/gi,"$1NORTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])S([^A-Z0-9])/gi,"$1SOUTH$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NNE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])ENE([^A-Z0-9])/gi,"$1NORTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])ESE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SSE([^A-Z0-9])/gi,"$1SOUTHEAST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])SSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WSW([^A-Z0-9])/gi,"$1SOUTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])WNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])NNW([^A-Z0-9])/gi,"$1NORTHWEST$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z0-9\.\-'\,])PRECIP([^A-Z0-9])/gi,"$1PRECIPITATION$2");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/MPH/gi,"");
-        WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/WIND/gi,"WEND");
-        // WeatherForecastSpoken[WFSnum] = WeatherForecastSpoken[WFSnum].replace(/([^A-Z])\./gi,"$1; "); // Attempts to improve spoken pauses.
-      }
-      for (var FWFlp=0; FWFlp<2; FWFlp++) {
-        if (WeatherForecast.length > 10) { WeatherForecast += "\n &nbsp; "; }
-        if ('speechSynthesis' in window) {
-          WeatherForecast += '<a href="JavaScript:SpeakForecast('+FWFlp+');" title="Speak the forecast." style="text-decoration:none;">';
-        } else {
-          if (WeatherURLeff!="") {
-            WeatherForecast += '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather" style="text-decoration:none;">';
-          }
-        }
-        WeatherForecast += '<span style="font-family:Arial; font-size:'+(Math.floor(WinHgt*WeatherForecastHgt))+'px; line-height:84%; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;'+WeatherShadow+'">';
-        WeatherForecast += '<nobr>';
-        if (FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url'].indexOf('nt_.gif')<1) {
-          WeatherForecast += '<img src="'+FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['icon_url']+'" height="'+(Math.floor(WinHgt*WeatherForecastHgt*.6))+'; margin-top:0px; margin-bottom:0px; padding-top:0px; padding-bottom:0px;" border=0>';
-        }
-        WeatherForecast += FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['date']['weekday_short']+":&nbsp;";
-        if (FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'] != FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit']) {
-          WeatherForecast += FmtMinus(FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['low']['fahrenheit'])+"<span style='font-size:70%;'>&#8209;</span>";
-        }
-        WeatherForecast += FmtMinus(FWFrec['forecast']['simpleforecast']['forecastday'][FWFlp]['high']['fahrenheit'])+"&deg;</nobr>\n";
-        WFtext = FWFrec['forecast']['txt_forecast']['forecastday'][FWFlp]['fcttext'];
-        WFtext = WFtext.replace(/ -([0-9]+)/gi," <span style='font-size:80%; vertical-align:40%;'>-</span>$1");
-        WeatherForecast += WFtext+"</span>";
-        if ( ('speechSynthesis' in window) || (WeatherURLeff!="") ) { WeatherForecast += "</a>"; }
-        WeatherForecast = WeatherForecast.replace(/([0-9])F/gi,"$1&deg;");
-        WeatherForecast = WeatherForecast.replace(/([0-9<>;]+) to ([0-9<>;]+)/gi,"$1<span style='font-size:70%;'>&#8209;</span>$2");
-        WeatherForecast = WeatherForecast.replace(/ at ([0-9<>;]+)/gi," $1");
-        WeatherForecast = WeatherForecast.replace(/ mph/gi,"");
-        WeatherForecast = WeatherForecast.replace(/\.\.\./gi,"; ");
-        WeatherForecast = WeatherForecast.replace(/\s[\s]+/gi," ");
-        WeatherForecast = WeatherForecast.replace(/ inches/gi," in");
-        WeatherForecast = WeatherForecast.replace(/^[\s]+/gi,"");
-        WeatherForecast = WeatherForecast.replace(/[\s]+$/gi,"");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NE$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NE$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SE$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SE$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SW$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SW$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NW$2");
-        WeatherForecast = WeatherForecast.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NW$2");
-        WFspokenPrep(FWFlp);
-      }
-      WeatherForecast += "\n";
-    } catch (err) {
-      WeatherForecast = '<font size=2>Weather forecast is not available on this browser.</font>';
-    }
-    if (BGshowCurr.indexOf('F')>=0) {
-      document.getElementById('DivWeatherForecast').innerHTML = WeatherForecast;
-    }
-  }
+function d2o (d_in) {  // Wind direction degrees to ordinal.
+  if (d_in<22.5) return("N");
+  if (d_in<67.5) return("NW");
+  if (d_in<112.5) return("W");
+  if (d_in<157.5) return("SW");
+  if (d_in<202.5) return("S");
+  if (d_in<247.5) return("SE");
+  if (d_in<292.5) return("E");
+  if (d_in<337.5) return("NE");
+  return("N");
 }
-// Request weather forecast on capable browsers.
-function WeatherForecastRequest () {
-  var WFout = "";
-  try {
-    WeatherForecastHandle = new XMLHttpRequest();
-  } catch (trymicrosoft) {
-    try {
-      WeatherForecastHandle = new ActiveXObject('Msxml2.XMLHTTP');
-    } catch (othermicrosoft) {
-      try {
-        WeatherForecastHandle = new ActiveXObject('Microsoft.XMLHTTP');
-      } catch (failed) {
-        WeatherForecastHandle = false;
-      }
-    }
-  }
-  if (WeatherForecastHandle) {
-    try {
-      if (WeatherForecastURL.length>1) {
-        WeatherForecastHandle.open('GET', WeatherForecastURL+'?'+UnqSec(), true);
-        WeatherForecastHandle.timeout = 20000;
-        WeatherForecastHandle.onreadystatechange = WeatherForecastReceive;
-        WeatherForecastHandle.send(null);
-      }
-    } catch (err) {
-      WeatherForecast = '<font size=2>Weather forecast is not available on this browser.</font>';
-      if (WeatherURLeff!="") { WFout += '<a href="'+WeatherURLeff+'" title="Detailed Weather Forecast" target="weather">"'; }
-      WFout += '<span style="font-family:Arial; font-size:'+(Math.floor(WinHgt*WeatherForecastHgt))+'px; line-height:'+(Math.floor(WinHgt*WeatherForecastHgt*.7))+'px; text-decoration:none; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;">'+WeatherForecast+'</span>';
-      if (WeatherURLeff!="") { WFout += '</a>'; }
-      document.getElementById('DivWeatherForecast').innerHTML = WFout;
-    }
-  }
-  WeatherForecastTimer = WeatherForecastDur;
+function d2ordinal (d_in) {
+  if (d_in<22.5) return("North");
+  if (d_in<67.5) return("Northwest");
+  if (d_in<112.5) return("West");
+  if (d_in<157.5) return("Southwest");
+  if (d_in<202.5) return("South");
+  if (d_in<247.5) return("Southeast");
+  if (d_in<292.5) return("East");
+  if (d_in<337.5) return("Northeast");
+  return("North");
+}
+function c2f (c_in) {  // centi to faren
+  return( Math.floor( ( (c_in * 1.8) + 32) * 10) / 10);
+}
+function k2m (k_in) {  // km to miles
+  return( Math.floor( (k_in * .62) * 10) / 10);
 }
 
-// Asynchronous receive and parse of JSON response to weather current conditions query (on capable browsers).  Current supports only Wunderground.com format.
-var WeatherCurrentHandle = false;
+// Asynchronous receive of weather current conditions, from NWS API.
+function WeatherCurrentDisplay () {
+  var WeatherCurrentOut
+  WeatherCurrentOut = "";
+  if (SpeechReady) {
+    WeatherCurrentOut += '<a href="JavaScript:SpeakWeather();" title="Speak the weather." style="text-decoration:none;">';
+  } else {
+    if (WeatherLink!="") {
+      WeatherCurrentOut += '<a href="'+WeatherLink+'" title="Detailed Weather" target="weather" style="text-decoration:none;">';
+    }
+  }
+  WeatherCurrentOut += '<span id="DivWeatherText" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:Arial; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px; line-height:'+Math.floor(WinHgt*WeatherCurrentHgt*0.7)+'px; color:'+ClockColor+'; text-decoration:none; font-stretch:condensed; -webkit-font-smoothing:antialiased;'+WeatherShadow+'" title="Detailed Weather Forecast">'+WeatherCurrent+'</span>';
+  if ( (SpeechReady) || (WeatherLink!="") ) { WeatherCurrentOut += "</a>"; }
+  if (BGshowCurr.indexOf('W')>=0) {
+    document.getElementById('DivWeatherCurrent').innerHTML = WeatherCurrentOut;
+    // Check if text element exceeds div width and adjust it's horizontal scaling as needed.
+    if (WinPortrait) {
+      var textElement = document.getElementById('DivWeatherCurrent'); 
+      var scaleFactor = textElement.clientWidth / textElement.scrollWidth;
+      if (textElement.scrollWidth > textElement.clientWidth) {
+        textElement.style.transform = `scaleX(${scaleFactor})`;
+        textElement.style.transformOrigin = 'left center';
+        DebugMsg('ScaleX='+scaleFactor.toString());
+      }
+    }
+  }
+}
+
+// Receive current weather observations, format it for display and speech.
+var WeatherCurrentHandle = 0;
 function WeatherCurrentReceive () {
-  var WeatherCurrentSpokenTmp = "";
+  WeatherCurrent = '';
+  WeatherCurrentSpoken = '';
   if ( (WeatherCurrentHandle.readyState==4) && (WeatherCurrentHandle.status==200) ) {
     var FWCread = WeatherCurrentHandle.responseText;
     try {
       var FWCrec = JSON.parse(FWCread);
-      WeatherCurrent = '';  WeatherCurrentIcon = "";
-      if (FWCrec['current_observation']['icon_url'].indexOf('/.gif')<1) {
-        WeatherCurrentIcon = '<img src="'+FWCrec['current_observation']['icon_url']+'" border=0 height='+(Math.floor(WinHgt*WeatherCurrentHgt*.6))+'>';
+      WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;">';
+      WeatherCurrent += FmtMinus(c2f(FWCrec['features'][0]['properties']['temperature']['value']))+'</span>&deg;</nobr>';
+      WeatherCurrentSpoken = Math.floor(c2f(FWCrec['features'][0]['properties']['temperature']['value']))+' degrees';
+      if (FWCrec['features'][0]['properties']['windSpeed']['value']>1) {
+        WeatherCurrent += '&nbsp;'+d2o(FWCrec['features'][0]['properties']['windDirection']['value'])+Math.floor(k2m(FWCrec['features'][0]['properties']['windSpeed']['value']));
+        WeatherCurrentSpoken += ', wind '+d2ordinal(FWCrec['features'][0]['properties']['windDirection']['value'])+' at '+Math.floor(k2m(FWCrec['features'][0]['properties']['windSpeed']['value']));
       }
-      WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;">'+FmtMinus(FWCrec['current_observation']['temp_f'])+'</span>&deg;</nobr> ';
-      WeatherCurrentSpokenTmp += SpokenMinus(FWCrec['current_observation']['temp_f'])+" . . . . "; // Markup forces a slight speech pause
-      if (FWCrec['current_observation']['weather'].length>1) {
-        WeatherCurrentSpokenTmp += FWCrec['current_observation']['weather']+". "; // Markup forces a whole pause
-      }
-      FWCrec['current_observation']['wind_mph'] = Math.floor(FWCrec['current_observation']['wind_mph']);
-      FWCrec['current_observation']['wind_gust_mph'] = Math.floor(FWCrec['current_observation']['wind_gust_mph']);
-      if ( (FWCrec['current_observation']['wind_mph']>2) || (FWCrec['current_observation']['wind_gust_mph']>2) ) {
-        WeatherCurrentSpokenTmp += "wends ";  // attempts to fix mispronounciation of "wind"(s)
-        if (FWCrec['current_observation']['wind_dir'].length<1) {
-          WeatherCurrentSpokenTmp += "variable ";
-        } else {
-          WeatherCurrentSpokenTmp += FWCrec['current_observation']['wind_dir']+" ";
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])NE([^A-Z0-9])/gi,"$1NorthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NorthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NorthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SouthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])SE([^A-Z0-9])/gi,"$1SouthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SouthEast$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])SW([^A-Z0-9])/gi,"$1SouthWest$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SouthWest$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SouthWest$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])NW([^A-Z0-9])/gi,"$1NorthWest$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NorthWest$2");
-          WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NorthWest$2");
-        }
-        if (FWCrec['current_observation']['wind_mph']<=2) {
-          WeatherCurrentSpokenTmp += "gusting at "+FWCrec['current_observation']['wind_gust_mph'];
-        } else {
-          WeatherCurrentSpokenTmp += "at "+FWCrec['current_observation']['wind_mph'];
-          if ( (FWCrec['current_observation']['wind_gust_mph']>2) && ((FWCrec['current_observation']['wind_gust_mph']-FWCrec['current_observation']['wind_mph'])>1) ) {
-            WeatherCurrentSpokenTmp += " to "+FWCrec['current_observation']['wind_gust_mph'];
-          }
-        }
-      }
-      var FWhum = FWCrec['current_observation']['relative_humidity'].replace('%','');
-      if ( (FWCrec['current_observation']['windchill_f']!="") && (FWCrec['current_observation']['windchill_f']!="NA") && (FWCrec['current_observation']['windchill_f']!="N/A") && (FWCrec['current_observation']['windchill_f']!="null") && (FWCrec['current_observation']['windchill_f']!="undefined") &&
-           (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['windchill_f'])>4) ) {
-        WeatherCurrentSpokenTmp += ", feels like "+SpokenMinus(FWCrec['current_observation']['windchill_f']);
-      } else {
-        if ( (FWCrec['current_observation']['heat_index_f']!="") && (FWCrec['current_observation']['heat_index_f']!="NA") && (FWCrec['current_observation']['heat_index_f']!="N/A") && (FWCrec['current_observation']['heat_index_f']!="null") && (FWCrec['current_observation']['heat_index_f']!="undefined") &&
-             (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['heat_index_f'])>4) ) {
-          WeatherCurrentSpokenTmp += ", feels like "+SpokenMinus(FWCrec['current_observation']['heat_index_f']);
-        }
-      }
-      if ( (FWhum>1) && (FWhum<120) ) { WeatherCurrentSpokenTmp += ", humidity "+FWhum.toString()+" percent"; }
-      WeatherCurrentSpokenTmp += ". ";
-      WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/\.[0-9]+/g,'');
-      var WindText = '';
-      var WindDir = FWCrec['current_observation']['wind_dir'];
-      if (WindDir.length < 1) { WindDir = 'V'; }
-      if ( (FWCrec['current_observation']['wind_mph']>2) || (FWCrec['current_observation']['wind_gust_mph']>2) ) {
-        if (FWCrec['current_observation']['wind_mph']<=2) {
-          WindText += '<span style="font-size:'+(Math.floor(WinHgt*WeatherCurrentHgt*.8))+'px; font-stretch:condensed;">'+WindDir+'</span><i><span style="font-size:'+(Math.floor(WinHgt*WeatherCurrentHgt*.7))+'px; vertical-align:20%; margin-right:-4px">&#45;</span>'+FWCrec['current_observation']['wind_gust_mph']+'</i>';
-        } else {
-          WindText += '<span style="font-size:'+(Math.floor(WinHgt*WeatherCurrentHgt*.8))+'px; font-stretch:condensed;">'+WindDir+'</span>';
-          WindText += FWCrec['current_observation']['wind_mph'];
-          if ( (FWCrec['current_observation']['wind_gust_mph']>2) && ((FWCrec['current_observation']['wind_gust_mph']-FWCrec['current_observation']['wind_mph'])>1) ) {
-            WindText += '<span style="font-size:'+(Math.floor(WinHgt*WeatherCurrentHgt*.8))+'px;"><i><span style="font-size:'+(Math.floor(WinHgt*WeatherCurrentHgt*0.7))+'px; vertical-align:20%; margin-right:-4px">&#45;</span>'+FWCrec['current_observation']['wind_gust_mph']+'</i></span>';
-          }
-        }
-      }
-      if (WindText.length>1) {
-        WeatherCurrent += '<nobr><span style="white-space:nowrap;">'+WindText+'</span></nobr> ';
-      }
-      if ( (FWhum>1) && (FWhum<120) ) {
-        WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;">'+FWhum+'<span style="font-size:'+Math.floor(WinHgt*WeatherCurrentHgt*.7)+'px; font-stretch:condensed;">&oslash;</span></span></nobr> ';
-      }
-      if ( (FWCrec['current_observation']['windchill_f']!="") && (FWCrec['current_observation']['windchill_f']!="NA") && (FWCrec['current_observation']['windchill_f']!="N/A") && (FWCrec['current_observation']['windchill_f']!="null") && (FWCrec['current_observation']['windchill_f']!="undefined") &&
-           (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['windchill_f'])>4) ) {
-        WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;"><i>'+FmtMinus(FWCrec['current_observation']['windchill_f'])+'<span style="font-size:'+Math.floor(WinHgt*WeatherCurrentHgt*0.7)+'px;">&#8226;</span></i></span></nobr> ';
-      } else {
-        if ( (FWCrec['current_observation']['heat_index_f']!="") && (FWCrec['current_observation']['heat_index_f']!="NA") && (FWCrec['current_observation']['heat_index_f']!="N/A") && (FWCrec['current_observation']['heat_index_f']!="null") && (FWCrec['current_observation']['heat_index_f']!="undefined") &&
-             (Math.abs(FWCrec['current_observation']['temp_f']-FWCrec['current_observation']['heat_index_f'])>4) ) {
-          WeatherCurrent += '<nobr><span style="white-space:nowrap; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px;"><i>'+FmtMinus(FWCrec['current_observation']['heat_index_f'])+'<span style="font-size:'+Math.floor(WinHgt*WeatherCurrentHgt*0.7)+'px;">i</span></i></span></nobr> ';
-        }
-      }
-      WeatherCurrent = WeatherCurrentIcon+' '+WeatherCurrent+' '+FWCrec['current_observation']['weather']+"\n";
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])East([^A-Z0-9])/gi,"$1E$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])West([^A-Z0-9])/gi,"$1W$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])North([^A-Z0-9])/gi,"$1N$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])South([^A-Z0-9])/gi,"$1S$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])NNE([^A-Z0-9])/gi,"$1NE$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])ENE([^A-Z0-9])/gi,"$1NE$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])ESE([^A-Z0-9])/gi,"$1SE$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])SSE([^A-Z0-9])/gi,"$1SE$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])SSW([^A-Z0-9])/gi,"$1SW$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])WSW([^A-Z0-9])/gi,"$1SW$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])WNW([^A-Z0-9])/gi,"$1NW$2");
-      WeatherCurrent = WeatherCurrent.replace(/([^A-Z0-9])NNW([^A-Z0-9])/gi,"$1NW$2");
-      WeatherCurrent = WeatherCurrent.replace(/Mostly /,"M.");
-      WeatherCurrent = WeatherCurrent.replace(/Partly /,"P.");
-      WeatherCurrent = WeatherCurrent.replace(/Scattered /,"Sct.");
-      WeatherCurrent = WeatherCurrent.replace(/Isolated /,"Iso.");
-      WeatherCurrent = WeatherCurrent.replace(/Thunderstorm/,"T-Storm");
-      WeatherCurrent = WeatherCurrent.replace(/\.0/g,'');
-      WeatherCurrent += '</span>';
+      WeatherCurrent += '&nbsp;<span style="font-size:'+Math.floor(WinHgt*WeatherCurrentHgt*.9)+'px;"">'+Math.floor(FWCrec['features'][0]['properties']['relativeHumidity']['value'])+'</span><span style="font-size:'+Math.floor(WinHgt*WeatherCurrentHgt*.5)+'px;"">%</span>';
+      WeatherCurrent += '&nbsp;'+FWCrec['features'][0]['properties']['textDescription'].replace(/ and /gi,"&");
+      WeatherCurrentSpoken += ', '+FWCrec['features'][0]['properties']['textDescription']+' ';
+      WeatherCurrentSpoken += ', humidity '+Math.floor(FWCrec['features'][0]['properties']['relativeHumidity']['value'])+' percent.';
+      WeatherCurrentStat = "Weather loaded OK.";
     } catch (err) {
-      WeatherCurrent = '';
+      WeatherCurrentStat = 'Trouble parsing observations: '+err;
     }
-    if (BGshowCurr.indexOf('W')>=0) {
-      var WeatherURLtmp = "";
-      if ('speechSynthesis' in window) { WeatherURLtmp = 'JavaScript:SpeakForecast(0);'; }
-      var FWCout = "";
-      FWCout += '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:Arial; font-size:'+Math.floor(WinHgt*WeatherCurrentHgt)+'px; line-height:'+Math.floor(WinHgt*WeatherCurrentHgt*0.7)+'px; color:'+ClockColor+'; text-decoration:none; font-stretch:condensed; -webkit-font-smoothing:antialiased;'+WeatherShadow+'" title="Detailed Weather Forecast" onMousedown="'+WeatherURLtmp+'">'+WeatherCurrent+'</span>';
-      document.getElementById('DivWeatherCurrent').innerHTML = FWCout;
-    }
-    ShowMoon();
+  } else {
+    WeatherCurrentStat = 'Trouble receiving observations.';
   }
-  WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/^[\s]+/gi,"");
-  WeatherCurrentSpokenTmp = WeatherCurrentSpokenTmp.replace(/[\s]+$/gi,"");
-  if (WeatherCurrentSpokenTmp.length > 4) {
-    WeatherCurrentSpoken = WeatherCurrentSpokenTmp;
-  }
+  WeatherCurrentDisplay();
+  ShowMoon();
 }
+
 // Request weather current conditions on capable browsers.
 function WeatherCurrentRequest () {
-  try {
-    WeatherCurrentHandle = new XMLHttpRequest();
-  } catch (trymicrosoft) {
+  WeatherCurrent = '';
+  WeatherCurrentSpoken = '';
+  if (WeatherCurrentURL.length>1) {
     try {
-      WeatherCurrentHandle = new ActiveXObject('Msxml2.XMLHTTP');
-    } catch (othermicrosoft) {
-      try {
-        WeatherCurrentHandle = new ActiveXObject('Microsoft.XMLHTTP');
-      } catch (failed) {
-        WeatherCurrentHandle = false;
-      }
-    }
-  }
-  if (WeatherCurrentHandle) {
-    try {
-      if (WeatherCurrentURL.length>1) {
-        WeatherCurrentHandle.open('GET', WeatherCurrentURL+'?'+UnqSec(), true);
+      WeatherCurrentHandle = new XMLHttpRequest();
+      if (WeatherCurrentHandle) {
+        WeatherCurrentHandle.open('GET', WeatherCurrentURL, true);
+        WeatherCurrentHandle.setRequestHeader('User-Agent', USER_AGENT);
         WeatherCurrentHandle.timeout = 20000;
         WeatherCurrentHandle.onreadystatechange = WeatherCurrentReceive;
         WeatherCurrentHandle.send(null);
       }
     } catch (err) {
+      WeatherCurrentStat = 'Trouble requesting observations: '+err;
     }
+    WeatherCurrentStat = 'Waiting for weather observations...';
   }
   WeatherCurrentTimer = WeatherCurrentDur;
+  WeatherCurrentDisplay();
+  ShowMoon();
+}
+
+// Asynchronous receive of weather forecast from NWS API.
+function WeatherForecastDisplay () {
+  var WeatherForecastOut
+  WeatherForecastOut = "";
+  WeatherForecastOut += '<span style="font-family:Arial; font-size:'+(Math.floor(WinHgt*WeatherForecastHgt))+'px; line-height:84%; color:'+ForecastColor+'; -webkit-font-smoothing:antialiased;'+WeatherShadow+'">';
+  if (SpeechReady) {
+    WeatherForecastOut += '<a href="JavaScript:SpeakWeather();" title="Speak the forecast." style="text-decoration:none; color:'+ForecastColor+'">';
+  } else {
+    if (WeatherLink!="") {
+      WeatherForecastOut += '<a href="'+WeatherLink+'" title="Detailed Weather Forecast" target="weather" style="text-decoration:none; color:'+ForecastColor+'">';
+    }
+  }
+  WeatherForecastOut += WeatherForecast;
+  if ( (SpeechReady) || (WeatherLink!="") ) { WeatherForecastOut += "</a>"; }
+  WeatherForecastOut += "</span>";
+  if (BGshowCurr.indexOf('F')>=0) {
+    document.getElementById('DivWeatherForecast').innerHTML = WeatherForecastOut;
+  }
+}
+
+// Receive weather forecast, extensively format it for display and speech.
+var WeatherForecastHandle = 0;
+function WeatherForecastReceive () {
+  WeatherForecast = '';
+  WeatherForecastSpoken = '';
+  if ( (WeatherForecastHandle.readyState==4) && (WeatherForecastHandle.status==200) ) {
+    var FWFread = WeatherForecastHandle.responseText;
+    try {
+      var FWFrec = JSON.parse(FWFread);
+      PeriodName = FWFrec['properties']['periods'][0]['name'];
+      WeatherForecast = PeriodName+' ';
+      FcstText = FWFrec['properties']['periods'][0]['detailedForecast'];
+      // Cleanup displayed weather forecast for brevity.
+      FcstText = ' '+FcstText+' ';
+      FcstText = FcstText.replace(/([0-9<>;]+) to ([0-9<>;]+)/gi,"$1-$2");
+      FcstText = FcstText.replace(/ at ([0-9<>;]+)/gi," $1");
+      FcstText = FcstText.replace(/ mph/gi,"");
+      FcstText = FcstText.replace(/ degrees/gi," ");
+      FcstText = FcstText.replace(/around /gi,"~");
+      FcstText = FcstText.replace(/about /gi,"~");
+      FcstText = FcstText.replace(/near /gi,"~");
+      FcstText = FcstText.replace(/\.\.\./gi,"; ");
+      FcstText = FcstText.replace(/\s[\s]+/gi," ");
+      FcstText = FcstText.replace(/ inches/gi," in");
+      FcstText = FcstText.replace(/temperature /gi,"temp ");
+      FcstText = FcstText.replace(/temperatures /gi,"temps ");
+      FcstText = FcstText.replace(/with temps /gi,"temps ");
+      FcstText = FcstText.replace(/precipitation /gi,"precip ");
+      FcstText = FcstText.replace(/ is /gi," ");
+      FcstText = FcstText.replace(/ with gusts /gi," gusts ");
+      FcstText = FcstText.replace(/ gusts of /gi," gusts ");
+      FcstText = FcstText.replace(/ amounts /gi," ");
+      FcstText = FcstText.replace(/ as high as /gi," of ");
+      FcstText = FcstText.replace(/ with a /gi," ");
+      FcstText = FcstText.replace(/^[\s]+/gi,"");
+      FcstText = FcstText.replace(/[\s]+$/gi,"");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])South Southeast([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])Southeast([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])South Southwest([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])Southwest([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])North Northeast([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])Northeast([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])North Northwest([^A-Za-z])/gi,"$1NW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])Northwest([^A-Za-z])/gi,"$1NW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])East Southeast([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])East Northeast([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])West Southwest([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])West Northwest([^A-Za-z])/gi,"$1NW$2");
+	  FcstText = FcstText.replace(/([^A-Za-z0-9])East([^A-Za-z])/gi,"$1E$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])West([^A-Za-z])/gi,"$1W$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])North([^A-Za-z])/gi,"$1N$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])South([^A-Za-z])/gi,"$1S$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])NNE([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])ENE([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])ESE([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])SSE([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])SSW([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])WSW([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])WNW([^A-Za-z])/gi,"$1NW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])NNW([^A-Za-z])/gi,"$1NW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])N NE([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])E NE([^A-Za-z])/gi,"$1NE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])E SE([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])S SE([^A-Za-z])/gi,"$1SE$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])S SW([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])W SW([^A-Za-z])/gi,"$1SW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])W NW([^A-Za-z])/gi,"$1NW$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])N NW([^A-Za-z])/gi,"$1NW$2");
+	  FcstText = FcstText.replace(/New rainfall[^\.]+[\.]/gi,"");
+	  FcstText = FcstText.trim();
+      WeatherForecast += FcstText;
+      WeatherForecast = WeatherForecast.replace(/ -([0-9]+)/gi," <span style='font-size:80%; vertical-align:40%;'>-</span>$1");
+      WeatherForecastSpoken = PeriodName+' ';
+      FcstText = FWFrec['properties']['periods'][0]['detailedForecast'];
+      FcstText = FcstText.replace(/([^A-Za-z0-9])South Southeast([^A-Za-z])/gi,"$1Southeast$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])South Southwest([^A-Za-z])/gi,"$1Southwest$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])North Northeast([^A-Za-z])/gi,"$1Northeast$2");
+      FcstText = FcstText.replace(/([^A-Za-z0-9])North Northwest([^A-Za-z])/gi,"$1Northwest$2");
+      FcstText = FcstText.replace(/ winds /gi," wind ");  // Pronounciation improvement.
+      WeatherForecastSpoken += FcstText;
+      WeatherForecastStat = "Forecast loaded OK.";
+    } catch (err) {
+      WeatherForecastStat = 'Trouble parsing forecast: '+err;
+    }
+  } else {
+    WeatherForecastStat = 'Trouble receiving forecast.';
+  }
+  WeatherForecastDisplay();
+  ShowMoon();
+}
+
+// Request weather forecast on capable browsers.
+function WeatherForecastRequest () {
+  WeatherForecast = '';
+  WeatherForecastSpoken = '';
+  if (WeatherForecastURL.length>1) {
+    try {
+      WeatherForecastHandle = new XMLHttpRequest();
+      if (WeatherForecastHandle) {
+        WeatherForecastHandle.open('GET', WeatherForecastURL, true);
+        WeatherForecastHandle.setRequestHeader('User-Agent', USER_AGENT);
+        WeatherForecastHandle.timeout = 20000;
+        WeatherForecastHandle.onreadystatechange = WeatherForecastReceive;
+        WeatherForecastHandle.send(null);
+      }
+      WeatherCurrentStat = "Forecast loaded OK.";
+    } catch (err) {
+      WeatherForecastStat = 'Trouble requesting forecast: '+err;
+    }
+    WeatherForecastStat = 'Waiting for weather forecast...';
+  }
+  WeatherForecastTimer = WeatherForecastDur;
+  WeatherForecastDisplay();
+  ShowMoon();
 }
 
 // Setup weather display areas.
@@ -1226,30 +1162,21 @@ function SetupWeather () {
   document.getElementById('DivWeatherForecast').style.height = Math.floor(WinHgt*.3)+'px';
   document.getElementById('DivWeatherForecast').style.left = (OfsX+18)+'px';
   document.getElementById('DivWeatherForecast').style.width = (WinWid-OfsX-36)+'px';
-  document.getElementById('DivWeatherForecast').style.opacity = 0.8;
+  document.getElementById('DivWeatherForecast').style.opacity = 0.7;
   WeatherForecastTimer = 0;
   WeatherCurrentTimer = 0;
+  WeatherLink = WeatherURL;
+  RadarLink = WeatherURL;
 }
 
 // === REMOTE CONFIGURABLES ===
 // Fetch a URL specified config file for alarms.
 
-// Show tyailing log if div is visible.
-function DebugMsg (ADin) {
-  if (document.getElementById('DivDebug')) {
-    if (document.getElementById('DivDebug').style.visibility=='visible') {
-      if (document.getElementById('DivDebug').innerText.length>1850) {
-        document.getElementById('DivDebug').innerText = document.getElementById('DivDebug').innerText.substr(ADin.length+2);
-      }
-      document.getElementById('DivDebug').innerText += ADin+"\n";
-    }
-  }
-}
-
 // Parse target=message pairs from alarms config file.
 function CfgParse () {
   var CfgErrCnt = 0;
   var CfgMaxErrs = 12;
+  CfgStat = "CFG Parsing...";
   if ( (CfgHandle.readyState==4) && (CfgHandle.status==200) ) {
     CfgText = CfgHandle.responseText;
     CfgName = "";  CfgVal = "";
@@ -1284,34 +1211,28 @@ function CfgParse () {
             }
           }
         } else {
-          if (CfgErrCnt==CfgMaxErrs) { alert('Too many errors loading config file:'+"\n"+CfgSrc); }
+          if (CfgErrCnt==CfgMaxErrs) { CfgStat = 'Too many errors loading config file'; }
           CfgErrCnt++;
         }
-      }
+      }  // CFG line loop
       if (CfgKeysCnt>0) {
         if (CfgVals['dayssince']) {
           DaysSinceStarted = new Date(CfgVals['dayssince']);
         }
       }
     }
-    SpeechDone();
+    SpeechUtteranceDone();
+  } else {
+    CfgStat = "CFG reply error "+CfgHandle.status+" on "+CfgSrc;
   }
 }
 
-// Request remote config file by URL.
+// Request remote config file infowall.dat from host web root.  Completion of load calls CfgParse
 function CfgRequest () {
   var CfgURLcode = "";
   CfgURLcode = location.href;
-  if (CfgURLcode.indexOf('#')>=0) {
-    CfgURLcode = CfgURLcode.replace(/^[^#]+#/,'').toLowerCase();
-    CfgURLcode = CfgURLcode.replace(/^\s+/,'').replace(/\s+$/,'');
-    CfgURLcode = CfgURLcode.replace(/[^a-z0-9]/,'');
-    if ( (CfgURLcode.length>0) && (CfgURLcode.length<20) ) {
-      CfgSrc = 'https://bedno.com/d/'+CfgURLcode+'.ini';
-    }
-  } else {
-    CfgSrc = 'https://bedno.com/d/infowall.ini';
-  }
+  CfgStat = "CFG requesting...";
+  CfgSrc = 'https://'+window.location.hostname+'/infowall.dat';
   if (CfgSrc.length>0) {
     CfgHandle = null;
     CfgText = "";
@@ -1333,9 +1254,9 @@ function CfgRequest () {
         CfgHandle.timeout = 11000;
         CfgHandle.onreadystatechange = function(){CfgParse();};
         CfgHandle.send(null);
-      } catch (err) { }
+      } catch (err) { CfgStat = "CFG request failed: "+err }
     }
-    DebugMsg('Src="'+CfgSrc+'"');
+    DebugMsg('CfgSrc="'+CfgSrc+'"');
   }
 }
 
@@ -1357,8 +1278,8 @@ function AlarmSubs (ASval) {
     } else {
       ASval = ASval.replace(/{WEATHER}/,'');
     }
-    if (WeatherForecastSpoken[0].length>16) {
-      ASval = ASval.replace(/{FORECAST}/,WeatherForecastSpoken[0].replace(/^[^\s]+\ /,''));
+    if (WeatherForecastSpoken.length>16) {
+      ASval = ASval.replace(/{FORECAST}/,WeatherForecastSpoken.replace(/^[^\s]+\ /,''));
     } else {
       ASval = ASval.replace(/{FORECAST}/,'','');
     }
@@ -1392,7 +1313,7 @@ function AlarmSubs (ASval) {
           if (ASm < 10) { ASt += ' oh '; }
           ASt += ASm.toString();
         }
-        ASapSpoken = ( (ASap=='A') ? "ay emm" : "pee emm" );
+        ASapSpoken = ( (ASap=='A') ? " A M " : " P M " );
         ASt += ' '+ASapSpoken;
       }
     }
@@ -1471,6 +1392,7 @@ function ShowDate () {
   var SDday = SDdt.getDate();
   var SDdow = SDdt.getDay();
   var SDmonth = SDdt.getMonth();
+  var SDout = "";
   if (BGshowCurr.indexOf('D')>=0) {
     if ( (BGshowCurr.indexOf('W')<0) && (BGshowCurr.indexOf('F')<0) ) {
       document.getElementById('DivDate').style.top = (OfsY+Math.floor(WinHgt*.58))+'px';
@@ -1480,8 +1402,12 @@ function ShowDate () {
     document.getElementById('DivDate').style.textAlign = 'center';
     document.getElementById('DivDate').style.left = (OfsX+48)+'px';
     document.getElementById('DivDate').style.width = (WinWid-OfsX-48)+'px';
-    document.getElementById('DivDate').style.opacity = 1.0;
-    document.getElementById('SpanDate').innerHTML = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+DateShadow+'; -webkit-font-smoothing:antialiased; color:'+DateColor+'; font-size:'+Math.floor(WinHgt*DateHgt)+'px;" onClick="NextBG();">' + AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday + '</span>';
+    document.getElementById('DivDate').style.opacity = 0.8;
+    SDout = '<span style="font-family:Arial; text-decoration:bold; font-variant:small-caps; text-shadow:-3px 3px 0px '+DateShadow+'; -webkit-font-smoothing:antialiased; color:'+DateColor+'; font-size:'+Math.floor(WinHgt*DateHgt)+'px;" onClick="NextBG();">';
+    SDout += AbrvDoW[SDdow] + "&nbsp;" + AbrvMon[SDmonth] + "&nbsp;" + SDday;
+    if ( (WinPortrait) && (BGshowCurr.indexOf('M')>=0) ) { SDout += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"; }  // Padding for adjacent sunrise/sunset display.
+    SDout += '</span>';
+    document.getElementById('SpanDate').innerHTML = SDout;
   }
 }
 
@@ -1586,8 +1512,19 @@ function ShowTime () {
     // Clock digit sizing effects (throbbing) happens here. Recently slowed from a quick pulse to a slow breathing.  Replaces pastel rainbow animation to reduce burn-in.
     // if (STms > 500) { STsz = 1000 - STms; } else { STsz = STms; }
     // DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.5 + (0.2*(STsz/500)))) );
-    if (STms > (STmspc/2)) { STsz = (STmspc/2) - (STms - (STmspc/2)); } else { STsz = STms; }
-    DigitSize = ( (ClockMode==0) ? Math.floor(WinMin*0.5) : Math.floor(WinMin*(0.48 + (0.25*(STsz/(STmspc/2))))) );
+    STmspcHalf = STmspc / 2;
+    if (STms > (STmspcHalf)) { STsz = (STmspcHalf) - (STms - (STmspcHalf)); } else { STsz = STms; }
+    STszHalf = STsz/(STmspcHalf);
+    if (WinPortrait) { 
+      DigitSizeBreathing = (Math.floor(WinMin*(0.3 + (0.07*(STszHalf)))));
+    } else {
+      if (WinSquare) { 
+        DigitSizeBreathing = (Math.floor(WinMin*(0.4 + (0.07*(STszHalf)))));
+      } else {
+        DigitSizeBreathing = (Math.floor(WinMin*(0.5 + (0.1*(STszHalf)))));
+      }
+    }
+    DigitSize = ( (ClockMode==0) ? (Math.floor(WinMin*0.5)) : DigitSizeBreathing );
     ClockColorEff = ((BGoptsCurr.indexOf("R")>=0)?ClockShadow:ClockColor);
     ClockShadowEff = ((BGoptsCurr.indexOf("R")>=0)?ClockColor:ClockShadow);
     ClockHTML += '<span style="color:'+ClockColorEff+'; opacity:'+ClockOpacity.toString()+'; font-size:'+DigitSize.toString()+'px; font-family:Arial; text-decoration:bold; text-shadow:-6px 6px 0px '+ClockShadowEff+';">' + STh + '</span>'; // hour
@@ -1894,6 +1831,13 @@ function UpdateMargins () {
 
 // Diagnostic info pop-up.  Called from Q key.
 function TechReadout () {
+  if (document.getElementById('DivDebug')) {
+    if (document.getElementById('DivDebug').style.visibility!='visible') {
+      document.getElementById('DivDebug').style.visibility='visible';
+    } else {
+      document.getElementById('DivDebug').style.visibility='hidden';
+    }
+  }
   var TRout = "";
   try { TRout = "Display: "+WinWidPhys.toString()+'x'+WinHgtPhys.toString()+"\n"; } catch (err) { }
   try { TRout = TRout + "Margins: "+MarginTop.toString()+','+MarginLeft.toString()+','+MarginBottom.toString()+','+MarginRight.toString()+"\n"; } catch (err) { }
@@ -1909,15 +1853,20 @@ function TechReadout () {
   } else {
     TRout += "No speech synthesizer.\n";
   }
-  if (CfgKeysCnt > 0) { TRout += CfgKeysCnt.toString()+" alarms loaded"; if (AlarmsBooted>0) { TRout += " and booted"; } TRout += ".\n"; }
+  if (CfgKeysCnt > 0) {
+    TRout += CfgKeysCnt.toString()+" alarms loaded"; if (AlarmsBooted>0) { TRout += " and booted"; };
+  } else {
+    TRout += "Config load status: "+CfgStat;
+  }
+  TRout += ".\n";
   try {
-    if (WeatherCurrentSpoken.length>8) { TRout += "Weather report is ready.\n"; }
-    if (WeatherForecastSpoken[0].length>16)  { TRout += "Weather forecast is ready.\n"; }
+    if (WeatherCurrentStat.length>8) { TRout += WeatherCurrentStat+"\n"; }
+    if (WeatherForecastStat.length>8) { TRout += WeatherForecastStat+"\n"; }
   } catch (err) {}
   if (SpeechCnt > 0) { TRout += SpeechCnt.toString()+" utterances spoken.\n"; }
   if (AlarmDupeCnt > 0) { TRout += AlarmDupeCnt.toString()+" dupes suppressed.\n"; }
   if (IsChrome()) { TRout += 'Browser is Chrome ("'+navigator.userAgent+'")'+"\n"; }
-  alert(TRout);
+  DebugMsg(TRout);
 }
 
 // Finish screen setup for aspects that require a startup delay.
@@ -1934,14 +1883,12 @@ function SetupWindow () {
     WinHgt = WinHgtPhys - MarginTop - MarginBottom;
   } else {
     WinWid = WinWidPhys;  WinHgt = WinHgtPhys;
-    WeatherURLeff = WeatherURL;
-    RadarURLeff = WeatherURL;
   }
   LimitMargins();
   // 'kiosk' mode disables offsite links.
   if (location.href.toLowerCase().indexOf('kiosk')>=0) {
-    WeatherURLeff = "";
-    RadarURLeff = "";
+    WeatherLink = "";
+    RadarLink = "";
     ShowIntro = 0;
   }
   document.getElementById('DivWhole').style.top = MarginTop.toString()+'px';
@@ -1950,17 +1897,35 @@ function SetupWindow () {
   document.getElementById('DivWhole').style.height = WinHgt.toString()+'px';
   WinMin = Math.min(WinWid,WinHgt);
   WinMax = Math.max(WinWid,WinHgt);
+  // Orientation rotation detection.
   WinPortrait = (WinHgt > WinWid);
+  WinSquareHgt = Math.floor(WinHgt/2);
+  WinSquareWid = Math.floor(WinWid/2);
+  WinSquare = (WinSquareHgt == WinSquareWid);
   RadarWid = Math.floor(WinWid*0.3);
   RadarHgt = Math.floor(WinHgt*0.5);
   WeatherCurrentHgt = WeatherCurrentHgtDefault;
   WeatherForecastHgt = WeatherForecastHgtDefault;
   DateHgt = DateHgtDefault;
-  if (WinPortrait) { WeatherCurrentHgt = WeatherCurrentHgt * 0.4; }
-  if (WinPortrait) { WeatherForecastHgt = WeatherForecastHgt * 0.4; }
-  if (WinPortrait) { DateHgt = DateHgt * 0.5; }
+  if (WinPortrait) { WeatherCurrentHgt = WeatherCurrentHgt * 0.5; }
+  if (WinPortrait) { WeatherForecastHgt = WeatherForecastHgt * 0.5; }
+  if (WinPortrait) { DateHgt = DateHgt * 0.4; }
   AnalogSetup();
   setTimeout('FinishScreen()',3000);
+}
+
+// Handle UNMUTE button being pressed.
+function UnMute () {
+  if (document.getElementById('DivUnMute')) {
+    SpeechReady = true;
+    if (document.getElementById('DivUnMute').style.visibility=='visible') {
+      // If newly unmuted, redisplay weather to update links to speech vs weather website.
+      WeatherCurrentDisplay();
+      WeatherForecastDisplay();
+      DebugMsg('Relinking weather.');
+    }
+    document.getElementById('DivUnMute').style.visibility='hidden';
+  }
 }
 
 // ===== MAIN DISPATCH =====
@@ -1972,13 +1937,14 @@ function DoSetup () {
   SetupRadar();
   SetupScreen();
   SetupWeather();
-  document.getElementById('DivAbout').style.top = (OfsY+Math.round(WinHgt*.9))+'px';
-  document.getElementById('DivAbout').style.left = (OfsX+Math.round(WinWid*.96))+'px';
+  document.getElementById('DivUnMute').style.top = (OfsY+Math.round(WinHgt*.90))+'px';
+  document.getElementById('DivAbout').style.top = (OfsY+Math.round(WinHgt*.88))+'px';
+  // document.getElementById('DivAbout').style.left = (OfsX+Math.round(WinWid*.89))+'px';
   document.getElementById('SpanAbout').style.fontSize = (Math.round(WinHgt*.1))+'px';
-  document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.25))+'px';
-  document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.25))+'px';
+  document.getElementById('DivIntro').style.top = (OfsY+Math.round(WinHgt*.15))+'px';
+  document.getElementById('DivIntro').style.left = (OfsX+Math.round(WinWid*.15))+'px';
   document.getElementById('DivTime').style.left = (OfsX)+'px';
-  document.getElementById('DivTime').style.top = Math.floor(OfsY+((ClockMode==0) ? 52 : 32)).toString()+'px';
+  document.getElementById('DivTime').style.top = '52px';
   document.getElementById('DivTime').style.width = (WinWid-OfsX)+'px';
   document.getElementById('DivTime').style.textAlign = 'center';
   document.getElementById('DivAnalog').style.left = (OfsX)+'px';
@@ -2053,7 +2019,7 @@ function DoUpd () {
       SetupOfs();
       ShowMoon();
       ShowDate();
-      setTimeout('CfgRequest()',135000);
+      if ( (! IsIOS()) && (! IsAndroid()) && (SpeechReady) ) { setTimeout('CfgRequest()',10*1000); }  // Reload CFG N seconds after the hour. Doesn't work on mobile, which requires sounds be in response to interactions.
     }
     if (MinuteCurr != MinutePrev) {
       MinutePrev = MinuteCurr;
@@ -2061,7 +2027,7 @@ function DoUpd () {
     }
     if (SecondCurr != SecondPrev) {
       SecondPrev = SecondCurr;
-      if (! IsSpeaking) CheckAlarms();
+      if ( (! IsSpeaking) && (SpeechReady) ) CheckAlarms();
     }
     if (DateColor != DateColorPrev) {  // Sunset/Sunrise change.
       ShowMoon();
@@ -2097,7 +2063,8 @@ function DoUpd () {
 
 // Handle user keypress.  Used in body tag to catch all keypad events.
 function CheckKeypress (e) {
-  var KeyPressedCode = e.keyCode;
+  var KeyPressedCodeRaw = e.keyCode;
+  var KeyPressedCode = KeyPressedCodeRaw;
   var BaseFrame = -1;
   var IncTemp = 0;
   // Convert numeric keypad cursor keycodes back to numbers.
@@ -2113,11 +2080,13 @@ function CheckKeypress (e) {
   if (KeyPressedCode==46) { KeyPressedCode=110; }
   if (KeyPressedCode==96) { KeyPressedCode=48; }
   if ( (KeyPressedCode>26) && (KeyPressedCode<128) ) {  // Special handling of multi key sequences.
-    while (KeysPressed.length>5) { KeysPressed = KeysPressed.substring(1); }
+    while (KeysPressed.length>5) { KeysPressed = KeysPressed.substr(1,5); }
     KeysPressed = KeysPressed+String.fromCharCode(KeyPressedCode).toUpperCase();
     if (KeysPressed == "000000") { location.reload(); } // Force reload on six zeroes for tech support purposes.
-    if (KeysPressed == "999999") { location.href = 'https://bedno.com/ispacewar?u='+encodeURIComponent(location.href).replace('#','#'); } // Hidden exit to iSpacewar! video game.
+    if (KeysPressed == "666666") { location.href = 'https://bedno.com/media/twister/index.htm?u='+encodeURIComponent(location.href).replace('#','#'); } // Hidden exit to Twsiter game.
+    if (KeysPressed == "999999") { location.href = 'https://bedno.com/ispacewar?u='+encodeURIComponent(location.href).replace('#','#'); } // Hidden exit to iSpacewar! game.
   }
+  DebugMsg("KeyCode:"+KeyPressedCode.toString()+"("+KeyPressedCodeRaw+")");
   if (KeyPressedCode == 32) {  // Space = next BG
     ClearTimers();
     if (MasterTimer!=null) { clearTimeout(MasterTimer); }
@@ -2218,9 +2187,10 @@ function CheckKeypress (e) {
                   }
                 } else {
                   if ( (KeyPressedCode == 10) || (KeyPressedCode == 13) || (KeyPressedCode == 0) ) {  // ENTER speaks forecast.
+                    if (document.getElementById('DivUnMute').style.visibility=='visible') { UnMute(); }
                     ClearTimers();
                     MasterTimer = setTimeout('DoUpd()',MasterDur);
-                    SpeakForecast(0);
+                    SpeakWeather();
                   } else {
                     if ( (KeyPressedCode == 46) || (KeyPressedCode == 110) || (KeyPressedCode == 190) ) {  // '.' = Stopwatch
                       if (StopwatchStarted < 1) {
@@ -2296,7 +2266,6 @@ function CheckKeypress (e) {
                             break;
                           default:
                            // Unhandled keys do nothing.
-                           // alert(KeyPressedCode);
                         }
                       }
                     }
@@ -2322,7 +2291,6 @@ function DoReBoot () {
 
 // Boot happens only once, after page load.
 function DoBoot () {
-  CfgRequest();
   FetchUptimes();
   // Remove secured images if not at authorized installation.
   var ArgLp = 0;  var SubLp = 0;  var BGslideMax = 0;
@@ -2354,6 +2322,12 @@ function DoBoot () {
   // Optionally set BG from URL using parameter like ?<code>
   var CodePatt = '';  var CodeMatch = '';  var CodeIn = '';
   CodeIn = ' '+location.href.toUpperCase()+' ';
+  // Optionally enable debug panel.
+  if (location.href.toUpperCase().indexOf('DEBUG')>1) {
+    if (document.getElementById('DivDebug')) {
+      document.getElementById('DivDebug').style.visibility='visible';
+    }
+  }
   for (ArgLp=0; ArgLp<BGdata.length; ArgLp++) {
     CodePatt = '[^a-zA-Z0-9]'+BGdata[ArgLp].BGcode.toUpperCase()+'[^a-zA-Z0-9]';
     CodeMatch = new RegExp(CodePatt);
@@ -2393,7 +2367,11 @@ function DoBoot () {
       catch (err) { }
     }
   }
-  SpeechVoicesLoad();
+  if ('speechSynthesis' in window) {
+    SpeechVoices = window.speechSynthesis.getVoices();
+    speechSynthesis.addEventListener("voiceschanged", SpeechVoicesLoad);
+    setTimeout('SpeechVoicesLoad()',2000);  // Failsafe.
+  }
   DoReBoot();
 }
 
@@ -2434,26 +2412,31 @@ function DoRefresh () {
 </div>
 
 <div id="DivRadar" style="z-index:6; position:absolute; left:0px; top:0px;"></div>
-<div id="DivMoonImg" style="z-index:7; position:absolute; left:0px; top:-34px;"></div>
+<div id="DivMoonImg" style="z-index:7; position:absolute; left:0px; top:-24px;"></div>
 <div id="DivSunTimes" style="z-index:8; position:absolute; left:0px; top:0px; text-align:right;"></div>
 
 <div id="DivBGdesc" style="z-index:9; position:absolute; left:0px; top:0px;"></div>
 
 <div id="DivTime" style="z-index:10; position:absolute; left:1px; top:-10px; text-align:center;"><span id="SpanTime" onMouseDown='NextSlide();'></span></div>
 
-<div id="DivWeatherForecast" style="z-index:11; position:absolute; left:0px; top:0px;"></div>
+<div id="DivWeatherCurrent" style="z-index:12; position:absolute; left:0px; top:0px; text-align:center; opacity:0.8;"></div>
 
-<div id="DivWeatherCurrent" style="z-index:12; position:absolute; left:0px; top:0px; text-align:center; opacity:1.0;"></div>
+<div id="DivWeatherForecast" style="z-index:13; position:absolute; left:0px; top:0px;"></div>
 
-<div id="DivDate" style="z-index:13; position:absolute; left:1px; top:0px;"><span id="SpanDate"></span></div>
+<div id="DivDate" style="z-index:14; position:absolute; left:1px; top:0px;"><span id="SpanDate"></span></div>
 
-<div id="DivStopwatch" style="z-index:14; position:absolute; left:0px; top:0px; visibility:hidden; text-align:center;"><span id="SpanStopwatch" style="font-family:Arial; text-decoration:bold; font-stretch:condensed; text-shadow:-4px 4px 0px #9A008D; -webkit-font-smoothing:antialiased; color:red; line-height:81%; font-size:36px;"></span></div>
+<div id="DivStopwatch" style="z-index:15; position:absolute; left:0px; top:0px; visibility:hidden; text-align:center;"><span id="SpanStopwatch" style="font-family:Arial; text-decoration:bold; font-stretch:condensed; text-shadow:-4px 4px 0px #9A008D; -webkit-font-smoothing:antialiased; color:red; line-height:81%; font-size:36px;"></span></div>
 
-<div id="DivAbout" style="z-index:15; position:absolute; left:0px; top:0px; visibility:hidden;"><span id="SpanAbout" onClick="IntroTimer=IntroDur;" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; -webkit-font-smoothing:antialiased;"><b>?</b></span></div>
 
-<div id="DivIntro" style="z-index:16; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
+<div id="DivAbout" style="border-radius:20px; z-index:16; position:absolute; left:6px; top:0px; visibility:hidden;"><span id="SpanAbout" onClick="IntroTimer=IntroDur;" style="font-family:Arial; color:#4040FF; text-decoration:none; font-size:36px; -webkit-font-smoothing:antialiased;"><b>?</b></span></div>
 
-<div id="DivDebug" style="visibility:hidden; opacity:0.7; z-index:17; position:absolute; left:0px; top:0px; width:600px; height:600px; background-color:#FFFFFF;font-family:Arial; color:#000000; font-size:9pt; display:inline-block;"></div>
+<div id="DivUnMute" style="z-index:17; position:absolute; left:32px; top:0px; background-color:#FFFFFF; padding:4px; font-family:Arial; color:#000000; font-size:12pt; border-radius:10px; border-style:solid; border-width:6px; border-color:#FF0000; visibility:hidden;" onClick="UnMute();"><b>UNMUTE &#x1F507;</b></div>
+
+<div id="DivIntro" style="z-index:18; position:absolute; left:0px; top:0px; visibility:hidden; background-color:#FFFFFF; padding-left:16px; padding-top:16px; padding-right:16px; padding-bottom:16px; font-family:Arial; color:#000000; font-size:12pt; border-style:solid; border-width:8px; border-color:#FF0000; display:inline-block;" onClick="IntroTimer=0;document.getElementById('DivIntro').style.visibility='hidden';"></div>
+
+<div id="DivDebug" style="z-index:19; visibility:hidden; opacity:0.8; overflow:auto; position:absolute; left:0px; top:0px; width:200px; height:200px; background-color:#FFFFFF; display:inline-block;">
+<textarea readonly id="DivDebugText" style="width:100%; height:100%; resize:none; border:none; padding:0; box-sizing:border-box; overflow:auto; font-family:Arial; color:#000000; font-size:8pt; display:flex; flex-direction:column-reverse;"> </textarea>
+</div>
 
 </div>
 
@@ -2662,4 +2645,3 @@ else window.SunCalc = SunCalc;
 
 </body>
 </html>
-
